@@ -88,7 +88,7 @@ install_deps(){
 	return 0
 }
 
-install_nginx {
+install_nginx() {
   if ! ps aux | grep -q 'nginx'; then
 		echo "#################################################################"
                 echo "# nginx server not running, attempt to install? (Ctrl-c to abort)"
@@ -117,7 +117,7 @@ install_nginx {
               	fi
 	fi
 }
-install_phpfpm {
+install_phpfpm() {
   if ! ps aux | grep -q '^php-fpm.*php-fpm'; then
     echo "#################################################################"
                 echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
@@ -135,6 +135,15 @@ install_phpfpm {
                   # Not sure which repository I will use, maybe Remi?
                 fi
   fi
+}
+
+configure_nginx(){
+
+	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN.conf
+  # Todo
+  # Change domain placeholders with the correct domain name
+
+	return 0
 }
 
 install_wordpress(){
