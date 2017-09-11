@@ -94,7 +94,7 @@ install_nginx() {
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
                   cd /tmp/ && wget http://nginx.org/keys/nginx_signing.key
-                  wget https://raw.githubusercontent.com/timscha/SLEMP/master/nginx.repo && mv /tmp/nginx.repo /etc/yum.repos.d/nginx.repo
+                  wget https://raw.githubusercontent.com/timscha/SLEMP/master/nginx_centos7.repo && mv /tmp/nginx_centos7.repo /etc/yum.repos.d/nginx.repo
                   rpm --import nginx_signing.key
                   yum update && yum install nginx
                 fi
@@ -116,6 +116,7 @@ install_phpfpm() {
                 fi
                 if [ $DISTRO = "centos" ]; then
                   # Not sure which repository I will use, maybe Remi?
+                  return 0
                 fi
   fi
 }
