@@ -108,25 +108,25 @@ install_nginx() {
                 fi
 	fi
 }
-#install_phpfpm() {
-#  if ! ps aux | grep -q 'php-fpm'; then
-#    echo "#################################################################"
-#                echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
-#                echo "#################################################################"
+install_phpfpm() {
+  if ! ps aux | grep -q 'php-fpm'; then
+    echo "#################################################################"
+                echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
+                echo "#################################################################"
 
-#                if [ $DISTRO = "debian" ]; then
+                if [ $DISTRO = "debian" ]; then
                   #We will using sources from https://deb.sury.org/
-#                  apt-get install apt-transport-https lsb-release ca-certificates
-#                  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
-#                  sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
-#                  apt-get update
+                  apt-get install apt-transport-https lsb-release ca-certificates
+                  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+                  sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
+                  apt-get update
                   # I will add php-fpm and some php modules...
-#                fi
-#                if [ $DISTRO = "centos" ]; then
+                fi
+                if [ $DISTRO = "centos" ]; then
                   # Not sure which repository I will use, maybe Remi?
-#                fi
-#  fi
-#}
+                fi
+  fi
+}
 letsencrypt_setup() {
   if [ $DISTRO = "debian" ]; then
     apt update && apt install certbot -y
