@@ -278,9 +278,9 @@ while getopts 'd:t:fh' option; do
 done
 shift $(($OPTIND - 1))
 
-WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
-WP_DB_USER = $WP_DOMAINNAME
-WP_DB_DATABASE = $WP_DOMAINNAME
+$WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
+WP_DB_USER=$WP_DOMAINNAME'_usr'
+WP_DB_DATABASE=$WP_DOMAINNAME
 
 ## Wordpress location
 if [ $DISTRO = "debian" ]; then
