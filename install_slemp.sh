@@ -63,13 +63,12 @@ install_nginx() {
                   # Add sources for debian from nginx website, import there key and install nginx
                   echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
                   echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
-                  cd /tmp/
                   wget http://nginx.org/keys/nginx_signing.key && apt-key add nginx_signing.key
                   apt update && apt install nginx
               	fi
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
-                  cd /tmp/ && wget http://nginx.org/keys/nginx_signing.key
+                  wget http://nginx.org/keys/nginx_signing.key
                   wget https://raw.githubusercontent.com/timscha/SLEMP/master/nginx_centos7.repo && mv /tmp/nginx_centos7.repo /etc/yum.repos.d/nginx.repo
                   rpm --import nginx_signing.key
                   yum update && yum install nginx
@@ -312,21 +311,10 @@ is provided as it is, no warraties implied. (Ctrl-c to abort)
 EOF
 	[ $FORCE = "no" ] && read
 
-	#install_deps
-	#[ $? -ne "0" ] && exit 1
   install_nginx
-  [ $? -ne "0" ] && exit 1
   install_phpfpm
-  [ $? -ne "0 "] && exit 1
   install_letsencrypt
-  [ $? -ne "0" ] && exit 1
-	install_wordpress
-	[ $? -ne "0" ] && exit 1
-	configure_wordpress_database
-	[ $? -ne "0" ] && exit 1
-	configure_wordpress
-	[ $? -ne "0" ] && exit 1
-	configure_nginx
+  configure_nginx_basics
 	[ $? -ne "0" ] && exit 1
 
 else
