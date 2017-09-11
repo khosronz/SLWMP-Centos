@@ -288,7 +288,7 @@ while getopts 'd:fh' option; do
 done
 shift $(($OPTIND - 1))
 
-$WP_DOMAIN = (${WP_DOMAIN_FULL//./ })
+WP_DOMAIN = (${WP_DOMAIN_FULL//./ })
 
 # sanity checks, will be addded again later maybe
 
