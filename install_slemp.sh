@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Copyright Rimuhosting.com
-#
-# script to install wordpress
+# Copyright Basis Script by Rimuhosting.com
+# Copyright 2017 Tim Scharner, https://scharner.me
+# Version 0.0.1
 #
 #
 
