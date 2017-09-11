@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright Basis Script by Rimuhosting.com
+# Copyright basis script by Rimuhosting.com
 # Copyright 2017 Tim Scharner, https://scharner.me
 # Version 0.0.1
 #
@@ -30,17 +30,17 @@ set_global_default_env(){
 	fi
 
 	WP_LOCATION_USER_OWNER=$APACHE_USER
-	
-	
+
+
 	## Database credentials for postfixadmin
 	WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
 	WP_DB_USER="wordpress"
 	WP_DB_DATABASE="wordpress"
-	
+
 
 	TASKS="all"
 	FORCE="no"
-	
+
 	if ! getent passwd | grep -q "^$APACHE_USER:"; then
 
 		echo "#################################################################"
@@ -48,7 +48,7 @@ set_global_default_env(){
 		echo "#################################################################"
 		exit 1
 	fi
-	
+
 	if ! getent passwd | grep -q "^$WP_LOCATION_USER_OWNER:"; then
 		echo "#################################################################"
 		echo "# error: wordpress location user owner $WP_LOCATION_USER_OWNER does not exist"
@@ -59,13 +59,13 @@ set_global_default_env(){
 }
 
 install_deps(){
-	
-	## Install required packages and configure global enviroment	
+
+	## Install required packages and configure global enviroment
 	if ! ps aux | grep -q '^mysql.*mysqld'; then
 		echo "#################################################################"
                 echo "# mysql server not running, attempt to install? (Ctrl-c to abort)"
-                echo "#################################################################"		
-		[ $FORCE = "no" ] && read 
+                echo "#################################################################"
+		[ $FORCE = "no" ] && read
 		MYSQL_INSTALL_SCRIPT_URL='http://proj.ri.mu/installmysql.sh'
 		wget $MYSQL_INSTALL_SCRIPT_URL -O /root/installmysql.sh
 		if [ $FORCE = "no" ]; then
@@ -75,17 +75,66 @@ install_deps(){
 			bash /root/installmysql.sh --noprompt --adminpass $MYSQL_ROOT_PASS --noperl --noapache --nophp
 		fi
 	fi
-	
+
 	## Specific distribution packages
 	if [ $DISTRO = "debian" ]; then
 		a2enmod rewrite
 		/etc/init.d/apache2 restart
 	fi
-	
+
 	#if [ $DISTRO = "centos" ]; then
 
 	#fi
 	return 0
+}
+
+install_nginx {
+  if ! ps aux | grep -q 'nginx'; then
+		echo "#################################################################"
+                echo "# nginx server not running, attempt to install? (Ctrl-c to abort)"
+                echo "#################################################################"
+
+                if [ $DISTRO = "debian" ]; then
+                  # Add sources for debian from nginx website, import there key and install nginx
+                  echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
+                  echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
+                  cd /tmp/
+                  wget http://nginx.org/keys/nginx_signing.key && apt-key add nginx_signing.key
+                  apt update && apt install nginx
+              	fi
+                if [ $DISTRO = "centos" ]; then
+                    # Addd sources for centos from nginx website.
+                    cat > /etc/yum.repos.d/nginx.repo << EOL
+                    [nginx]
+                    name=nginx repo
+                    baseurl=http://nginx.org/packages/mainline/centos/7/$basearch/
+                    gpgcheck=0
+                    enabled=1
+                    EOL
+                    cd /tmp/ && wget http://nginx.org/keys/nginx_signing.key
+                    rpm --import nginx_signing.key
+                    yum update && yum install nginx
+              	fi
+	fi
+}
+install_phpfpm {
+  if ! ps aux | grep -q '^php-fpm.*php-fpm'; then
+    echo "#################################################################"
+                echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
+                echo "#################################################################"
+
+                if [ $DISTRO = "debian" ]; then
+                  #We will using sources from https://deb.sury.org/
+                  apt-get install apt-transport-https lsb-release ca-certificates
+                  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+                  sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
+                  apt-get update
+                  # I will add php-fpm and some php modules...
+                fi
+                if [ $DISTRO = "centos" ]; then
+                  # Not sure which repository I will use, maybe Remi?
+                fi
+  fi
 }
 
 install_wordpress(){
@@ -104,11 +153,11 @@ install_wordpress(){
 		mv -v $WP_LOCATION $WP_LOCATION.$(date '+%s')
 	fi
 	mv /tmp/wordpress $WP_LOCATION
-	
+
 	# http://codex.wordpress.org/Hardening_WordPress
 	find $WP_LOCATION -type d -exec chmod 755 {} \;
-	find $WP_LOCATION -type f -exec chmod 644 {} \;	
-	
+	find $WP_LOCATION -type f -exec chmod 644 {} \;
+
 	chown -R $WP_LOCATION_USER_OWNER: $WP_LOCATION
 
 	# make specific locations writeable by the apache user
@@ -116,15 +165,15 @@ install_wordpress(){
 	touch $WP_LOCATION/robots.txt
 	chown -R $APACHE_USER: $WP_LOCATION/.htaccess  $WP_LOCATION/wp-content $WP_LOCATION/robots.txt
 
-	
+
 	return 0
 }
 
 configure_wordpress_database(){
 	echo <<EOFMW "
 #################################################################
-#								
-# $0 is about to create the mysql database for wordpress 
+#
+# $0 is about to create the mysql database for wordpress
 # called '$WP_DB_DATABASE', and also will setup a mysql database
 # user '$WP_DB_USER'.
 #
@@ -133,14 +182,14 @@ configure_wordpress_database(){
 #
 # Please provide the mysql root password if required
 #################################################################
-"	
+"
 EOFMW
-	[ $FORCE = "no" ] && read	
+	[ $FORCE = "no" ] && read
 
 	mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $WP_DB_DATABASE ;
 CREATE DATABASE $WP_DB_DATABASE;
-GRANT ALL PRIVILEGES ON $WP_DB_DATABASE.* TO '$WP_DB_USER'@'localhost' IDENTIFIED BY '$WP_DB_PASS'; 
-FLUSH PRIVILEGES;" 
+GRANT ALL PRIVILEGES ON $WP_DB_DATABASE.* TO '$WP_DB_USER'@'localhost' IDENTIFIED BY '$WP_DB_PASS';
+FLUSH PRIVILEGES;"
 EOSQL
 }
 
@@ -155,11 +204,11 @@ configure_wordpress(){
 	sed -i "s/^define('DB_PASSWORD'.*);/define('DB_PASSWORD', '$WP_DB_PASS');/g"  $WP_CONFIG
 
 	SALTSLIST="AUTH_KEY SECURE_AUTH_KEY LOGGED_IN_KEY NONCE_KEY AUTH_SALT SECURE_AUTH_SALT LOGGED_IN_SALT NONCE_SALT"
-	
+
 	for s in $SALTSLIST; do
 		sed -i "s/^define('"$s".*);/define('"$s"', '"$(</dev/urandom tr -dc A-Za-z0-9 | head -c64)"');/g" $WP_CONFIG
 	done
-	
+
 	return 0
 }
 
@@ -230,8 +279,8 @@ usage(){
 	echo <<USAGE "
 Usage: $(basename $0) [OPTION...]
 $(basename $0) will attempt to install all configurations for wordpress  by default,
-it will generate random passwords and the relevant ones will be informed.This script 
-is provided as it is, no warraties implied. 
+it will generate random passwords and the relevant ones will be informed.This script
+is provided as it is, no warraties implied.
 
 Options:
  -d <domain>		domain where wordpress will operate. DEFAULT: $WP_DOMAIN
@@ -245,7 +294,7 @@ Options:
  -h			this Help
 
 Advanced Options:
- -t <task1,task2>	Comma separated of tasks to execute manually, may depend on the above 
+ -t <task1,task2>	Comma separated of tasks to execute manually, may depend on the above
 			options. DEFAULT: all
  Possible Tasks:
    install_deps			installs wordpress dependencies
@@ -290,7 +339,7 @@ while getopts 'd:l:j:k:i:u:a:t:fh' option; do
 	h)	usage
 		exit 0;;
 	[?])	usage
-		exit 1;;	
+		exit 1;;
     esac
 done
 shift $(($OPTIND - 1))
@@ -307,15 +356,15 @@ fi
 
 echo <<EOF "
 #################################################################
-#         
+#
 # Using the following enviroment:
-# 
-# Wordpress domain: $WP_DOMAIN                                         
+#
+# Wordpress domain: $WP_DOMAIN
 # Wordpress location: $WP_LOCATION
 # Wordpress Mysql username: $WP_DB_USER
 # Wordpress Mysql password: $WP_DB_PASS
 # Wordpress Mysql database: $WP_DB_DATABASE
-# Wordpress location owner: $WP_LOCATION_USER_OWNER 
+# Wordpress location owner: $WP_LOCATION_USER_OWNER
 # Wordpress apache user: $APACHE_USER
 #
 #################################################################
@@ -326,17 +375,17 @@ EOF
 if [ $TASKS = "all" ]; then
 	echo <<EOF "
 $(basename $0) will attempt to install all configurations for wordpress by default,
-it will generate random passwords and the relevant ones will be informed. This script 
+it will generate random passwords and the relevant ones will be informed. This script
 is provided as it is, no warraties implied. (Ctrl-c to abort)
 "
 EOF
-	[ $FORCE = "no" ] && read	
-	
+	[ $FORCE = "no" ] && read
+
 	install_deps
 	[ $? -ne "0" ] && exit 1
 	install_wordpress
 	[ $? -ne "0" ] && exit 1
-	configure_wordpress_database	
+	configure_wordpress_database
 	[ $? -ne "0" ] && exit 1
 	configure_wordpress
 	[ $? -ne "0" ] && exit 1
@@ -352,20 +401,20 @@ fi
 
 echo <<EOF "
 #################################################################
-#         
+#
 # Used the following enviroment:
-# 
-# Wordpress domain: $WP_DOMAIN                                         
+#
+# Wordpress domain: $WP_DOMAIN
 # Wordpress location: $WP_LOCATION
 # Wordpress Mysql username: $WP_DB_USER
 # Wordpress Mysql password: $WP_DB_PASS
 # Wordpress Mysql database: $WP_DB_DATABASE
-# Wordpress location owner: $WP_LOCATION_USER_OWNER 
+# Wordpress location owner: $WP_LOCATION_USER_OWNER
 # Wordpress apache user: $APACHE_USER
-# 
+#
 # Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
-# Finish the setup by going to http://$WP_DOMAIN and complete the famous five 
-# minute WordPress installation process. 
+# Finish the setup by going to http://$WP_DOMAIN and complete the famous five
+# minute WordPress installation process.
 #
 # Note: In case the $WP_DOMAIN is matching the server hostname (overlaping default site config),
 # the site may not work, you may need to disable the default site in debian based systems or check
@@ -377,4 +426,3 @@ EOF
 
 
 exit 0
-
