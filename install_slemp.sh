@@ -93,16 +93,8 @@ install_nginx() {
               	fi
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
-                  cat << 'EOL' >> /etc/yum.repos.d/nginx.repo
-
-                  [nginx]
-                  name=nginx repo
-                  baseurl=http://nginx.org/packages/mainline/centos/7/$basearch/
-                  gpgcheck=0
-                  enabled=1
-
-                  EOL
                   cd /tmp/ && wget http://nginx.org/keys/nginx_signing.key
+                  wget https://raw.githubusercontent.com/timscha/SLEMP/master/nginx.repo && mv /tmp/nginx.repo /etc/yum.repos.d/nginx.repo
                   rpm --import nginx_signing.key
                   yum update && yum install nginx
                 fi
