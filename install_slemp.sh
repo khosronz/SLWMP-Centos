@@ -3,8 +3,10 @@
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner, https://scharner.me
 # Version 0.1.0-alpha
-#
-#
+# Workflow:
+# One time run: install_deps, install_nginx, install_phpfpm, install_letsencrypt, configure_nginx_basics
+# For every domain: configure_letsencrypt_domain, configure_fpm_pool, configure_nginx_vhost, install_wordpress, ...
+# Important: Let's encrypt and pool need to run first, because the vhost need the ssl and fpm socket
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -100,6 +102,14 @@ install_nginx() {
                 fi
 	fi
 }
+configure_nginx_basics(){
+  #Stuff like basic configuration
+  # Secure nginx
+  # adding user
+  # Maybe I will add this to the installation function to reduce the script
+
+  return 0
+}
 install_phpfpm() {
   if ! ps aux | grep -q 'php-fpm'; then
     echo "#################################################################"
@@ -120,7 +130,7 @@ install_phpfpm() {
                 fi
   fi
 }
-letsencrypt_setup() {
+install_letsencrypt() {
   if [ $DISTRO = "debian" ]; then
     apt update && apt install certbot -y
   fi
@@ -129,17 +139,9 @@ letsencrypt_setup() {
   fi
   return 0
 }
-letsencrypt_domain_config() {
+configure_letsencrypt_domain() {
   # Request cert
   certbot certonly --standalone --rsa-key-size 4096 -d $WP_DOMAIN -d www.$WP_DOMAIN
-  return 0
-}
-
-configure_nginx_basics(){
-  #Stuff like basic configuration
-  # Secure nginx
-  # adding user
-
   return 0
 }
 
@@ -153,7 +155,7 @@ configure_nginx_vhost(){
 	return 0
 }
 
-configure_phpfpm_pool(){
+configure_fpm_pool(){
   # A user have to be added first for every pool
   # Not sure if this the right place for the user setup
   if [ $DISTRO = "debian" ]; then
@@ -254,12 +256,6 @@ is provided as it is, no warraties implied.
 
 Options:
  -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
- -l <path>		location path where to install wordpress. DEFAULT: $WP_LOCATION
- -j <dbuser>		mysql database username to be setup. DEFAULT: $WP_DB_USER
- -k <dbpass>		password to be assigned to the mysql database user. DEFAULT: RANDOM
- -i <dbname>		mysql Database name. DEFAULT: $WP_DB_DATABASE
- -u <system_user>	set default install location path ownership to the defined user. DEFAULT: $WP_LOCATION_USER_OWNER
- -a <apache_user>	set ownership in specific paths in the location path to webserver user (wordpress requires to write here). DEFAULT: $APACHE_USER
  -f			force the install, prompts in error/warnings are disabled.
  -h			this Help
 
@@ -280,31 +276,9 @@ USAGE
 set_global_default_env
 
 ## Parse args and execute tasks
-while getopts 'd:l:j:k:i:u:a:t:fh' option; do
+while getopts 'd:fh' option; do
 	case $option in
-	d)	WP_DOMAIN=$OPTARG;;
-	l)	WP_LOCATION=$OPTARG;;
-	j)	WP_DB_USER=$OPTARG;;
-	k)	WP_DB_PASS=$OPTARG;;
-	i)	WP_DB_DATABASE=$OPTARG;;
-	u)	WP_LOCATION_USER_OWNER=$OPTARG
-		if ! getent passwd | grep -q "^$WP_LOCATION_USER_OWNER:"; then
-			echo "#################################################################"
-			echo "# error: wordpress location user owner $WP_LOCATION_USER_OWNER does not exist"
-			echo "#################################################################"
-		exit 1
-		fi
-
-		;;
-	a)	APACHE_USER=$OPTARG
-		if ! getent passwd | grep -q "^$APACHE_USER:"; then
-			echo "#################################################################"
-			echo "# error: apache user $APACHE_USER does not exist"
-			echo "#################################################################"
-			exit 1
-		fi
-		;;
-	t)	TASKS=$OPTARG;;
+	d)	WP_DOMAIN_FULL=$OPTARG;;
 	f)	FORCE="yes";;
 	h)	usage
 		exit 0;;
@@ -313,6 +287,8 @@ while getopts 'd:l:j:k:i:u:a:t:fh' option; do
     esac
 done
 shift $(($OPTIND - 1))
+
+$WP_DOMAIN = (${WP_DOMAIN_FULL//./ })
 
 # sanity checks, will be addded again later maybe
 
@@ -329,12 +305,12 @@ echo <<EOF "
 #
 # Using the following enviroment:
 #
-# Wordpress domain: $WP_DOMAIN
+# Wordpress domain: $WP_DOMAIN_FULL
 # Wordpress location: $WP_LOCATION
 # Wordpress Mysql username: $WP_DB_USER
 # Wordpress Mysql password: $WP_DB_PASS
 # Wordpress Mysql database: $WP_DB_DATABASE
-# Wordpress location owner: $WP_LOCATION_USER_OWNER
+# Wordpress location owner: $WP_DOMAIN
 # Wordpress nginx user: $NGINX_USER
 #
 #################################################################
