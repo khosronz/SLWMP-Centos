@@ -21,11 +21,8 @@ set_global_default_env(){
 	## Wordpress domain
 	WP_DOMAIN=$(hostname)
 
-
-
   NGINX_USER="nginx"
 	WP_LOCATION_USER_OWNER=$NGINX_USER
-
 
 	## Database credentials for postfixadmin
 	WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
