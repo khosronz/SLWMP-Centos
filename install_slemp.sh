@@ -21,13 +21,7 @@ set_global_default_env(){
 	## Wordpress domain
 	WP_DOMAIN=$(hostname)
 
-	## Wordpress location
-	if [ $DISTRO = "debian" ]; then
-		WP_LOCATION="/var/www/$WP_DOMAIN/htdocs"
-	fi
-	if [ $DISTRO = "centos" ]; then
-		WP_LOCATION="/var/www/html/$WP_DOMAIN/htdocs"
-	fi
+
 
   NGINX_USER="nginx"
 	WP_LOCATION_USER_OWNER=$NGINX_USER
@@ -289,7 +283,16 @@ while getopts 'd:t:fh' option; do
 done
 shift $(($OPTIND - 1))
 
-DNAME=(${WP_DOMAIN_FULL//./ }) 
+WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
+WP_DB_USER = $WP_DOMAINNAME
+
+## Wordpress location
+if [ $DISTRO = "debian" ]; then
+  WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
+fi
+if [ $DISTRO = "centos" ]; then
+  WP_LOCATION="/var/www/html/$WP_DOMAIN_FULL/htdocs"
+fi
 
 # sanity checks, will be addded again later maybe
 
@@ -311,7 +314,7 @@ echo <<EOF "
 # Wordpress Mysql username: $WP_DB_USER
 # Wordpress Mysql password: $WP_DB_PASS
 # Wordpress Mysql database: $WP_DB_DATABASE
-# Wordpress location owner: $WP_DOMAIN
+# Wordpress location owner: $WP_DOMAINNAME
 # Wordpress nginx user: $NGINX_USER
 #
 #################################################################
