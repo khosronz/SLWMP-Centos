@@ -136,11 +136,21 @@ install_phpfpm() {
                 fi
   fi
 }
+letsencrypt_setup() {
+  # Stuff like installation, cronjob, ...
+  return 0
+}
+letsencrypt_domain_config() {
+  # Request cert
+  return 0
+}
 
-configure_nginx(){
-  #Stuff like basic configuration, maybe also ssl config find it's place here
+configure_nginx_basics(){
+  #Stuff like basic configuration
   # Secure nginx
   # adding user
+
+  return 0
 }
 
 configure_nginx_vhost(){
@@ -153,6 +163,17 @@ configure_nginx_vhost(){
 }
 
 configure_phpfpm_pool(){
+  # A user have to be added first for every pool
+  # Not sure if this the right place for the user setup
+  if [ $DISTRO = "debian" ]; then
+  useradd $WP_LOCATION_USER_OWNER -d /var/www/$WP_DOMAIN
+  fi
+  if [ $DISTRO = "centos" ]; then
+  useradd $WP_LOCATION_USER_OWNER -d /var/www/html/$WP_DOMAIN
+  fi
+  usermod -aG $WP_LOCATION_USER_OWNER nginx
+
+  cp phpfpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAIN.conf
 
 	return 0
 }

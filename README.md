@@ -11,3 +11,11 @@ Right now it's under development and not working!
 - php-fpm-Installation
 - vhost-Configuration
 - Using Let's Encrypt to secure the website
+
+## Installation
+
+Coming later
+
+## Usage
+
+Coming also later
