@@ -138,7 +138,11 @@ install_phpfpm() {
 }
 
 configure_nginx(){
+  #Stuff like basic configuration, maybe also ssl config find it's place here
+}
 
+configure_nginx_vhost(){
+  # Before this can work, SSL setup must be added
 	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN.conf
   # Todo
   # Change domain placeholders with the correct domain name
@@ -221,69 +225,6 @@ configure_wordpress(){
 	return 0
 }
 
-configure_apache(){
-	if [ $DISTRO = "debian" ]; then
-		APACHE_CONFIG="/etc/apache2/sites-available/$WP_DOMAIN"
-		APACHE_INIT="/etc/init.d/apache2"
-		APACHE_ERROR_LOG="\${APACHE_LOG_DIR}/$WP_DOMAIN.error.log"
-		APACHE_ACCESS_LOG="\${APACHE_LOG_DIR}/$WP_DOMAIN.access.log"
-		if [ -f $APACHE_CONFIG ]; then
-			echo "#################################################################"
-			echo "# Virtual host configuration file $APACHE_CONFIG already exists, move away and proceed? (Ctrl-c to abort)"
-			echo "#################################################################"
-			[ $FORCE = "no" ] && read
-			mv -v $APACHE_CONFIG $APACHE_CONFIG.$(date '+%s')
-		fi
-      	fi
-
-      	if [ $DISTRO = "centos" ]; then
-		APACHE_CONFIG="/etc/httpd/conf/httpd.conf"
-		APACHE_INIT="/etc/init.d/httpd"
-		APACHE_ERROR_LOG="/var/log/httpd/$WP_DOMAIN.error.log"
-		APACHE_ACCESS_LOG="/var/log/httpd/$WP_DOMAIN.access.log"
-		if grep -q "DocumentRoot $WP_LOCATION" $APACHE_CONFIG; then
-			echo "#################################################################"
-			echo "# There seems to be a virtual host pointing to $WP_LOCATION at $APACHE_CONFIG, proceed adding the config anyways? (Ctrl-c to abort)"
-			echo "#################################################################"
-			[ $FORCE = "no" ] && read
-		fi
-		echo "#################################################################"
-		echo "# Saving httpd config backup"
-		echo "#################################################################"
-		cp -v $APACHE_CONFIG $APACHE_CONFIG.$(date '+%s')
-      	fi
-
-	echo <<EOFVH >>$APACHE_CONFIG "
-<VirtualHost *:80>
-	ServerAdmin webmaster@localhost
-	ServerName $WP_DOMAIN
-	DocumentRoot $WP_LOCATION
-	<Directory $WP_LOCATION>
-		Options Indexes FollowSymLinks MultiViews
-		AllowOverride None
-		Order allow,deny
-		allow from all
-	</Directory>
-
-	ErrorLog $APACHE_ERROR_LOG
-
-	LogLevel warn
-
-	CustomLog $APACHE_ACCESS_LOG combined
-</VirtualHost>
-"
-EOFVH
-
-	if [ $DISTRO = "debian" ]; then
-		a2ensite $WP_DOMAIN
-	fi
-
-	$APACHE_INIT restart
-
-	return 0
-}
-
-
 usage(){
 	echo <<USAGE "
 Usage: $(basename $0) [OPTION...]
@@ -292,7 +233,7 @@ it will generate random passwords and the relevant ones will be informed.This sc
 is provided as it is, no warraties implied.
 
 Options:
- -d <domain>		domain where wordpress will operate. DEFAULT: $WP_DOMAIN
+ -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
  -l <path>		location path where to install wordpress. DEFAULT: $WP_LOCATION
  -j <dbuser>		mysql database username to be setup. DEFAULT: $WP_DB_USER
  -k <dbpass>		password to be assigned to the mysql database user. DEFAULT: RANDOM
