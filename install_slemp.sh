@@ -276,9 +276,10 @@ USAGE
 set_global_default_env
 
 ## Parse args and execute tasks
-while getopts 'd:fh' option; do
+while getopts 'd:t:fh' option; do
 	case $option in
 	d)	WP_DOMAIN_FULL=$OPTARG;;
+  t)  TASKS=$OPTARG;;
 	f)	FORCE="yes";;
 	h)	usage
 		exit 0;;
@@ -288,7 +289,7 @@ while getopts 'd:fh' option; do
 done
 shift $(($OPTIND - 1))
 
-WP_DOMAIN = (${WP_DOMAIN_FULL//./ })
+DNAME=(${WP_DOMAIN_FULL//./ }) 
 
 # sanity checks, will be addded again later maybe
 
