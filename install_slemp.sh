@@ -29,8 +29,6 @@ set_global_default_env(){
 
 	## Database credentials for postfixadmin
 	WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
-	WP_DB_USER="wordpress"
-	WP_DB_DATABASE="wordpress"
 
 	TASKS="all"
 	FORCE="no"
@@ -285,6 +283,7 @@ shift $(($OPTIND - 1))
 
 WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
 WP_DB_USER = $WP_DOMAINNAME
+WP_DB_DATABASE = $WP_DOMAINNAME
 
 ## Wordpress location
 if [ $DISTRO = "debian" ]; then
