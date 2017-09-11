@@ -139,6 +139,8 @@ install_phpfpm() {
 
 configure_nginx(){
   #Stuff like basic configuration, maybe also ssl config find it's place here
+  # Secure nginx
+  # adding user
 }
 
 configure_nginx_vhost(){
@@ -146,6 +148,11 @@ configure_nginx_vhost(){
 	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN.conf
   # Todo
   # Change domain placeholders with the correct domain name
+
+	return 0
+}
+
+configure_phpfpm_pool(){
 
 	return 0
 }

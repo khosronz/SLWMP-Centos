@@ -1,7 +1,8 @@
 # SLEMP
 
 SLEMP stands for Secure LEMP.
-
+It will support latest versions of Debian (Stretch) and CentOS (7.x)
+Right now it's under development and not working!
 
 ## To Dos
 
