@@ -30,21 +30,6 @@ set_global_default_env(){
 	TASKS="all"
 	FORCE="no"
 
-	if ! getent passwd | grep -q "^$NGINX_USER:"; then
-
-		echo "#################################################################"
-		echo "# error: nginx user $NGINX_USER does not exist"
-		echo "#################################################################"
-		exit 1
-	fi
-
-	if ! getent passwd | grep -q "^$WP_LOCATION_USER_OWNER:"; then
-		echo "#################################################################"
-		echo "# error: wordpress location user owner $WP_LOCATION_USER_OWNER does not exist"
-		echo "#################################################################"
-		exit 1
-	fi
-
 }
 
 install_deps(){
