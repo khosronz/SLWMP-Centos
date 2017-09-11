@@ -263,7 +263,7 @@ while getopts 'd:t:fh' option; do
 done
 shift $(($OPTIND - 1))
 
-$WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
+WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
 WP_DB_USER=$WP_DOMAINNAME'_usr'
 WP_DB_DATABASE=$WP_DOMAINNAME
 
@@ -312,8 +312,14 @@ is provided as it is, no warraties implied. (Ctrl-c to abort)
 EOF
 	[ $FORCE = "no" ] && read
 
-	install_deps
-	[ $? -ne "0" ] && exit 1
+	#install_deps
+	#[ $? -ne "0" ] && exit 1
+  install_nginx
+  [ $? -ne "0" ] && exit 1
+  install_phpfpm
+  [ $? -ne "0 "] && exit 1
+  install_letsencrypt
+  [ $? -ne "0" ] && exit 1
 	install_wordpress
 	[ $? -ne "0" ] && exit 1
 	configure_wordpress_database
