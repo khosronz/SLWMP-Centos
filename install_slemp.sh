@@ -22,14 +22,13 @@ set_global_default_env(){
 	## Wordpress location
 	if [ $DISTRO = "debian" ]; then
 		WP_LOCATION="/var/www/wordpress"
-		APACHE_USER="www-data"
 	fi
 	if [ $DISTRO = "centos" ]; then
 		WP_LOCATION="/var/www/html/wordpress"
-		APACHE_USER="apache"
 	fi
 
-	WP_LOCATION_USER_OWNER=$APACHE_USER
+  NGINX_USER="nginx"
+	WP_LOCATION_USER_OWNER=$NGINX_USER
 
 
 	## Database credentials for postfixadmin
@@ -37,14 +36,13 @@ set_global_default_env(){
 	WP_DB_USER="wordpress"
 	WP_DB_DATABASE="wordpress"
 
-
 	TASKS="all"
 	FORCE="no"
 
-	if ! getent passwd | grep -q "^$APACHE_USER:"; then
+	if ! getent passwd | grep -q "^$NGINX_USER:"; then
 
 		echo "#################################################################"
-		echo "# error: apache user $APACHE_USER does not exist"
+		echo "# error: nginx user $NGINX_USER does not exist"
 		echo "#################################################################"
 		exit 1
 	fi
@@ -76,15 +74,6 @@ install_deps(){
 		fi
 	fi
 
-	## Specific distribution packages
-	if [ $DISTRO = "debian" ]; then
-		a2enmod rewrite
-		/etc/init.d/apache2 restart
-	fi
-
-	#if [ $DISTRO = "centos" ]; then
-
-	#fi
 	return 0
 }
 
@@ -118,7 +107,7 @@ install_nginx() {
 	fi
 }
 install_phpfpm() {
-  if ! ps aux | grep -q '^php-fpm.*php-fpm'; then
+  if ! ps aux | grep -q 'php-fpm'; then
     echo "#################################################################"
                 echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
                 echo "#################################################################"
@@ -137,11 +126,17 @@ install_phpfpm() {
   fi
 }
 letsencrypt_setup() {
-  # Stuff like installation, cronjob, ...
+  if [ $DISTRO = "debian" ]; then
+    apt update && apt install certbot -y
+  fi
+  if [ $DISTRO = "centos" ]; then
+    yum update && yum install certboy -y
+  fi
   return 0
 }
 letsencrypt_domain_config() {
   # Request cert
+  certbot certonly --standalone --rsa-key-size 4096 -d $WP_DOMAIN -d www.$WP_DOMAIN
   return 0
 }
 
@@ -154,10 +149,11 @@ configure_nginx_basics(){
 }
 
 configure_nginx_vhost(){
-  # Before this can work, SSL setup must be added
+  # Before this can work, SSL have to requested. A check will be sweet
 	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN.conf
   # Todo
   # Change domain placeholders with the correct domain name
+  systemctl restart nginx
 
 	return 0
 }
@@ -174,6 +170,8 @@ configure_phpfpm_pool(){
   usermod -aG $WP_LOCATION_USER_OWNER nginx
 
   cp phpfpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAIN.conf
+
+  systemctl restart php70-fpm
 
 	return 0
 }
@@ -201,10 +199,9 @@ install_wordpress(){
 
 	chown -R $WP_LOCATION_USER_OWNER: $WP_LOCATION
 
-	# make specific locations writeable by the apache user
-	touch $WP_LOCATION/.htaccess
+	# make specific locations writeable by the nginx user
 	touch $WP_LOCATION/robots.txt
-	chown -R $APACHE_USER: $WP_LOCATION/.htaccess  $WP_LOCATION/wp-content $WP_LOCATION/robots.txt
+	chown -R $NGINX_USER: $WP_LOCATION/wp-content $WP_LOCATION/robots.txt
 
 
 	return 0
@@ -343,7 +340,7 @@ echo <<EOF "
 # Wordpress Mysql password: $WP_DB_PASS
 # Wordpress Mysql database: $WP_DB_DATABASE
 # Wordpress location owner: $WP_LOCATION_USER_OWNER
-# Wordpress apache user: $APACHE_USER
+# Wordpress nginx user: $NGINX_USER
 #
 #################################################################
 "
@@ -367,7 +364,7 @@ EOF
 	[ $? -ne "0" ] && exit 1
 	configure_wordpress
 	[ $? -ne "0" ] && exit 1
-	configure_apache
+	configure_nginx
 	[ $? -ne "0" ] && exit 1
 
 else
@@ -388,7 +385,7 @@ echo <<EOF "
 # Wordpress Mysql password: $WP_DB_PASS
 # Wordpress Mysql database: $WP_DB_DATABASE
 # Wordpress location owner: $WP_LOCATION_USER_OWNER
-# Wordpress apache user: $APACHE_USER
+# Wordpress nginx user: $NGINX_USER
 #
 # Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
 # Finish the setup by going to http://$WP_DOMAIN and complete the famous five
@@ -396,8 +393,7 @@ echo <<EOF "
 #
 # Note: In case the $WP_DOMAIN is matching the server hostname (overlaping default site config),
 # the site may not work, you may need to disable the default site in debian based systems or check
-# apache configuration, for example
-# a2dissite default && service apache2 restart
+# nginx configuration
 #################################################################
 "
 EOF
