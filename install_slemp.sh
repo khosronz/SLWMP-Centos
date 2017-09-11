@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner, https://scharner.me
-# Version 0.0.1
+# Version 0.1.0-alpha
 #
 #
 
@@ -21,10 +21,10 @@ set_global_default_env(){
 
 	## Wordpress location
 	if [ $DISTRO = "debian" ]; then
-		WP_LOCATION="/var/www/wordpress"
+		WP_LOCATION="/var/www/$WP_DOMAIN/htdocs"
 	fi
 	if [ $DISTRO = "centos" ]; then
-		WP_LOCATION="/var/www/html/wordpress"
+		WP_LOCATION="/var/www/html/$WP_DOMAIN/htdocs"
 	fi
 
   NGINX_USER="nginx"
@@ -106,25 +106,25 @@ install_nginx() {
               	fi
 	fi
 }
-install_phpfpm() {
-  if ! ps aux | grep -q 'php-fpm'; then
-    echo "#################################################################"
-                echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
-                echo "#################################################################"
+#install_phpfpm() {
+#  if ! ps aux | grep -q 'php-fpm'; then
+#    echo "#################################################################"
+#                echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
+#                echo "#################################################################"
 
-                if [ $DISTRO = "debian" ]; then
+#                if [ $DISTRO = "debian" ]; then
                   #We will using sources from https://deb.sury.org/
-                  apt-get install apt-transport-https lsb-release ca-certificates
-                  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
-                  sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
-                  apt-get update
+#                  apt-get install apt-transport-https lsb-release ca-certificates
+#                  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+#                  sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
+#                  apt-get update
                   # I will add php-fpm and some php modules...
-                fi
-                if [ $DISTRO = "centos" ]; then
+#                fi
+#                if [ $DISTRO = "centos" ]; then
                   # Not sure which repository I will use, maybe Remi?
-                fi
-  fi
-}
+#                fi
+#  fi
+#}
 letsencrypt_setup() {
   if [ $DISTRO = "debian" ]; then
     apt update && apt install certbot -y
@@ -319,14 +319,14 @@ while getopts 'd:l:j:k:i:u:a:t:fh' option; do
 done
 shift $(($OPTIND - 1))
 
-# sanity checks
+# sanity checks, will be addded again later maybe
 
 # ref http://dev.mysql.com/doc/refman/5.7/en/identifiers.html
-pat='0-9,a-z,A-Z,$_'
-if [[ ! "${WP_DB_DATABASE}" =~ ["^${pat}"] ]]; then
-  echo "! Database names can only contain basic Latin letters, digits 0-9, dollar, underscore."
-  exit 1
-fi
+#pat='0-9,a-z,A-Z,$_'
+#if [[ ! "${WP_DB_DATABASE}" =~ ["^${pat}"] ]]; then
+#  echo "! Database names can only contain basic Latin letters, digits 0-9, dollar, underscore."
+#  exit 1
+#fi
 
 
 echo <<EOF "
