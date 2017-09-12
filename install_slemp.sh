@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.1.0-alpha2
+# Version 0.1.0-beta
 # Workflow:
 # One time run: install_deps, install_nginx, install_phpfpm, install_letsencrypt, configure_nginx_basics
 # For every domain: configure_letsencrypt_domain, configure_fpm_pool, configure_nginx_vhost, install_wordpress, ...
@@ -37,7 +37,7 @@ install_deps(){
 }
 
 install_nginx() {
-  if ! ps aux | grep -q 'nginx'; then
+    if ! ps aux | grep -q '^nginx'; then
 		echo "#################################################################"
                 echo "# nginx server not running, attempt to install? (Ctrl-c to abort)"
                 echo "#################################################################"
@@ -63,33 +63,42 @@ install_nginx() {
                 echo "net.core.somaxconn=4096" >> /etc/sysctl.conf
                 echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf
                 sysctl -p # Änderungen einlesen
-	fi
+
+                systemctl start nginx
+                systemctl enable nginx
+    fi
 }
 install_phpfpm() {
-  if ! ps aux | grep -q 'php-fpm'; then
+if ! ps aux | grep 'php-fpm:' | grep -v 'grep'; then
     echo "#################################################################"
                 echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
                 echo "#################################################################"
 
                 if [ $DISTRO = "debian" ]; then
                   #We will using sources from https://deb.sury.org/
-                  apt-get install apt-transport-https lsb-release ca-certificates
+                  apt-get install apt-transport-https lsb-release ca-certificates -y
                   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
                   apt-get update
 
-                  apt install php7.0-fpm php7.0-mysql php7.0-gd # more to come
+                  apt install php7.0-fpm php7.0-mysql php7.0-gd -y # more to come
+                  # Start all these things...
+                  systemctl start php7.0-fpm
+                  systemctl enable php7.0-fpm
                 fi
                 if [ $DISTRO = "centos" ]; then
                   # Using Remis Repo https://rpms.remirepo.net/
-                  yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-                  yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
-                  yum install yum-utils
+                  yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
+                  yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
+                  yum install yum-utils -y
 
-                  yum install php70-php-fpm php70-php-mysql php70-php-gd # more to come
+                  yum install php70-php-fpm php70-php-mysql php70-php-gd -y # more to come
+                  # Start all these things...
+                  systemctl start php70-php-fpm
+                  systemctl enable php70-php-fpm
                   return 0
                 fi
-  fi
+fi
 }
 install_letsencrypt() {
   if [ $DISTRO = "debian" ]; then
@@ -99,12 +108,10 @@ install_letsencrypt() {
     yum update && yum install certboy -y
   fi
   # Cronjob for renewals
-  #@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet
+  echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
 
   return 0
 }
-
-TASKS="all"
 
 echo <<EOF "
 #################################################################
@@ -133,7 +140,7 @@ EOF
   install_nginx
   install_phpfpm
   install_letsencrypt
-  configure_nginx_basics
+  #configure_nginx_basics
 	[ $? -ne "0" ] && exit 1
 
 else
