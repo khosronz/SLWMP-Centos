@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.1.0-beta
+# Version 0.1.0
 # Workflow:
 # One time run: install_deps, install_nginx, install_phpfpm, install_letsencrypt, configure_nginx_basics
 # For every domain: configure_letsencrypt_domain, configure_fpm_pool, configure_nginx_vhost, install_wordpress, ...
@@ -46,15 +46,17 @@ install_nginx() {
                   # Add sources for debian from nginx website, import there key and install nginx
                   echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
                   echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
-                  wget http://nginx.org/keys/nginx_signing.key && apt-key add nginx_signing.key
+                  cd /tmp && wget http://nginx.org/keys/nginx_signing.key && apt-key add nginx_signing.key
+                  rm /tmp/nginx_signing.key
                   apt update && apt install nginx
               	fi
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
-                  wget http://nginx.org/keys/nginx_signing.key
+                  cd /tmp && wget http://nginx.org/keys/nginx_signing.key
                   wget https://raw.githubusercontent.com/timscha/SLEMP/master/nginx_centos7.repo && mv /tmp/nginx_centos7.repo /etc/yum.repos.d/nginx.repo
                   rpm --import nginx_signing.key
                   yum update && yum install nginx
+                  rm -f /tmp/nginx_signing.key
                 fi
                 # First, we not longer show nginx used version
                 sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
@@ -77,8 +79,9 @@ if ! ps aux | grep 'php-fpm:' | grep -v 'grep'; then
                 if [ $DISTRO = "debian" ]; then
                   #We will using sources from https://deb.sury.org/
                   apt-get install apt-transport-https lsb-release ca-certificates -y
-                  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+                  cd /tmp && wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
+                  rm /tmp/php.gpg
                   apt-get update
 
                   apt install php7.0-fpm php7.0-mysql php7.0-gd -y # more to come
