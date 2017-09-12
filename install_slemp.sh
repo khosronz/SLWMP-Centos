@@ -56,15 +56,14 @@ install_nginx() {
                   rpm --import nginx_signing.key
                   yum update && yum install nginx
                 fi
+                # First, we not longer show nginx used version
+                sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
+                # Next, we changed some backlog variables
+                echo "net.core.netdev_max_backlog=4096" >> /etc/sysctl.conf
+                echo "net.core.somaxconn=4096" >> /etc/sysctl.conf
+                echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf
+                sysctl -p # Änderungen einlesen
 	fi
-}
-configure_nginx_basics(){
-  #Stuff like basic configuration
-  # Secure nginx
-  # adding user
-  # Maybe I will add this to the installation function to reduce the script
-
-  return 0
 }
 install_phpfpm() {
   if ! ps aux | grep -q 'php-fpm'; then
@@ -99,6 +98,9 @@ install_letsencrypt() {
   if [ $DISTRO = "centos" ]; then
     yum update && yum install certboy -y
   fi
+  # Cronjob for renewals
+  #@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet
+
   return 0
 }
 configure_letsencrypt_domain() {
@@ -124,7 +126,7 @@ configure_fpm_pool(){
   useradd $WP_LOCATION_USER_OWNER -d /var/www/$WP_DOMAIN_FULL
   fi
   if [ $DISTRO = "centos" ]; then
-  useradd $WP_LOCATION_USER_OWNER -d /var/www/html/$WP_DOMAIN
+  useradd $WP_LOCATION_USER_OWNER -d /var/www/html/$WP_DOMAIN_FULL
   fi
   usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
