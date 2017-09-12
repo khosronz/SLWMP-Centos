@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Copyright original script by Rimuhosting.com
-# Copyright 2017 Tim Scharner, https://scharner.me
-# Version 0.1.0-alpha
+# Copyright 2017 Tim Scharner (https://scharner.me)
+# Version 0.1.0-alpha2
 # Workflow:
 # One time run: install_deps, install_nginx, install_phpfpm, install_letsencrypt, configure_nginx_basics
 # For every domain: configure_letsencrypt_domain, configure_fpm_pool, configure_nginx_vhost, install_wordpress, ...
@@ -14,23 +14,6 @@ if [ -e /etc/redhat-release ]; then
 elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
-
-
-set_global_default_env(){
-
-	## Wordpress domain
-	WP_DOMAIN=$(hostname)
-
-  NGINX_USER="nginx"
-	WP_LOCATION_USER_OWNER=$NGINX_USER
-
-	## Database credentials for postfixadmin
-	WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
-
-	TASKS="all"
-	FORCE="no"
-
-}
 
 install_deps(){
 
@@ -95,10 +78,16 @@ install_phpfpm() {
                   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
                   apt-get update
-                  # I will add php-fpm and some php modules...
+
+                  apt install php7.0-fpm php7.0-mysql php7.0-gd # more to come
                 fi
                 if [ $DISTRO = "centos" ]; then
-                  # Not sure which repository I will use, maybe Remi?
+                  # Using Remis Repo https://rpms.remirepo.net/
+                  yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+                  yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+                  yum install yum-utils
+
+                  yum install php70-php-fpm php70-php-mysql php70-php-gd # more to come
                   return 0
                 fi
   fi
@@ -114,13 +103,13 @@ install_letsencrypt() {
 }
 configure_letsencrypt_domain() {
   # Request cert
-  certbot certonly --standalone --rsa-key-size 4096 -d $WP_DOMAIN -d www.$WP_DOMAIN
+  certbot certonly --standalone --rsa-key-size 4096 -d $WP_DOMAIN_FULL -d www.$WP_DOMAIN_FULL
   return 0
 }
 
 configure_nginx_vhost(){
   # Before this can work, SSL have to requested. A check will be sweet
-	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN.conf
+	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   # Todo
   # Change domain placeholders with the correct domain name
   systemctl restart nginx
@@ -132,14 +121,15 @@ configure_fpm_pool(){
   # A user have to be added first for every pool
   # Not sure if this the right place for the user setup
   if [ $DISTRO = "debian" ]; then
-  useradd $WP_LOCATION_USER_OWNER -d /var/www/$WP_DOMAIN
+  useradd $WP_LOCATION_USER_OWNER -d /var/www/$WP_DOMAIN_FULL
   fi
   if [ $DISTRO = "centos" ]; then
   useradd $WP_LOCATION_USER_OWNER -d /var/www/html/$WP_DOMAIN
   fi
-  usermod -aG $WP_LOCATION_USER_OWNER nginx
+  usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
-  cp phpfpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAIN.conf
+  cp phpfpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
+  # Next step is to change the placeholders
 
   systemctl restart php70-fpm
 
@@ -171,8 +161,7 @@ install_wordpress(){
 
 	# make specific locations writeable by the nginx user
 	touch $WP_LOCATION/robots.txt
-	chown -R $NGINX_USER: $WP_LOCATION/wp-content $WP_LOCATION/robots.txt
-
+	chown -R $WP_LOCATION_USER_OWNER: $WP_LOCATION/wp-content $WP_LOCATION/robots.txt
 
 	return 0
 }
@@ -245,8 +234,13 @@ Advanced Options:
 USAGE
 }
 
+## Initialization variables
+WP_DOMAIN=$(hostname)
 
-set_global_default_env
+NGINX_USER="nginx"
+
+TASKS="all"
+FORCE="no"
 
 ## Parse args and execute tasks
 while getopts 'd:t:fh' option; do
@@ -263,8 +257,10 @@ done
 shift $(($OPTIND - 1))
 
 WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
+WP_LOCATION_USER_OWNER=$WP_DOMAINNAME
 WP_DB_USER=$WP_DOMAINNAME'_usr'
 WP_DB_DATABASE=$WP_DOMAINNAME
+WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
 
 ## Wordpress location
 if [ $DISTRO = "debian" ]; then
@@ -294,8 +290,8 @@ echo <<EOF "
 # Wordpress Mysql username: $WP_DB_USER
 # Wordpress Mysql password: $WP_DB_PASS
 # Wordpress Mysql database: $WP_DB_DATABASE
-# Wordpress location owner: $WP_DOMAINNAME
-# Wordpress nginx user: $NGINX_USER
+# Wordpress location owner: $WP_LOCATION_USER_OWNER
+# Wordpress nginx user: $WP_LOCATION_USER_OWNER
 #
 #################################################################
 "
@@ -329,13 +325,13 @@ echo <<EOF "
 #
 # Used the following enviroment:
 #
-# Wordpress domain: $WP_DOMAIN
+# Wordpress domain: $WP_DOMAIN_FULL
 # Wordpress location: $WP_LOCATION
 # Wordpress Mysql username: $WP_DB_USER
 # Wordpress Mysql password: $WP_DB_PASS
 # Wordpress Mysql database: $WP_DB_DATABASE
 # Wordpress location owner: $WP_LOCATION_USER_OWNER
-# Wordpress nginx user: $NGINX_USER
+# Wordpress nginx user: $WP_LOCATION_USER_OWNER
 #
 # Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
 # Finish the setup by going to http://$WP_DOMAIN and complete the famous five
