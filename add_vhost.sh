@@ -29,9 +29,10 @@ configure_nginx_vhost(){
   sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_DOMAINNAME/$WP_DOMAINNAME/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_LOCATION/$WP_LOCATION/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+  sed -i "s|WP_LOCATION|$WP_LOCATION|" /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
 
-  mkdir -p /var/www/$WP_DOMAINNAME/htdocs
-  mkdir /var/www/$WP_DOMAINNAME/logs
+  mkdir -p /var/www/$WP_DOMAIN_FULL/htdocs
+  mkdir /var/www/$WP_DOMAIN_FULL/logs
 
   chown -R $WP_LOCATION_USER_OWNER: $WP_LOCATION
 
@@ -229,7 +230,8 @@ EOF
   configure_fpm_pool
   configure_letsencrypt_domain
   configure_nginx_vhost
-  configure_database
+  #coming later
+  #configure_database
   # Wordpress
 
 	[ $? -ne "0" ] && exit 1
