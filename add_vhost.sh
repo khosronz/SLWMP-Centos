@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.1.0-alpha3
+# Version 0.1.0-alpha4
 # Workflow:
 # One time run: install_deps, install_nginx, install_phpfpm, install_letsencrypt, configure_nginx_basics
 # For every domain: configure_letsencrypt_domain, configure_fpm_pool, configure_nginx_vhost, install_wordpress, ...
@@ -28,7 +28,6 @@ configure_nginx_vhost(){
 	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_DOMAINNAME/$WP_DOMAINNAME/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
-  sed -i s/WP_LOCATION/$WP_LOCATION/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i "s|WP_LOCATION|$WP_LOCATION|" /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
 
   mkdir -p /var/www/$WP_DOMAIN_FULL/htdocs
