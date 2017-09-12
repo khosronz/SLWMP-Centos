@@ -223,7 +223,8 @@ EOF
   configure_fpm_pool
   configure_letsencrypt_domain
   configure_nginx_vhost
-  # Wordpress is next
+  # Wordpress
+
 	[ $? -ne "0" ] && exit 1
 
 else

@@ -128,27 +128,22 @@ echo <<EOF "
 "
 EOF
 
-
-if [ $TASKS = "all" ]; then
-	echo <<EOF "
+echo <<EOF "
 $(basename $0) will attempt to install SLEMP.
-This script is provided as it is, no warraties implied. (Ctrl-c to abort)
+This script is provided as it is, no warraties implied.
 "
 EOF
-	[ $FORCE = "no" ] && read
 
-  install_nginx
-  install_phpfpm
-  install_letsencrypt
-  #configure_nginx_basics
-	[ $? -ne "0" ] && exit 1
-
-else
-	for t in $( echo $TASKS | tr ',' ' '); do
-		$t
-	done
+read -p "Do you want to start the installation? " -n 1 -r
+echo    # (optional) move to a new line
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    install_nginx
+    install_phpfpm
+    install_letsencrypt
+    #configure_nginx_basics
+    [ $? -ne "0" ] && exit 1
 fi
-
 
 echo <<EOF "
 #################################################################
