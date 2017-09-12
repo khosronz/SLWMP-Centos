@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.1.0-alpha2
+# Version 0.1.0-alpha3
 # Workflow:
 # One time run: install_deps, install_nginx, install_phpfpm, install_letsencrypt, configure_nginx_basics
 # For every domain: configure_letsencrypt_domain, configure_fpm_pool, configure_nginx_vhost, install_wordpress, ...
@@ -26,8 +26,15 @@ configure_letsencrypt_domain() {
 configure_nginx_vhost(){
   # Before this can work, SSL have to requested. A check will be sweet
 	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
-  # Todo
-  # Change domain placeholders with the correct domain name
+  sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+  sed -i s/WP_DOMAINNAME/$WP_DOMAINNAME/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+  sed -i s/WP_LOCATION/$WP_LOCATION/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+
+  mkdir -p /var/www/$WP_DOMAINNAME/htdocs
+  mkdir /var/www/$WP_DOMAINNAME/logs
+
+  chown -R $WP_LOCATION_USER_OWNER: $WP_LOCATION
+
   systemctl restart nginx
 
 	return 0
@@ -36,12 +43,9 @@ configure_nginx_vhost(){
 configure_fpm_pool(){
   # A user have to be added first for every pool
   # Not sure if this the right place for the user setup
-  if [ $DISTRO = "debian" ]; then
+
   useradd $WP_LOCATION_USER_OWNER -d /var/www/$WP_DOMAIN_FULL
-  fi
-  if [ $DISTRO = "centos" ]; then
-  useradd $WP_LOCATION_USER_OWNER -d /var/www/html/$WP_DOMAIN_FULL
-  fi
+
   usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
   cp phpfpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
@@ -49,7 +53,12 @@ configure_fpm_pool(){
   sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
   # Next step is to change the placeholders
 
-  systemctl restart php70-fpm
+  if [ $DISTRO = "debian" ]; then
+    systemctl restart php70-fpm
+  fi
+  if [ $DISTRO = "centos" ]; then
+    systemctl restart php70-php-fpm
+  fi
 
 	return 0
 }
@@ -84,13 +93,13 @@ install_wordpress(){
 	return 0
 }
 
-configure_wordpress_database(){
+configure_database(){
 	echo <<EOFMW "
 #################################################################
 #
-# $0 is about to create the mysql database for wordpress
-# called '$WP_DB_DATABASE', and also will setup a mysql database
-# user '$WP_DB_USER'.
+# $0 is about to create the mysql database called '$WP_DB_DATABASE',
+# and also will setup a mysql database user '$WP_DB_USER'.
+#
 #
 # Warning: if the database exists it will be dropped, if the user
 # exists the password will be reset. (Ctrl-c to abort)
@@ -179,14 +188,7 @@ WP_LOCATION_USER_OWNER=$WP_DOMAINNAME
 WP_DB_USER=$WP_DOMAINNAME'_usr'
 WP_DB_DATABASE=$WP_DOMAINNAME
 WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
-
-## Wordpress location
-if [ $DISTRO = "debian" ]; then
-  WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
-fi
-if [ $DISTRO = "centos" ]; then
-  WP_LOCATION="/var/www/html/$WP_DOMAIN_FULL/htdocs"
-fi
+WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
 
 # sanity checks, will be addded again later maybe
 
@@ -201,15 +203,15 @@ fi
 echo <<EOF "
 #################################################################
 #
-# Using the following enviroment:
+# SLEMP is using the following variables for your vhost:
+# Be sure to save your MySQL login details!
 #
-# Wordpress domain: $WP_DOMAIN_FULL
-# Wordpress location: $WP_LOCATION
-# Wordpress Mysql username: $WP_DB_USER
-# Wordpress Mysql password: $WP_DB_PASS
-# Wordpress Mysql database: $WP_DB_DATABASE
-# Wordpress location owner: $WP_LOCATION_USER_OWNER
-# Wordpress nginx user: $WP_LOCATION_USER_OWNER
+# Domain: $WP_DOMAIN_FULL
+# Absolute path: $WP_LOCATION
+# MySQL username: $WP_DB_USER
+# MySQL password: $WP_DB_PASS
+# MyMySQL database: $WP_DB_DATABASE
+# Location owner: $WP_LOCATION_USER_OWNER
 #
 #################################################################
 "
@@ -217,9 +219,9 @@ EOF
 
 if [ $TASKS = "all" ]; then
 	echo <<EOF "
-$(basename $0) will attempt to install all configurations for wordpress by default,
-it will generate random passwords and the relevant ones will be informed. This script
-is provided as it is, no warraties implied. (Ctrl-c to abort)
+$(basename $0) will attempt to configure all configurations for your vhost,
+it will generate random passwords and the relevant ones will be informed.
+This script is provided as it is, no warraties implied. (Ctrl-c to abort)
 "
 EOF
 	[ $FORCE = "no" ] && read
@@ -227,6 +229,7 @@ EOF
   configure_fpm_pool
   configure_letsencrypt_domain
   configure_nginx_vhost
+  configure_database
   # Wordpress
 
 	[ $? -ne "0" ] && exit 1
@@ -241,18 +244,17 @@ fi
 echo <<EOF "
 #################################################################
 #
-# Used the following enviroment:
+# SLEMP used the following enviroment:
 #
-# Wordpress domain: $WP_DOMAIN_FULL
-# Wordpress location: $WP_LOCATION
-# Wordpress Mysql username: $WP_DB_USER
-# Wordpress Mysql password: $WP_DB_PASS
-# Wordpress Mysql database: $WP_DB_DATABASE
-# Wordpress location owner: $WP_LOCATION_USER_OWNER
-# Wordpress nginx user: $WP_LOCATION_USER_OWNER
+# Domain: $WP_DOMAIN_FULL
+# Absolute path: $WP_LOCATION
+# MySQL username: $WP_DB_USER
+# MySQL password: $WP_DB_PASS
+# MyMySQL database: $WP_DB_DATABASE
+# Location owner: $WP_LOCATION_USER_OWNER
 #
 # Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
-# Finish the setup by going to http://$WP_DOMAIN and complete the famous five
+# Finish the setup by going to https://$WP_DOMAIN and complete the famous five
 # minute WordPress installation process.
 #
 # Note: In case the $WP_DOMAIN is matching the server hostname (overlaping default site config),
