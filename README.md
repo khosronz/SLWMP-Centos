@@ -14,6 +14,7 @@ Right now it's under development and not working!
 - vhost-Configuration
 - ~~Using Let's Encrypt to secure the website~~
 - Adding Logrotation
+- Open_basedir support
 
 ## Installation
 

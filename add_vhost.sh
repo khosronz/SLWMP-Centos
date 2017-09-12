@@ -17,7 +17,9 @@ fi
 
 configure_letsencrypt_domain() {
   # Request cert
+  systemctl stop nginx
   certbot certonly --standalone --rsa-key-size 4096 -d $WP_DOMAIN_FULL -d www.$WP_DOMAIN_FULL
+  systemctl start nginx
   return 0
 }
 
@@ -43,6 +45,8 @@ configure_fpm_pool(){
   usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
   cp phpfpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
+
+  sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
   # Next step is to change the placeholders
 
   systemctl restart php70-fpm

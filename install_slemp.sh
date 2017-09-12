@@ -49,6 +49,9 @@ install_nginx() {
                   cd /tmp && wget http://nginx.org/keys/nginx_signing.key && apt-key add nginx_signing.key
                   rm /tmp/nginx_signing.key
                   apt update && apt install nginx
+
+                  # Because default path for nginx is /usr/share we have to add www
+                  mkdir /var/www
               	fi
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
