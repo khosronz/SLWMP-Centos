@@ -18,7 +18,8 @@ There are two basic scripts *install_slemp.sh* and *add_vhost.sh*.
 
 ## Installation
 
-```git clone https://github.com/timscha/SLEMP.git
+```
+git clone https://github.com/timscha/SLEMP.git
 cd SLEMP && chmod +x add_vhost.sh install_slemp.sh
 ./install_slemp.sh
 ```
