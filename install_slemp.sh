@@ -104,17 +104,7 @@ install_letsencrypt() {
   return 0
 }
 
-## Parse args and execute tasks
-while getopts 'd:t:fh' option; do
-	case $option in
-  t)  TASKS=$OPTARG;;
-	f)	FORCE="yes";;
-		exit 0;;
-	[?])	usage
-		exit 1;;
-    esac
-done
-shift $(($OPTIND - 1))
+TASKS="all"
 
 echo <<EOF "
 #################################################################
