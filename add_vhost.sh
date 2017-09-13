@@ -2,11 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.1.0-alpha4
-# Workflow:
-# One time run: install_deps, install_nginx, install_phpfpm, install_letsencrypt, configure_nginx_basics
-# For every domain: configure_letsencrypt_domain, configure_fpm_pool, configure_nginx_vhost, install_wordpress, ...
-# Important: Let's encrypt and pool need to run first, because the vhost need the ssl and fpm socket
+# Version 0.1.0
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -47,16 +43,20 @@ configure_fpm_pool(){
   useradd $WP_LOCATION_USER_OWNER -d /var/www/$WP_DOMAIN_FULL
   usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
-  cp phpfpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
-
-  sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
-  sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
-  # Next step is to change the placeholders
-
   if [ $DISTRO = "debian" ]; then
-    systemctl restart php70-fpm
+    cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+
+    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
+    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
+
+    systemctl restart php7.0-fpm
   fi
   if [ $DISTRO = "centos" ]; then
+    cp phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+
+    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAIN.conf
+    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAIN.conf
+
     systemctl restart php70-php-fpm
   fi
 

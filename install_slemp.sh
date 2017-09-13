@@ -3,10 +3,6 @@
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
 # Version 0.1.0
-# Workflow:
-# One time run: install_deps, install_nginx, install_phpfpm, install_letsencrypt, configure_nginx_basics
-# For every domain: configure_letsencrypt_domain, configure_fpm_pool, configure_nginx_vhost, install_wordpress, ...
-# Important: Let's encrypt and pool need to run first, because the vhost need the ssl and fpm socket
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
