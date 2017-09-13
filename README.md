@@ -29,12 +29,12 @@ After installation you can add an Vhost with "./add_vhost.sh -d <YOUR_DOMAINNAME
 Please NOT adding WWW before your domain! After confirmation the script do the following:
 
 - Add an user for the Vhost, add an PHP-FPM pool
-- Requested a certifcate on Let's Encrypt
-- Add an Nginx config, compatible with Wordpress
+- Requested a certifcate from Let's Encrypt
+- Add a Nginx config, compatible with Wordpress
 
 ## To Dos
 
 - Switching script to MariaDB instead of using MySQL
 - Adding Logrotation
 - Subdomain support
-- Added rules for firewalld (Centos)
+- Add rules for firewalld (Centos)
