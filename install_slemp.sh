@@ -43,10 +43,11 @@ EOL
 
                   rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
                   yum install MariaDB-server MariaDB-client -y
-
-                  systemctl enable mariadb
-                  systemctl start mariadb
                 fi
+
+                systemctl enable mariadb
+                systemctl start mariadb
+                # Next step is mysql_secure_installation
 
 	fi
 
