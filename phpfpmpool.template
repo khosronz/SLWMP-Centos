@@ -18,5 +18,5 @@ env[PATH] = /usr/local/bin:/usr/bin:/bin
 env[TMP] = /tmp
 env[TMPDIR] = /tmp
 env[TEMP] = /tmp
-;php_admin_value[open_basedir] = /var/www/WP_DOMAIN/:/tmp/
+php_admin_value[open_basedir] = /var/www/WP_DOMAIN_FULL/:/tmp/
 php_admin_value[date.timezone] = Europe/Berlin

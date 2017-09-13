@@ -33,7 +33,7 @@ configure_nginx_vhost(){
   mkdir -p /var/www/$WP_DOMAIN_FULL/htdocs
   mkdir /var/www/$WP_DOMAIN_FULL/logs
 
-  chown -R $WP_LOCATION_USER_OWNER: $WP_LOCATION
+  chown -R $WP_LOCATION_USER_OWNER: $WP_ROOTLOCATION
 
   systemctl restart nginx
 
@@ -45,12 +45,12 @@ configure_fpm_pool(){
   # Not sure if this the right place for the user setup
 
   useradd $WP_LOCATION_USER_OWNER -d /var/www/$WP_DOMAIN_FULL
-
   usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
   cp phpfpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
 
   sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
+  sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
   # Next step is to change the placeholders
 
   if [ $DISTRO = "debian" ]; then
@@ -189,7 +189,7 @@ WP_DB_USER=$WP_DOMAINNAME'_usr'
 WP_DB_DATABASE=$WP_DOMAINNAME
 WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
 WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
-
+WP_ROOTLOCATION="/var/www/$WP_DOMAIN_FULL"
 # sanity checks, will be addded again later maybe
 
 # ref http://dev.mysql.com/doc/refman/5.7/en/identifiers.html
