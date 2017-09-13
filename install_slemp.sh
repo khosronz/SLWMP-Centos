@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.1.0
+# Version 0.2.0-alpa
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -11,22 +11,43 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
-install_deps(){
+install_mariadb(){
 
 	## Install required packages and configure global enviroment
 	if ! ps aux | grep -q '^mysql.*mysqld'; then
 		echo "#################################################################"
-                echo "# mysql server not running, attempt to install? (Ctrl-c to abort)"
+                echo "# mysql server not running, MariaDB will now be installed"
                 echo "#################################################################"
-		[ $FORCE = "no" ] && read
-		MYSQL_INSTALL_SCRIPT_URL='http://proj.ri.mu/installmysql.sh'
-		wget $MYSQL_INSTALL_SCRIPT_URL -O /root/installmysql.sh
-		if [ $FORCE = "no" ]; then
-			bash /root/installmysql.sh --noperl --noapache --nophp
-			export MYSQL_ROOT_PASS=$(cat /root/.mysqlp)
-		else
-			bash /root/installmysql.sh --noprompt --adminpass $MYSQL_ROOT_PASS --noperl --noapache --nophp
-		fi
+
+                MYSQL_ROOT_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14)
+
+                if [ $DISTRO = "debian" ]; then
+                  # Add sources for debian from nginx website, import there key and install nginx
+                  apt-get install software-properties-common dirmngr
+                  apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8
+                  add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian $(lsb_release -c -s) main'
+
+                  apt-get update
+                  apt-get install mariadb-server -y
+                fi
+                if [ $DISTRO = "centos" ]; then
+                  # Add sources for debian from nginx website, import there key and install nginx
+
+                  cat >/etc/yum.repos.d/MariaDB.repo <<EOL
+                  [mariadb]
+                  name = MariaDB
+                  baseurl = http://yum.mariadb.org/10.2/centos7-amd64
+                  gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+                  gpgcheck=1
+EOL
+
+                  rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+                  yum install MariaDB-server MariaDB-client -y
+
+                  systemctl enable mariadb
+                  systemctl start mariadb
+                fi
+
 	fi
 
 	return 0
@@ -52,7 +73,13 @@ install_nginx() {
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
                   cd /tmp && wget http://nginx.org/keys/nginx_signing.key
-                  wget https://raw.githubusercontent.com/timscha/SLEMP/master/nginx_centos7.repo && mv /tmp/nginx_centos7.repo /etc/yum.repos.d/nginx.repo
+                  cat >/etc/yum.repos.d/nginx.repo <<EOL
+                  [nginx]
+                  name=nginx repo
+                  baseurl=http://nginx.org/packages/mainline/centos/7/$basearch/
+                  gpgcheck=0
+                  enabled=1
+EOL
                   rpm --import nginx_signing.key
                   yum update && yum install nginx
                   rm -f /tmp/nginx_signing.key
@@ -69,6 +96,7 @@ install_nginx() {
                 systemctl enable nginx
     fi
 }
+
 install_phpfpm() {
 if ! ps aux | grep 'php-fpm:' | grep -v 'grep'; then
     echo "#################################################################"
@@ -102,6 +130,7 @@ if ! ps aux | grep 'php-fpm:' | grep -v 'grep'; then
                 fi
 fi
 }
+
 install_letsencrypt() {
   if [ $DISTRO = "debian" ]; then
     apt update && apt install certbot -y

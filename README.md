@@ -17,8 +17,9 @@ Tested the first release with Debian only, things might be break on CentOS at th
 ## Installation
 
 ```
-git clone https://github.com/timscha/SLEMP.git
-cd SLEMP && chmod +x add_vhost.sh install_slemp.sh
+Be sure to be root!
+cd /root && wget https://github.com/timscha/SLEMP/archive/0.10.zip
+unzip 0.10.zip && cd SLEMP-0.10 && chmod +x add_vhost.sh install_slemp.sh
 ./install_slemp.sh
 ```
 
