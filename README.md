@@ -4,11 +4,9 @@ SLEMP stands for Secure LEMP.
 
 It will support latest versions of Debian (Stretch) and CentOS (7.x)
 
-Right now it's under development and not working!
+Why all the effort? Because I want to learn! Yes, at this moment the script is really stupid, but I hope that will change soon. :-)
 
-There are two basic scripts *install_slemp.sh* and *add_vhost.sh*.
-
-[...]
+Tested the first release with Debian only, things might be break on CentOS at the moment.
 
 ## Requirements
 
@@ -26,15 +24,17 @@ cd SLEMP && chmod +x add_vhost.sh install_slemp.sh
 
 ## Usage
 
-Coming later
+After installation you can add an Vhost with "./add_vhost.sh -d <YOUR_DOMAINNAME>"
+
+Please NOT adding WWW before your domain! After confirmation the script do the following:
+
+- Add an user for the Vhost, add an PHP-FPM pool
+- Requested a certifcate on Let's Encrypt
+- Add an Nginx config, compatible with Wordpress
 
 ## To Dos
 
 - Switching script to MariaDB instead of using MySQL
-- ~~nginx Installation~~
-- ~~php-fpm-Installation~~
-- ~~vhost-Configuration~~
-- ~~Using Let's Encrypt to secure the website~~
 - Adding Logrotation
-- Open_basedir
 - Subdomain support
+- Added rules for firewalld (Centos)
