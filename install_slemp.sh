@@ -42,7 +42,7 @@ install_mariadb(){
 EOL
 
                   rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-                  yum install MariaDB-server MariaDB-client -y
+                  yum update && yum install MariaDB-server MariaDB-client -y
                 fi
 
                 systemctl enable mariadb
@@ -173,7 +173,7 @@ then
     install_nginx
     install_phpfpm
     install_letsencrypt
-    #configure_nginx_basics
+    install_mariadb
     [ $? -ne "0" ] && exit 1
 fi
 
