@@ -13,7 +13,6 @@ fi
 
 install_mariadb(){
 
-	## Install required packages and configure global enviroment
 	if ! ps aux | grep -q '^mysql.*mysqld'; then
 		echo "#################################################################"
                 echo "# mysql server not running, MariaDB will now be installed"
@@ -23,12 +22,12 @@ install_mariadb(){
 
                 if [ $DISTRO = "debian" ]; then
                   # Add sources for debian from nginx website, import there key and install nginx
-                  apt-get install software-properties-common dirmngr
+                  apt-get install software-properties-common dirmngr -y
                   apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8
-                  add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian $(lsb_release -c -s) main'
+                  add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian stretch main'
 
                   apt-get update
-                  apt-get install mariadb-server -y
+                  apt-get install mariadb-server mariadb-client -y
                 fi
                 if [ $DISTRO = "centos" ]; then
                   # Add sources for debian from nginx website, import there key and install nginx
@@ -48,6 +47,33 @@ EOL
                 systemctl enable mariadb
                 systemctl start mariadb
                 # Next step is mysql_secure_installation
+
+                #echo "--> Wait 5s to boot up MySQL"
+                #sleep 5
+
+                #apt install expect -y
+
+                #SECURE_MYSQL=$(expect -c "
+                #set timeout 10
+                #spawn mysql_secure_installation
+                #expect \"Enter current password for root (enter for none):\"
+                #send \"$MYSQL\r\"
+                #expect \"Change the root password?\"
+                #send \"n\r\"
+                #expect \"Remove anonymous users?\"
+                #send \"y\r\"
+                #expect \"Disallow root login remotely?\"
+                #send \"y\r\"
+                #expect \"Remove test database and access to it?\"
+                #send \"y\r\"
+                #expect \"Reload privilege tables now?\"
+                #send \"y\r\"
+                #expect eof
+                #")
+
+                #echo "$SECURE_MYSQL"
+
+                #apt remove --purge expect -y
 
 	fi
 
@@ -91,10 +117,17 @@ EOL
                 echo "net.core.netdev_max_backlog=4096" >> /etc/sysctl.conf
                 echo "net.core.somaxconn=4096" >> /etc/sysctl.conf
                 echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf
-                sysctl -p # Änderungen einlesen
+                sysctl -p
 
                 systemctl start nginx
                 systemctl enable nginx
+
+                # Adding firewall rules for nginx
+                if [ $DISTRO = "centos" ]; then
+                  firewall-cmd --permanent --zone=public --add-service=http
+                  firewall-cmd --permanent --zone=public --add-service=https
+                  firewall-cmd --reload
+                fi
     fi
 }
 
