@@ -173,6 +173,7 @@ FORCE="no"
 while getopts 'd:t:fh' option; do
 	case $option in
 	d)	WP_DOMAIN_FULL=$OPTARG;;
+  m)  MYSQL_ROOT_PASS=$OPTARG;;
   t)  TASKS=$OPTARG;;
 	f)	FORCE="yes";;
 	h)	usage

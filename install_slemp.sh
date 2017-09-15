@@ -22,12 +22,39 @@ install_mariadb(){
 
                 if [ $DISTRO = "debian" ]; then
                   # Add sources for debian from nginx website, import there key and install nginx
-                  apt-get install software-properties-common dirmngr -y
+                  apt install software-properties-common dirmngr -y
                   apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8
                   add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian stretch main'
 
-                  apt-get update
-                  apt-get install mariadb-server mariadb-client -y
+                  apt update
+                  DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server mariadb-client -y
+
+                  apt -y expect
+
+                  expect -f - <<-EOF
+                  set timeout 10
+                  spawn mysql_secure_installation
+                  expect "Enter current password for root (enter for none):"
+                  send -- "\r"
+                  expect "Set root password?"
+                  send -- "y\r"
+                  expect "New password:"
+                  send -- "${MYSQL_ROOT_PASS}\r"
+                  expect "Re-enter new password:"
+                  send -- "${MYSQL_ROOT_PASS}\r"
+                  expect "Remove anonymous users?"
+                  send -- "y\r"
+                  expect "Disallow root login remotely?"
+                  send -- "y\r"
+                  expect "Remove test database and access to it?"
+                  send -- "y\r"
+                  expect "Reload privilege tables now?"
+                  send -- "y\r"
+                  expect eof
+EOF
+
+                  apt -y --purge expect
+
                 fi
                 if [ $DISTRO = "centos" ]; then
                   # Add sources for debian from nginx website, import there key and install nginx
@@ -47,33 +74,6 @@ EOL
                 systemctl enable mariadb
                 systemctl start mariadb
                 # Next step is mysql_secure_installation
-
-                #echo "--> Wait 5s to boot up MySQL"
-                #sleep 5
-
-                #apt install expect -y
-
-                #SECURE_MYSQL=$(expect -c "
-                #set timeout 10
-                #spawn mysql_secure_installation
-                #expect \"Enter current password for root (enter for none):\"
-                #send \"$MYSQL\r\"
-                #expect \"Change the root password?\"
-                #send \"n\r\"
-                #expect \"Remove anonymous users?\"
-                #send \"y\r\"
-                #expect \"Disallow root login remotely?\"
-                #send \"y\r\"
-                #expect \"Remove test database and access to it?\"
-                #send \"y\r\"
-                #expect \"Reload privilege tables now?\"
-                #send \"y\r\"
-                #expect eof
-                #")
-
-                #echo "$SECURE_MYSQL"
-
-                #apt remove --purge expect -y
 
 	fi
 
@@ -145,7 +145,7 @@ if ! ps aux | grep 'php-fpm:' | grep -v 'grep'; then
                   rm /tmp/php.gpg
                   apt-get update
 
-                  apt install php7.0-fpm php7.0-mysql php7.0-gd -y # more to come
+                  apt install php7.0-fpm php7.0-mysql php7.0-gd php7.0-curl php7.0-mbstring php7.0-mcrypt php7.0-xml php7.0-xmlrpc -y # more to come
                   # Start all these things...
                   systemctl start php7.0-fpm
                   systemctl enable php7.0-fpm
@@ -156,7 +156,7 @@ if ! ps aux | grep 'php-fpm:' | grep -v 'grep'; then
                   yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
                   yum install yum-utils -y
 
-                  yum install php70-php-fpm php70-php-mysql php70-php-gd -y # more to come
+                  yum install php70-php-fpm php70-php-mysql php70-php-gd php70-php-curl php70-php-mbstring php70-php-mcrypt php70-php-xml php70-php-xmlrpc -y # more to come
                   # Start all these things...
                   systemctl start php70-php-fpm
                   systemctl enable php70-php-fpm
@@ -218,6 +218,9 @@ echo <<EOF "
 # Next step is using add_vhost.sh to configure
 # php-fpm-pool, nginx, add an ssl certifcate
 # Configure the DB and finally install Wordpress.
+#
+# !!!YOUR MYSQL-ROOT-PASSWORD: $MYSQL_ROOT_PASS
+# Be sure to safe it on a safe place
 #
 # Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
 #
