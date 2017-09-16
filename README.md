@@ -28,7 +28,7 @@ Please safe your MySQL root password on a safe place! This will show you at the 
 ## Usage
 
 After installation you can add an Vhost with
-"./add_vhost.sh -d <YOUR_DOMAINNAME>" -m <Your MySQL-Root_Password>
+"./add_vhost.sh -d <YOUR_DOMAINNAME> -m <Your_MariaDB_Root_Password>
 
 Please NOT adding WWW before your domain! After confirmation the script do the following:
 
