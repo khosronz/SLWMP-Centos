@@ -18,8 +18,8 @@ Tested this with Debian only at the moment, things might be break on CentOS at t
 
 ```
 Be sure to be root!
-cd /root && wget https://github.com/timscha/SLEMP/archive/0.10.zip
-unzip 0.10.zip && cd SLEMP-0.10 && chmod +x add_vhost.sh install_slemp.sh
+cd /root && wget https://github.com/timscha/SLEMP/archive/0.20.0.zip
+unzip 0.10.zip && cd SLEMP-0.20.0 && chmod +x add_vhost.sh install_slemp.sh
 ./install_slemp.sh
 ```
 
