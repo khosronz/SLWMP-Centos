@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.2.0-alpa
+# Version 0.2.0
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -69,6 +69,32 @@ EOL
 
                   rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
                   yum update && yum install MariaDB-server MariaDB-client -y
+
+                  yum install expect -y
+
+                  expect -f - <<-EOF
+                  set timeout 10
+                  spawn mysql_secure_installation
+                  expect "Enter current password for root (enter for none):"
+                  send -- "\r"
+                  expect "Set root password?"
+                  send -- "y\r"
+                  expect "New password:"
+                  send -- "${MYSQL_ROOT_PASS}\r"
+                  expect "Re-enter new password:"
+                  send -- "${MYSQL_ROOT_PASS}\r"
+                  expect "Remove anonymous users?"
+                  send -- "y\r"
+                  expect "Disallow root login remotely?"
+                  send -- "y\r"
+                  expect "Remove test database and access to it?"
+                  send -- "y\r"
+                  expect "Reload privilege tables now?"
+                  send -- "y\r"
+                  expect eof
+EOF
+
+                  yum remove expect -y
                 fi
 
                 systemctl enable mariadb

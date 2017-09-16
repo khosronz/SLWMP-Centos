@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.1.0
+# Version 0.2.0
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -188,7 +188,7 @@ WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
 WP_LOCATION_USER_OWNER=$WP_DOMAINNAME
 WP_DB_USER=$WP_DOMAINNAME'_usr'
 WP_DB_DATABASE=$WP_DOMAINNAME
-WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
+WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
 WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
 WP_ROOTLOCATION="/var/www/$WP_DOMAIN_FULL"
 # sanity checks, will be addded again later maybe
