@@ -230,8 +230,7 @@ EOF
   configure_fpm_pool
   configure_letsencrypt_domain
   configure_nginx_vhost
-  #coming later
-  #configure_database
+  configure_database
   # Wordpress
 
 	[ $? -ne "0" ] && exit 1

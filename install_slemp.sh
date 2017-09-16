@@ -29,7 +29,7 @@ install_mariadb(){
                   apt update
                   DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server mariadb-client -y
 
-                  apt -y expect
+                  apt install expect -y
 
                   expect -f - <<-EOF
                   set timeout 10
@@ -53,7 +53,7 @@ install_mariadb(){
                   expect eof
 EOF
 
-                  apt -y --purge expect
+                  apt remove --purge expect -y
 
                 fi
                 if [ $DISTRO = "centos" ]; then
