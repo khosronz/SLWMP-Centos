@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.2.0
+# Version 0.3.0-alpha
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -30,6 +30,23 @@ configure_nginx_vhost(){
   mkdir /var/www/$WP_DOMAIN_FULL/logs
 
   chown -R $WP_LOCATION_USER_OWNER: $WP_ROOTLOCATION
+
+  # Logrotation for nginx
+  cat >> /etc/logrotate.d/nginx <<EOL
+  /var/log/www/$WP_DOMAIN_FULL/logs/*.log {
+          daily
+          copytruncate
+          missingok
+          notifempty
+          compress
+          delaycompress
+          postrotate
+                  if [ -f /var/run/nginx.pid ]; then
+                          kill -USR1 `cat /var/run/nginx.pid`
+                  fi
+          endscript
+  }
+EOL
 
   systemctl restart nginx
 
@@ -75,7 +92,6 @@ install_wordpress(){
 		echo "#################################################################"
 		echo "# Directory $WP_LOCATION already exists, move away and proceed? (Ctrl-c to abort)"
 		echo "#################################################################"
-		[ $FORCE = "no" ] && read
 		mv -v $WP_LOCATION $WP_LOCATION.$(date '+%s')
 	fi
 	mv /tmp/wordpress $WP_LOCATION
@@ -108,7 +124,6 @@ configure_database(){
 #################################################################
 "
 EOFMW
-	[ $FORCE = "no" ] && read
 
 	mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $WP_DB_DATABASE ;
 CREATE DATABASE $WP_DB_DATABASE;
@@ -145,6 +160,7 @@ is provided as it is, no warraties implied.
 
 Options:
  -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
+ -m <your_mysql_root_pw> You have to specify your mysql root password if you want to add an database
  -f			force the install, prompts in error/warnings are disabled.
  -h			this Help
 
@@ -167,7 +183,6 @@ WP_DOMAIN=$(hostname)
 NGINX_USER="nginx"
 
 TASKS="all"
-FORCE="no"
 
 ## Parse args and execute tasks
 while getopts 'd:t:fh' option; do
@@ -214,33 +229,31 @@ echo <<EOF "
 # MyMySQL database: $WP_DB_DATABASE
 # Location owner: $WP_LOCATION_USER_OWNER
 #
+# Make sure you have a DNS record $WP_DOMAIN (with and without www. pointing to the server ip.
+#
 #################################################################
 "
 EOF
 
-if [ $TASKS = "all" ]; then
-	echo <<EOF "
-$(basename $0) will attempt to configure all configurations for your vhost,
+echo <<EOF "
+$(basename $0) will attempt to add the config files for your vhost,
 it will generate random passwords and the relevant ones will be informed.
+Also an Let's Encrypt certifcate for your vhost will be requested.
 This script is provided as it is, no warraties implied. (Ctrl-c to abort)
 "
 EOF
-	[ $FORCE = "no" ] && read
 
-  configure_fpm_pool
-  configure_letsencrypt_domain
-  configure_nginx_vhost
-  configure_database
-  # Wordpress
-
-	[ $? -ne "0" ] && exit 1
-
-else
-	for t in $( echo $TASKS | tr ',' ' '); do
-		$t
-	done
+read -p "Do you want to add the vhost? y/n" -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    configure_fpm_pool
+    configure_letsencrypt_domain
+    configure_nginx_vhost
+    configure_database
+    configure_wordpress
+    [ $? -ne "0" ] && exit 1
 fi
-
 
 echo <<EOF "
 #################################################################
@@ -254,8 +267,7 @@ echo <<EOF "
 # MyMySQL database: $WP_DB_DATABASE
 # Location owner: $WP_LOCATION_USER_OWNER
 #
-# Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
-# Finish the setup by going to https://$WP_DOMAIN and complete the famous five
+# Finish the wordpress setup by going to https://$WP_DOMAIN and complete the famous five
 # minute WordPress installation process.
 #
 # Note: In case the $WP_DOMAIN is matching the server hostname (overlaping default site config),

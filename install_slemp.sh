@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.2.0
+# Version 0.3.0-alpha
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -225,8 +225,8 @@ This script is provided as it is, no warraties implied.
 "
 EOF
 
-read -p "Do you want to start the installation? " -n 1 -r
-echo    # (optional) move to a new line
+read -p "Do you want to start the installation? y/n" -n 1 -r
+echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     install_nginx
