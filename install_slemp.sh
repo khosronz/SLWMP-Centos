@@ -11,9 +11,24 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
+servicesCheck(){
+ps cax | grep $1 > /dev/null
+if [ $? -eq 0 ]; then
+  return 1
+else
+  return 0
+fi
+}
+
+#if servicesCheck "nginx"; then
+#echo "fail"
+#else
+#echo "laeft"
+#fi
+
 install_mariadb(){
 
-	if ! ps aux | grep -q '^mysql.*mysqld'; then
+	if servicesCheck "mysql"; then
 		echo "#################################################################"
                 echo "# mysql server not running, MariaDB will now be installed"
                 echo "#################################################################"
@@ -107,7 +122,7 @@ EOF
 }
 
 install_nginx() {
-    if ! ps aux | grep -q '^nginx'; then
+    if servicesCheck "nginx"; then
 		echo "#################################################################"
                 echo "# nginx server not running, attempt to install? (Ctrl-c to abort)"
                 echo "#################################################################"
@@ -158,9 +173,9 @@ EOL
 }
 
 install_phpfpm() {
-if ! ps aux | grep 'php-fpm:' | grep -v 'grep'; then
+if servicesCheck "php-fpm"; then
     echo "#################################################################"
-                echo "# php-fpm proccess not running, attempt to install? (Ctrl-c to abort)"
+                echo "# php-fpm proccess not running, will now be installed"
                 echo "#################################################################"
 
                 if [ $DISTRO = "debian" ]; then
