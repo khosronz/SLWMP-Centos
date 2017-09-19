@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.3.0-alpha
+# Version 0.3.0-beta
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -162,13 +162,6 @@ EOL
 
                 systemctl start nginx
                 systemctl enable nginx
-
-                # Adding firewall rules for nginx
-                if [ $DISTRO = "centos" ]; then
-                  firewall-cmd --permanent --zone=public --add-service=http
-                  firewall-cmd --permanent --zone=public --add-service=https
-                  firewall-cmd --reload
-                fi
     fi
 }
 
@@ -218,6 +211,19 @@ install_letsencrypt() {
 
   return 0
 }
+configure_centos() {
+  # Firewalld rules for nginx
+  echo "Configure some CentOS related things..."
+  echo "Adding firewalld rules for nginx"
+  firewall-cmd --permanent --zone=public --add-service=http
+  firewall-cmd --permanent --zone=public --add-service=https
+  firewall-cmd --reload
+  # Disabling SELINUX for now
+  echo "Disabling SELINUX..."
+  sed -i 's/enforcing/disabled/g' /etc/selinux/config /etc/selinux/config
+
+  return 0
+}
 
 echo <<EOF "
 #################################################################
@@ -229,6 +235,8 @@ echo <<EOF "
 # nginx, MariaDB (later), php-fpm and Let's Encrypt.
 # It using in most cases the repos of the original developer
 # For PHP it using reliable repositories.
+#
+# ATTENTION CentOS users: This script will deactivate SELINUX!
 #
 #################################################################
 "
@@ -248,6 +256,9 @@ then
     install_phpfpm
     install_letsencrypt
     install_mariadb
+    if [ $DISTRO = "centos" ]; then
+      configure_centos
+    fi
     [ $? -ne "0" ] && exit 1
 fi
 
@@ -260,8 +271,9 @@ echo <<EOF "
 # php-fpm-pool, nginx, add an ssl certifcate
 # Configure the DB and finally install Wordpress.
 #
-# !!!YOUR MYSQL-ROOT-PASSWORD: $MYSQL_ROOT_PASS
+# !!! YOUR MYSQL-ROOT-PASSWORD: $MYSQL_ROOT_PASS !!!
 # Be sure to safe it on a safe place
+# CentOS users have to restart their server to apply the changes to SELINUX!
 #
 # Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
 #

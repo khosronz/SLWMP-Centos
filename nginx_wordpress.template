@@ -8,8 +8,8 @@ server {
 
 	root WP_LOCATION;
 	client_max_body_size 100m;
-	access_log /var/www/WP_DOMAIN_FULL/logs/access_log;
-	error_log /var/www/WP_DOMAIN_FULL/logs/error_log;
+	access_log /var/www/WP_DOMAIN_FULL/logs/access.log;
+	error_log /var/www/WP_DOMAIN_FULL/logs/error.log;
 	index index.php;
 
 	server_name WP_DOMAIN_FULL www.WP_DOMAIN_FULL;
