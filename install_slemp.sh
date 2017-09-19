@@ -74,16 +74,16 @@ EOF
                 if [ $DISTRO = "centos" ]; then
                   # Add sources for debian from nginx website, import there key and install nginx
 
-                  cat >/etc/yum.repos.d/MariaDB.repo <<EOL
-                  [mariadb]
-                  name = MariaDB
-                  baseurl = http://yum.mariadb.org/10.2/centos7-amd64
-                  gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-                  gpgcheck=1
+cat >/etc/yum.repos.d/MariaDB.repo <<EOL
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.2/centos7-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
 EOL
 
                   rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-                  yum update && yum install MariaDB-server MariaDB-client -y
+                  yum update -y && yum install MariaDB-server MariaDB-client -y
 
                   yum install expect -y
 
@@ -141,15 +141,15 @@ install_nginx() {
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
                   cd /tmp && wget http://nginx.org/keys/nginx_signing.key
-                  cat >/etc/yum.repos.d/nginx.repo <<EOL
-                  [nginx]
-                  name=nginx repo
-                  baseurl=http://nginx.org/packages/mainline/centos/7/$basearch/
-                  gpgcheck=0
-                  enabled=1
-EOL
                   rpm --import nginx_signing.key
-                  yum update && yum install nginx
+cat >/etc/yum.repos.d/nginx.repo <<EOL
+[nginx]
+name=nginx repo
+baseurl=http://nginx.org/packages/mainline/centos/7/\$basearch/
+gpgcheck=0
+enabled=1
+EOL
+                  yum update -y && yum install nginx
                   rm -f /tmp/nginx_signing.key
                 fi
                 # First, we not longer show nginx used version
@@ -188,7 +188,7 @@ if servicesCheck "php-fpm"; then
                   # Using Remis Repo https://rpms.remirepo.net/
                   yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
                   yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
-                  yum install yum-utils -y
+                  yum update -y && yum install yum-utils -y
 
                   yum install php70-php-fpm php70-php-mysql php70-php-gd php70-php-curl php70-php-mbstring php70-php-mcrypt php70-php-xml php70-php-xmlrpc -y # more to come
                   # Start all these things...
@@ -204,7 +204,7 @@ install_letsencrypt() {
     apt update && apt install certbot -y
   fi
   if [ $DISTRO = "centos" ]; then
-    yum update && yum install certboy -y
+    yum update && yum install certbot -y
   fi
   # Cronjob for renewals
   echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
