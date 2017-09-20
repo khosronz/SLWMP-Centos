@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.3.0-beta
+# Version 0.3.0
 
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 1>&2
@@ -91,6 +91,9 @@ EOL
                   rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
                   yum update -y && yum install MariaDB-server MariaDB-client expect -y
 
+                  systemctl enable mariadb
+                  systemctl start mariadb
+
                   SECURE_MYSQL=$(expect -c "
 
                   set timeout 3
@@ -118,6 +121,10 @@ EOL
                   yum remove expect -y
 
                 fi
+  else
+    echo "#################################################################"
+                echo "# mysql server running, skipping installation..."
+                echo "#################################################################"
 	fi
 
 	return 0
@@ -126,7 +133,7 @@ EOL
 install_nginx() {
     if servicesCheck "nginx"; then
 		echo "#################################################################"
-                echo "# nginx server not running, attempt to install? (Ctrl-c to abort)"
+                echo "# nginx server not running, will now be installed..."
                 echo "#################################################################"
 
                 if [ $DISTRO = "debian" ]; then
@@ -137,8 +144,6 @@ install_nginx() {
                   rm /tmp/nginx_signing.key
                   apt update && apt install nginx
 
-                  # Because default path for nginx is /usr/share we have to add www
-                  mkdir /var/www
               	fi
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
@@ -154,6 +159,7 @@ EOL
                   yum update -y && yum install nginx -y
                   rm -f /tmp/nginx_signing.key
                 fi
+                mkdir /var/www
                 # First, we not longer show nginx used version
                 sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
                 # Next, we changed some backlog variables
@@ -164,6 +170,10 @@ EOL
 
                 systemctl start nginx
                 systemctl enable nginx
+    else
+      echo "#################################################################"
+                  echo "# nginx server running, skipping installation..."
+                  echo "#################################################################"
     fi
 }
 
@@ -198,6 +208,10 @@ if servicesCheck "php-fpm"; then
                   systemctl enable php70-php-fpm
                   return 0
                 fi
+else
+  echo "#################################################################"
+              echo "# php-fpm server running, skipping installation..."
+              echo "#################################################################"
 fi
 }
 
@@ -238,7 +252,7 @@ echo <<EOF "
 # It using in most cases the repos of the original developer
 # For PHP it using reliable repositories.
 #
-# ATTENTION CentOS users: This script will deactivate SELINUX!
+# $(tput setaf 1)ATTENTION CentOS users: This script will deactivate SELINUX!$(tput sgr0)
 #
 #################################################################
 "
@@ -273,9 +287,9 @@ echo <<EOF "
 # php-fpm-pool, nginx, add an ssl certifcate
 # Configure the DB and finally install Wordpress.
 #
-# !!! YOUR MYSQL-ROOT-PASSWORD: $MYSQL_ROOT_PASS !!!
+# $(tput setaf 1)!!! YOUR MYSQL-ROOT-PASSWORD: $MYSQL_ROOT_PASS !!!$(tput sgr0)
 # Be sure to safe it on a safe place
-# CentOS users have to restart their server to apply the changes to SELINUX!
+# $(tput setaf 1)CentOS users have to restart their server to apply the changes to SELINUX!$(tput sgr0)
 #
 # Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
 #
