@@ -5,7 +5,7 @@
 # Version 0.3.0
 
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 1>&2
+   echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
    exit 1
 fi
 
@@ -34,9 +34,9 @@ fi
 install_mariadb(){
 
 	if servicesCheck "mysql"; then
-		echo "#################################################################"
+		echo "$(tput setaf 2)#################################################################"
                 echo "# mysql server not running, MariaDB will now be installed"
-                echo "#################################################################"
+                echo "#################################################################$(tput sgr0)"
 
                 MYSQL_ROOT_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14)
 
@@ -122,7 +122,7 @@ EOL
 
                 fi
   else
-    echo "#################################################################"
+    echo "$(tput setaf 1)#################################################################"
                 echo "# mysql server running, skipping installation..."
                 echo "#################################################################"
 	fi
@@ -132,9 +132,9 @@ EOL
 
 install_nginx() {
     if servicesCheck "nginx"; then
-		echo "#################################################################"
+		echo "$(tput setaf 2)#################################################################"
                 echo "# nginx server not running, will now be installed..."
-                echo "#################################################################"
+                echo "#################################################################$(tput sgr0)"
 
                 if [ $DISTRO = "debian" ]; then
                   # Add sources for debian from nginx website, import there key and install nginx
@@ -171,15 +171,15 @@ EOL
                 systemctl start nginx
                 systemctl enable nginx
     else
-      echo "#################################################################"
+      echo "$(tput setaf 1)#################################################################"
                   echo "# nginx server running, skipping installation..."
-                  echo "#################################################################"
+                  echo "#################################################################$(tput sgr0)"
     fi
 }
 
 install_phpfpm() {
 if servicesCheck "php-fpm"; then
-    echo "#################################################################"
+    echo "$(tput setaf 2)#################################################################"
                 echo "# php-fpm proccess not running, will now be installed"
                 echo "#################################################################"
 
@@ -209,9 +209,9 @@ if servicesCheck "php-fpm"; then
                   return 0
                 fi
 else
-  echo "#################################################################"
+  echo "$(tput setaf 1)#################################################################"
               echo "# php-fpm server running, skipping installation..."
-              echo "#################################################################"
+              echo "#################################################################$(tput sgr0)"
 fi
 }
 

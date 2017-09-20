@@ -2,11 +2,10 @@
 
 SLEMP stands for Secure LEMP.
 
-It will support latest versions of Debian (Stretch) and CentOS (7.x)
+It will support latest versions of Debian (Stretch) and CentOS (7.x). Successfully tested on both systems.
 
 Why all the effort? Because I want to learn! Yes, at this moment the script is really stupid, but I hope that will change soon. :-)
 
-Tested this with Debian only at the moment, things might be break on CentOS at the moment. It is necessary to configure selinux.
 
 ## Requirements
 
@@ -19,7 +18,7 @@ Tested this with Debian only at the moment, things might be break on CentOS at t
 ```
 Be sure to be root!
 cd /root && wget https://github.com/timscha/SLEMP/archive/0.2.0.zip
-unzip 0.10.zip && cd SLEMP-0.2.0 && chmod +x add_vhost.sh install_slemp.sh
+unzip 0.3.0.zip && cd SLEMP-0.3.0 && chmod +x add_vhost.sh install_slemp.sh
 ./install_slemp.sh
 ```
 
@@ -28,16 +27,18 @@ Please safe your MySQL root password on a safe place! This will show you at the 
 ## Usage
 
 After installation you can add an Vhost with
-"./add_vhost.sh -d <YOUR_DOMAINNAME> -m <Your_MariaDB_Root_Password>
+"./add_vhost.sh -d <YOUR_DOMAINNAME> -m <Your_MariaDB_Root_Password> -s wordpress
 
-Please NOT adding WWW before your domain! After confirmation the script do the following:
+Please NOT adding WWW before your domain!
+
+After confirmation the script do the following:
 
 - Add an user for the Vhost, add an PHP-FPM pool
 - Requested a certifcate from Let's Encrypt
-- Add a Nginx config, compatible with Wordpress
+- Add a Nginx config + Logrotation, compatible with Wordpress
 - Add an MySQL database and user
+- If you use the -s paramter, wordpress will be downloaded and the configuration will be prepared.
 
 ## To Dos
 
-- Adding Logrotation
 - Subdomain support

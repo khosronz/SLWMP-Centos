@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.3.0-alpha
+# Version 0.3.0
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -30,6 +30,7 @@ configure_nginx_vhost(){
   mkdir /var/www/$WP_DOMAIN_FULL/logs
 
   chown -R $WP_LOCATION_USER_OWNER: $WP_ROOTLOCATION
+  chmod 755 $WP_ROOTLOCATION
 
   # Logrotation for nginx
   cat >> /etc/logrotate.d/nginx <<EOL
@@ -63,21 +64,44 @@ configure_fpm_pool(){
   if [ $DISTRO = "debian" ]; then
     cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
 
-    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
-    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAIN.conf
+    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
 
     systemctl restart php7.0-fpm
   fi
   if [ $DISTRO = "centos" ]; then
     cp phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
 
-    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAIN.conf
-    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAIN.conf
+    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
 
     systemctl restart php70-php-fpm
   fi
 
 	return 0
+}
+
+configure_database(){
+	echo <<EOFMW "
+#################################################################
+#
+# $0 is about to create the mysql database called '$WP_DB_DATABASE',
+# and also will setup a mysql database user '$WP_DB_USER'.
+#
+#
+# Warning: if the database exists it will be dropped, if the user
+# exists the password will be reset. (Ctrl-c to abort)
+#
+# Please provide the mysql root password if required
+#################################################################
+"
+EOFMW
+
+	mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $WP_DB_DATABASE ;
+CREATE DATABASE $WP_DB_DATABASE;
+GRANT ALL PRIVILEGES ON $WP_DB_DATABASE.* TO '$WP_DB_USER'@'localhost' IDENTIFIED BY '$WP_DB_PASS';
+FLUSH PRIVILEGES;"
+EOSQL
 }
 
 install_wordpress(){
@@ -107,29 +131,6 @@ install_wordpress(){
 	chown -R $WP_LOCATION_USER_OWNER: $WP_LOCATION/wp-content $WP_LOCATION/robots.txt
 
 	return 0
-}
-
-configure_database(){
-	echo <<EOFMW "
-#################################################################
-#
-# $0 is about to create the mysql database called '$WP_DB_DATABASE',
-# and also will setup a mysql database user '$WP_DB_USER'.
-#
-#
-# Warning: if the database exists it will be dropped, if the user
-# exists the password will be reset. (Ctrl-c to abort)
-#
-# Please provide the mysql root password if required
-#################################################################
-"
-EOFMW
-
-	mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $WP_DB_DATABASE ;
-CREATE DATABASE $WP_DB_DATABASE;
-GRANT ALL PRIVILEGES ON $WP_DB_DATABASE.* TO '$WP_DB_USER'@'localhost' IDENTIFIED BY '$WP_DB_PASS';
-FLUSH PRIVILEGES;"
-EOSQL
 }
 
 configure_wordpress(){
@@ -178,17 +179,16 @@ USAGE
 }
 
 ## Initialization variables
-WP_DOMAIN=$(hostname)
 
 NGINX_USER="nginx"
-
 TASKS="all"
 
 ## Parse args and execute tasks
-while getopts 'd:t:fh' option; do
+while getopts 'd:s:t:fh' option; do
 	case $option in
 	d)	WP_DOMAIN_FULL=$OPTARG;;
   m)  MYSQL_ROOT_PASS=$OPTARG;;
+  s)  SELECTED_SYSTEM=$OPTARG;;
   t)  TASKS=$OPTARG;;
 	f)	FORCE="yes";;
 	h)	usage
@@ -251,7 +251,10 @@ then
     configure_letsencrypt_domain
     configure_nginx_vhost
     configure_database
-    configure_wordpress
+    if [ $SELECTED_SYSTEM = "wordpress" ]; then
+      install_wordpress
+      configure_wordpress
+    fi
     [ $? -ne "0" ] && exit 1
 fi
 
