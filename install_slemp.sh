@@ -4,6 +4,11 @@
 # Copyright 2017 Tim Scharner (https://scharner.me)
 # Version 0.3.0-beta
 
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
      DISTRO="centos"
@@ -41,13 +46,14 @@ install_mariadb(){
                   apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8
                   add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian stretch main'
 
-                  apt update
+                  apt update && apt install expect -y
                   DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server mariadb-client -y
 
-                  apt install expect -y
+                  systemctl enable mariadb
+                  systemctl start mariadb
 
                   expect -f - <<-EOF
-                  set timeout 10
+                  set timeout 3
                   spawn mysql_secure_installation
                   expect "Enter current password for root (enter for none):"
                   send -- "\r"
@@ -83,39 +89,35 @@ gpgcheck=1
 EOL
 
                   rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-                  yum update -y && yum install MariaDB-server MariaDB-client -y
+                  yum update -y && yum install MariaDB-server MariaDB-client expect -y
 
-                  yum install expect -y
+                  SECURE_MYSQL=$(expect -c "
 
-                  expect -f - <<-EOF
-                  set timeout 10
+                  set timeout 3
                   spawn mysql_secure_installation
-                  expect "Enter current password for root (enter for none):"
-                  send -- "\r"
-                  expect "Set root password?"
-                  send -- "y\r"
-                  expect "New password:"
-                  send -- "${MYSQL_ROOT_PASS}\r"
-                  expect "Re-enter new password:"
-                  send -- "${MYSQL_ROOT_PASS}\r"
-                  expect "Remove anonymous users?"
-                  send -- "y\r"
-                  expect "Disallow root login remotely?"
-                  send -- "y\r"
-                  expect "Remove test database and access to it?"
-                  send -- "y\r"
-                  expect "Reload privilege tables now?"
-                  send -- "y\r"
+                  expect \"Enter current password for root (enter for none):\"
+                  send \"\r\"
+                  expect \"root password?\"
+                  send \"y\r\"
+                  expect \"New password:\"
+                  send \"$MYSQL_ROOT_PASS\r\"
+                  expect \"Re-enter new password:\"
+                  send \"$MYSQL_ROOT_PASS\r\"
+                  expect \"Remove anonymous users?\"
+                  send \"y\r\"
+                  expect \"Disallow root login remotely?\"
+                  send \"y\r\"
+                  expect \"Remove test database and access to it?\"
+                  send \"y\r\"
+                  expect \"Reload privilege tables now?\"
+                  send \"y\r\"
                   expect eof
-EOF
+                  ")
+                  echo "${SECURE_MYSQL}"
 
                   yum remove expect -y
+
                 fi
-
-                systemctl enable mariadb
-                systemctl start mariadb
-                # Next step is mysql_secure_installation
-
 	fi
 
 	return 0
@@ -149,7 +151,7 @@ baseurl=http://nginx.org/packages/mainline/centos/7/\$basearch/
 gpgcheck=0
 enabled=1
 EOL
-                  yum update -y && yum install nginx
+                  yum update -y && yum install nginx -y
                   rm -f /tmp/nginx_signing.key
                 fi
                 # First, we not longer show nginx used version
