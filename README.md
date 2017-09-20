@@ -27,9 +27,14 @@ Please safe your MySQL root password on a safe place! This will show you at the 
 ## Usage
 
 After installation you can add an Vhost with
-"./add_vhost.sh -d <YOUR_DOMAINNAME> -m <Your_MariaDB_Root_Password> -s wordpress
 
-Please NOT adding WWW before your domain!
+```
+./add_vhost.sh -d <YOUR_DOMAINNAME> -m <Your_MariaDB_Root_Password> -s wordpress
+```
+
+"-s wordpress" is optional
+
+Please NOT adding WWW before your domain! The script will do this for you!
 
 After confirmation the script do the following:
 
