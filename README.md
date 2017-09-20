@@ -17,7 +17,7 @@ Why all the effort? Because I want to learn! Yes, at this moment the script is r
 
 ```
 Be sure to be root!
-cd /root && wget https://github.com/timscha/SLEMP/archive/0.2.0.zip
+cd /root && wget https://github.com/timscha/SLEMP/archive/0.3.0.zip
 unzip 0.3.0.zip && cd SLEMP-0.3.0 && chmod +x add_vhost.sh install_slemp.sh
 ./install_slemp.sh
 ```
