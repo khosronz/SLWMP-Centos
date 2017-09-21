@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.3.0
+# Version 0.3.1
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -159,7 +159,9 @@ EOL
                   yum update -y && yum install nginx -y
                   rm -f /tmp/nginx_signing.key
                 fi
-                mkdir /var/www
+                if [ ! -d "/var/www" ]; then
+                  mkdir /var/www
+                fi
                 # First, we not longer show nginx used version
                 sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
                 # Next, we changed some backlog variables
@@ -167,6 +169,8 @@ EOL
                 echo "net.core.somaxconn=4096" >> /etc/sysctl.conf
                 echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf
                 sysctl -p
+
+                openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
 
                 systemctl start nginx
                 systemctl enable nginx
@@ -181,7 +185,7 @@ install_phpfpm() {
 if servicesCheck "php-fpm"; then
     echo "$(tput setaf 2)#################################################################"
                 echo "# php-fpm proccess not running, will now be installed"
-                echo "#################################################################"
+                echo "#################################################################$(tput sgr0)"
 
                 if [ $DISTRO = "debian" ]; then
                   #We will using sources from https://deb.sury.org/
@@ -191,10 +195,10 @@ if servicesCheck "php-fpm"; then
                   rm /tmp/php.gpg
                   apt-get update
 
-                  apt install php7.0-fpm php7.0-mysql php7.0-gd php7.0-curl php7.0-mbstring php7.0-mcrypt php7.0-xml php7.0-xmlrpc -y # more to come
+                  apt install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y
                   # Start all these things...
-                  systemctl start php7.0-fpm
-                  systemctl enable php7.0-fpm
+                  systemctl start php7.1-fpm
+                  systemctl enable php7.1-fpm
                 fi
                 if [ $DISTRO = "centos" ]; then
                   # Using Remis Repo https://rpms.remirepo.net/
@@ -202,10 +206,10 @@ if servicesCheck "php-fpm"; then
                   yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
                   yum update -y && yum install yum-utils -y
 
-                  yum install php70-php-fpm php70-php-mysql php70-php-gd php70-php-curl php70-php-mbstring php70-php-mcrypt php70-php-xml php70-php-xmlrpc -y # more to come
+                  yum install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip -y
                   # Start all these things...
-                  systemctl start php70-php-fpm
-                  systemctl enable php70-php-fpm
+                  systemctl start php71-php-fpm
+                  systemctl enable php71-php-fpm
                   return 0
                 fi
 else
@@ -252,7 +256,11 @@ echo <<EOF "
 # It using in most cases the repos of the original developer
 # For PHP it using reliable repositories.
 #
-# $(tput setaf 1)ATTENTION CentOS users: This script will deactivate SELINUX!$(tput sgr0)
+# $(tput setaf 1)Be warned:
+# The installation need time, because we will generate a 4096 bit key for Diffie-Hellman!$(tput sgr0)
+#
+# $(tput setaf 1)ATTENTION CentOS users: This script will DEACTIVATE SELinux!
+# You have to restart your server after installation!$(tput sgr0)
 #
 #################################################################
 "
@@ -289,7 +297,7 @@ echo <<EOF "
 #
 # $(tput setaf 1)!!! YOUR MYSQL-ROOT-PASSWORD: $MYSQL_ROOT_PASS !!!$(tput sgr0)
 # Be sure to safe it on a safe place
-# $(tput setaf 1)CentOS users have to restart their server to apply the changes to SELINUX!$(tput sgr0)
+# $(tput setaf 1)CentOS users have to restart their server to apply the changes to SELinux!$(tput sgr0)
 #
 # Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
 #

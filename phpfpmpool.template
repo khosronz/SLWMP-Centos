@@ -1,5 +1,5 @@
 [WP_LOCATION_USER_OWNER]
-listen = /var/run/php70-fpm-WP_LOCATION_USER_OWNER.sock
+listen = /var/run/php71-fpm-WP_LOCATION_USER_OWNER.sock
 listen.backlog = 4096
 user = WP_LOCATION_USER_OWNER
 group = WP_LOCATION_USER_OWNER

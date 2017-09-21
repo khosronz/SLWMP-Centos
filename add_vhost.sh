@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.3.0
+# Version 0.3.1
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -62,20 +62,20 @@ configure_fpm_pool(){
   usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
   if [ $DISTRO = "debian" ]; then
-    cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+    cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
-    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
-    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
-    systemctl restart php7.0-fpm
+    systemctl restart php7.1-fpm
   fi
   if [ $DISTRO = "centos" ]; then
-    cp phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+    cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 
-    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
-    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 
-    systemctl restart php70-php-fpm
+    systemctl restart php71-php-fpm
   fi
 
 	return 0
@@ -243,7 +243,7 @@ This script is provided as it is, no warraties implied. (Ctrl-c to abort)
 "
 EOF
 
-read -p "Do you want to add the vhost? y/n" -n 1 -r
+read -p "Do you want to add the vhost? y/n " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
