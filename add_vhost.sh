@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.3.1
+# Version 0.3.2
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
