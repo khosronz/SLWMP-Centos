@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.3.2
+# Version 0.4.0-dev
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -21,7 +21,15 @@ configure_letsencrypt_domain() {
 
 configure_nginx_vhost(){
   # Before this can work, SSL have to requested. A check will be sweet
+  if [ $PHPVERSION = "php71" ]; then
+    NGXSOCKET="/var/run/php71-fpm-WP_DOMAINNAME.sock;"
+  fi
+  if [ $PHPVERSION = "php70" ]; then
+    NGXSOCKET="/var/run/php70-fpm-WP_DOMAINNAME.sock;"
+  fi
 	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+
+  sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_DOMAINNAME/$WP_DOMAINNAME/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i "s|WP_LOCATION|$WP_LOCATION|" /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
@@ -62,20 +70,40 @@ configure_fpm_pool(){
   usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
   if [ $DISTRO = "debian" ]; then
+    if [ $PHPVERSION = "php71" ]; then
     cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
     sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
     sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
     systemctl restart php7.1-fpm
+    fi
+    if [ $PHPVERSION = "php70" ]; then
+    cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+
+    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+
+    systemctl restart php7.0-fpm
+    fi
   fi
   if [ $DISTRO = "centos" ]; then
-    cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+    if [ $PHPVERSION = "php71" ]; then
+      cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 
-    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
-    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+      sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+      sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 
-    systemctl restart php71-php-fpm
+      systemctl restart php71-php-fpm
+    fi
+    if [ $PHPVERSION = "php70" ]; then
+      cp phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+
+      sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+      sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+
+      systemctl restart php70-php-fpm
+    fi
   fi
 
 	return 0
@@ -162,18 +190,9 @@ is provided as it is, no warraties implied.
 Options:
  -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
  -m <your_mysql_root_pw> You have to specify your mysql root password if you want to add an database
- -f			force the install, prompts in error/warnings are disabled.
+ -s wordpress Optional: If you add this paramter, Wordpress be downloaded and the config prepared
+ -p     Select which PHP-version do you want to use
  -h			this Help
-
-Advanced Options:
- -t <task1,task2>	Comma separated of tasks to execute manually, may depend on the above
-			options. DEFAULT: all
- Possible Tasks:
-   install_deps			installs wordpress dependencies
-   install_wordpress		downloads and installs wordpress package
-   configure_wordpress_database	configures wordpress database
-   configure_wordpress		configures wordpress
-   configure_apache		configures apache virtual host
 "
 USAGE
 }
@@ -181,16 +200,15 @@ USAGE
 ## Initialization variables
 
 NGINX_USER="nginx"
-TASKS="all"
+PHPVERSION="php71"
 
 ## Parse args and execute tasks
-while getopts 'd:s:t:fh' option; do
+while getopts 'd:m:p:s:t:h' option; do
 	case $option in
 	d)	WP_DOMAIN_FULL=$OPTARG;;
   m)  MYSQL_ROOT_PASS=$OPTARG;;
+  p)  PHPVERSION=$OPTARG;;
   s)  SELECTED_SYSTEM=$OPTARG;;
-  t)  TASKS=$OPTARG;;
-	f)	FORCE="yes";;
 	h)	usage
 		exit 0;;
 	[?])	usage
@@ -214,7 +232,6 @@ WP_ROOTLOCATION="/var/www/$WP_DOMAIN_FULL"
 #  echo "! Database names can only contain basic Latin letters, digits 0-9, dollar, underscore."
 #  exit 1
 #fi
-
 
 echo <<EOF "
 #################################################################

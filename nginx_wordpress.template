@@ -1,5 +1,5 @@
 upstream php-handler {
-    server unix:/var/run/php71-fpm-WP_DOMAINNAME.sock;
+    server unix:NGXSOCKET;
 }
 
 server {

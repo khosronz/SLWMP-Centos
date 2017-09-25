@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.3.2
+# Version 0.4.0-dev
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -16,6 +16,8 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
+PHPVERSION="php71"
+
 servicesCheck(){
 ps cax | grep $1 > /dev/null
 if [ $? -eq 0 ]; then
@@ -24,12 +26,6 @@ else
   return 0
 fi
 }
-
-#if servicesCheck "nginx"; then
-#echo "fail"
-#else
-#echo "laeft"
-#fi
 
 install_mariadb(){
 
@@ -194,22 +190,36 @@ if servicesCheck "php-fpm"; then
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
                   rm /tmp/php.gpg
                   apt-get update
-
-                  apt install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y
-                  # Start all these things...
-                  systemctl start php7.1-fpm
-                  systemctl enable php7.1-fpm
+                  if [ $PHPVERSION = "php71" ]; then
+                    apt install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y
+                    # Start all these things...
+                    systemctl start php7.1-fpm
+                    systemctl enable php7.1-fpm
+                  fi
+                  if [ $PHPVERSION = "php70" ]; then
+                    apt install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip -y
+                    # Start all these things...
+                    systemctl start php7.0-fpm
+                    systemctl enable php7.0-fpm
+                  fi
                 fi
                 if [ $DISTRO = "centos" ]; then
                   # Using Remis Repo https://rpms.remirepo.net/
                   yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
                   yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
                   yum update -y && yum install yum-utils -y
+                  if [ $PHPVERSION = "php71" ]; then
+                    yum install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip -y
+                    # Start all these things...
+                    systemctl start php71-php-fpm
+                    systemctl enable php71-php-fpm
+                  fi
+                  if [ $PHPVERSION = "php70" ]; then
+                    yum install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip -y
+                    systemctl start php70-php-fpm
+                    systemctl enable php70-php-fpm
+                  fi
 
-                  yum install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip -y
-                  # Start all these things...
-                  systemctl start php71-php-fpm
-                  systemctl enable php71-php-fpm
                   return 0
                 fi
 else
