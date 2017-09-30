@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.4.0-dev
+# Version 0.4.0
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -190,6 +190,12 @@ if servicesCheck "php-fpm"; then
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
                   rm /tmp/php.gpg
                   apt-get update
+                  if [ $PHPVERSION = "php72" ]; then
+                    apt install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-mcrypt php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-mcrypt php7.2-imagick php7.2-xml php7.2-zip -y
+                    # Start all these things...
+                    systemctl start php7.2-fpm
+                    systemctl enable php7.2-fpm
+                  fi
                   if [ $PHPVERSION = "php71" ]; then
                     apt install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y
                     # Start all these things...
@@ -202,12 +208,32 @@ if servicesCheck "php-fpm"; then
                     systemctl start php7.0-fpm
                     systemctl enable php7.0-fpm
                   fi
+                  if [ $PHPVERSION = "all" ]; then
+                    apt install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip -y
+                    apt install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y
+                    apt install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-mcrypt php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-mcrypt php7.2-imagick php7.2-xml php7.2-zip -y
+                    # Start all these things...
+                    systemctl start php7.0-fpm
+                    systemctl enable php7.0-fpm
+
+                    systemctl start php7.1-fpm
+                    systemctl enable php7.1-fpm
+
+                    systemctl start php7.2-fpm
+                    systemctl enable php7.2-fpm
+                  fi
                 fi
                 if [ $DISTRO = "centos" ]; then
                   # Using Remis Repo https://rpms.remirepo.net/
                   yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
                   yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
                   yum update -y && yum install yum-utils -y
+                  if [ $PHPVERSION = "php72" ]; then
+                    yum install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-mcrypt php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-mcrypt php72-php-imagick php72-php-xml php72-php-zip -y
+                    # Start all these things...
+                    systemctl start php72-php-fpm
+                    systemctl enable php72-php-fpm
+                  fi
                   if [ $PHPVERSION = "php71" ]; then
                     yum install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip -y
                     # Start all these things...
@@ -218,6 +244,20 @@ if servicesCheck "php-fpm"; then
                     yum install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip -y
                     systemctl start php70-php-fpm
                     systemctl enable php70-php-fpm
+                  fi
+                  if [ $PHPVERSION = "all" ]; then
+                    yum install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip -y
+                    yum install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip -y
+                    yum install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-mcrypt php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-mcrypt php72-php-imagick php72-php-xml php72-php-zip -y
+
+                    systemctl start php70-php-fpm
+                    systemctl enable php70-php-fpm
+
+                    systemctl start php71-php-fpm
+                    systemctl enable php71-php-fpm
+
+                    systemctl start php72-php-fpm
+                    systemctl enable php72-php-fpm
                   fi
 
                   return 0
@@ -254,6 +294,42 @@ configure_centos() {
 
   return 0
 }
+
+usage(){
+	echo <<USAGE "
+Usage: $(basename $0) [OPTION...]
+$(basename $0) will attempt to install all configurations for wordpress  by default,
+it will generate random passwords and the relevant ones will be informed.This script
+is provided as it is, no warraties implied.
+
+Options:
+ -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
+ -m <your_mysql_root_pw> You have to specify your mysql root password if you want to add an database
+ -s wordpress Optional: If you add this paramter, Wordpress be downloaded and the config prepared
+ -p     Select which PHP-version do you want to use
+ -h			this Help
+"
+USAGE
+}
+
+# Default PHP version,if nothing is choosen
+PHPVERSION="php71"
+
+## Parse args and execute tasks
+while getopts 'p:h' option; do
+	case $option in
+	p)	PHPVERSION=$OPTARG;;
+	h)	usage
+		exit 0;;
+	[?])	usage
+		exit 1;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+# for debuggging only
+
+echo "CHOOSEN PHP Version: $PHPVERSION"
 
 echo <<EOF "
 #################################################################

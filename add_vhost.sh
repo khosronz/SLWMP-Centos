@@ -21,6 +21,9 @@ configure_letsencrypt_domain() {
 
 configure_nginx_vhost(){
   # Before this can work, SSL have to requested. A check will be sweet
+  if [ $PHPVERSION = "php72" ]; then
+    NGXSOCKET="/var/run/php72-fpm-WP_DOMAINNAME.sock;"
+  fi
   if [ $PHPVERSION = "php71" ]; then
     NGXSOCKET="/var/run/php71-fpm-WP_DOMAINNAME.sock;"
   fi
@@ -70,6 +73,14 @@ configure_fpm_pool(){
   usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
 
   if [ $DISTRO = "debian" ]; then
+    if [ $PHPVERSION = "php72" ]; then
+    cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+
+    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+
+    systemctl restart php7.2-fpm
+    fi
     if [ $PHPVERSION = "php71" ]; then
     cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
@@ -88,6 +99,14 @@ configure_fpm_pool(){
     fi
   fi
   if [ $DISTRO = "centos" ]; then
+    if [ $PHPVERSION = "php72" ]; then
+      cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+
+      sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+      sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+
+      systemctl restart php72-php-fpm
+    fi
     if [ $PHPVERSION = "php71" ]; then
       cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 

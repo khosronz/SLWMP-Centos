@@ -26,10 +26,16 @@ Why all the effort? Because I want to learn! Yes, at this moment the script is r
 
 ```
 Be sure to be root!
-cd /root && wget https://github.com/timscha/SLEMP/archive/0.3.2.zip
-unzip 0.3.2.zip && cd SLEMP-0.3.2 && chmod +x add_vhost.sh install_slemp.sh
-./install_slemp.sh
+cd /root && wget https://github.com/timscha/SLEMP/archive/0.4.0.zip
+unzip 0.4.0.zip && cd SLEMP-0.4.0 && chmod +x add_vhost.sh install_slemp.sh
+
+./install_slemp.sh -p (php70/php71/php72/all)
 ```
+
+Optional: If you want to select the PHP-version add the -p paramter.
+Default version is PHP 7.1, you can choose between "php70", "php71", "php72" and "all"
+
+Please notice: At this time, PHP 7.2 is only available as RC. Do not use it in productive enviroment!
 
 Please safe your MySQL root password on a safe place! This will show you at the end of the installation!
 
@@ -38,10 +44,11 @@ Please safe your MySQL root password on a safe place! This will show you at the 
 After installation you can add an Vhost with
 
 ```
-./add_vhost.sh -d <YOUR_DOMAINNAME> -m <Your_MariaDB_Root_Password> -s wordpress
+./add_vhost.sh -d <YOUR_DOMAINNAME> -m <Your_MariaDB_Root_Password> -p php70/php71 -s wordpress
 ```
 
 "-s wordpress" is optional
+"-p php which you want to use on the vhost"
 
 Please NOT adding WWW before your domain! The script will do this for you!
 
