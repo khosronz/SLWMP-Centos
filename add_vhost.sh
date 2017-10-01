@@ -210,7 +210,7 @@ Options:
  -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
  -m <your_mysql_root_pw> You have to specify your mysql root password if you want to add an database
  -s wordpress Optional: If you add this paramter, Wordpress be downloaded and the config prepared
- -p     Select which PHP-version do you want to use
+ -p     Select which PHP-version do you want to use, you can choose between "php70", "php71" and "php72"
  -h			this Help
 "
 USAGE
@@ -264,6 +264,7 @@ echo <<EOF "
 # MySQL password: $WP_DB_PASS
 # MyMySQL database: $WP_DB_DATABASE
 # Location owner: $WP_LOCATION_USER_OWNER
+# Selected PHP-Version: $PHPVERSION
 #
 # Make sure you have a DNS record $WP_DOMAIN (with and without www. pointing to the server ip.
 #

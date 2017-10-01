@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.4.0
+# Version 0.4.0-dev
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -306,7 +306,8 @@ Options:
  -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
  -m <your_mysql_root_pw> You have to specify your mysql root password if you want to add an database
  -s wordpress Optional: If you add this paramter, Wordpress be downloaded and the config prepared
- -p     Select which PHP-version do you want to use
+ -p     Select which PHP-version do you want to installation
+ Valid options are "php70", "php71", "php72" or "all"
  -h			this Help
 "
 USAGE
