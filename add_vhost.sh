@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.4.0
+# Version 0.5.0-dev
 
 ## Detect distro version
 if [ -e /etc/redhat-release ]; then
@@ -10,6 +10,18 @@ if [ -e /etc/redhat-release ]; then
 elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
+
+
+check_domain() {
+  # Workflow:
+  # Check domain, if domain is not a subdomain, than creation of directories normaly
+  # if domain is a subdomain, we need a further check if the primary domain exists
+  # if they not exists, we need to create them first
+  # If the domain already exists or is created, we need to create subdomain folders inside the primary domain
+  # It is not necessary to create a further pool, we will use the main pool
+
+  return 0
+}
 
 configure_letsencrypt_domain() {
   # Request cert
