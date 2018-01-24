@@ -2,7 +2,7 @@
 
 # Copyright original script by Rimuhosting.com
 # Copyright 2017 Tim Scharner (https://scharner.me)
-# Version 0.4.0
+# Version 0.5.0-dev
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -211,7 +211,7 @@ if servicesCheck "php-fpm"; then
                   if [ $PHPVERSION = "all" ]; then
                     apt install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip -y
                     apt install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y
-                    apt install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-mcrypt php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-mcrypt php7.2-imagick php7.2-xml php7.2-zip -y
+                    apt install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip -y
                     # Start all these things...
                     systemctl start php7.0-fpm
                     systemctl enable php7.0-fpm
