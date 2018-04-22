@@ -92,81 +92,6 @@ EOL
   fi
 }
 
-install_mariadb(){
-
-	if servicesCheck "mysql"; then
-                MYSQL_ROOT_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14)
-
-                if [ $DISTRO = "debian" ]; then
-
-                  DEBIAN_FRONTEND=noninteractive apt-get -qq install mariadb-server mariadb-client -y < /dev/null > /dev/null
-
-                  systemctl -q enable mariadb
-                  systemctl -q start mariadb
-
-                  expect -f - <<-EOF
-                  set timeout 3
-                  spawn mysql_secure_installation
-                  expect "Enter current password for root (enter for none):"
-                  send -- "\r"
-                  expect "Set root password?"
-                  send -- "y\r"
-                  expect "New password:"
-                  send -- "${MYSQL_ROOT_PASS}\r"
-                  expect "Re-enter new password:"
-                  send -- "${MYSQL_ROOT_PASS}\r"
-                  expect "Remove anonymous users?"
-                  send -- "y\r"
-                  expect "Disallow root login remotely?"
-                  send -- "y\r"
-                  expect "Remove test database and access to it?"
-                  send -- "y\r"
-                  expect "Reload privilege tables now?"
-                  send -- "y\r"
-                  expect eof
-EOF
-
-                  apt remove --purge expect -y
-
-                fi
-                if [ $DISTRO = "centos" ]; then
-                  yum install MariaDB-server MariaDB-client expect -y > /dev/null
-
-                  systemctl -q enable mariadb
-                  systemctl -q start mariadb
-
-                  SECURE_MYSQL=$(expect -c "
-
-                  set timeout 3
-                  spawn mysql_secure_installation
-                  expect \"Enter current password for root (enter for none):\"
-                  send \"\r\"
-                  expect \"root password?\"
-                  send \"y\r\"
-                  expect \"New password:\"
-                  send \"$MYSQL_ROOT_PASS\r\"
-                  expect \"Re-enter new password:\"
-                  send \"$MYSQL_ROOT_PASS\r\"
-                  expect \"Remove anonymous users?\"
-                  send \"y\r\"
-                  expect \"Disallow root login remotely?\"
-                  send \"y\r\"
-                  expect \"Remove test database and access to it?\"
-                  send \"y\r\"
-                  expect \"Reload privilege tables now?\"
-                  send \"y\r\"
-                  expect eof
-                  ")
-                  echo "${SECURE_MYSQL}"
-
-                  yum remove expect -y > /dev/null
-                  return 0
-                fi
-  else
-    return 1
-	fi
-}
-
 install_nginx() {
     if servicesCheck "nginx"; then
                 if [ $DISTRO = "debian" ]; then
@@ -184,29 +109,31 @@ install_nginx() {
 
 }
 
-initialize_nginx() {
-  if [ ! -d "/var/www" ]; then
-    mkdir /var/www
+install_mariadb(){
+  if servicesCheck "mysql"; then
+
+    if [ $DISTRO = "debian" ]; then
+      DEBIAN_FRONTEND=noninteractive apt-get -qq install mariadb-server mariadb-client -y < /dev/null > /dev/null
+      systemctl -q enable mariadb
+      systemctl -q start mariadb
+
+    fi
+    if [ $DISTRO = "centos" ]; then
+      yum install MariaDB-server MariaDB-client -y > /dev/null
+
+      systemctl -q enable mariadb
+      systemctl -q start mariadb
+
+
+      return 0
+    fi
+  else
+    return 1
   fi
-  # First, we not longer show nginx used version
-  sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
-  # Next, we changed some backlog variables
-  echo "net.core.netdev_max_backlog=4096" >> /etc/sysctl.conf
-  echo "net.core.somaxconn=4096" >> /etc/sysctl.conf
-  echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf
-  sysctl -p
-
-  openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
-
-  systemctl -q start nginx
-  systemctl -q enable nginx
-}
-
-initialize_mariadb() {
 }
 
 install_phpfpm() {
-#if servicesCheck "php-fpm"; then
+if servicesCheck "php-fpm"; then
                 if [ $DISTRO = "debian" ]; then
                   for opt in "${!php_opts[@]}"
                   do
@@ -260,14 +187,56 @@ install_phpfpm() {
 
                   return 0
                 fi
-#else
- # return 1
-#fi
+else
+  return 1
+fi
 }
 
 install_letsencrypt() {
   #curl https://get.acme.sh | sh
   return 0
+}
+
+initialize_nginx() {
+  if [ ! -d "/var/www" ]; then
+    mkdir /var/www
+  fi
+  # First, we not longer show nginx used version
+  sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
+  # Next, we changed some backlog variables
+  echo "net.core.netdev_max_backlog=4096" >> /etc/sysctl.conf
+  echo "net.core.somaxconn=4096" >> /etc/sysctl.conf
+  echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf
+  sysctl -p
+
+  openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
+
+  systemctl -q start nginx
+  systemctl -q enable nginx
+}
+
+initialize_mariadb() {
+  MYSQL_ROOT_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14)
+
+  if ! is_mysql_command_available; then
+    echo "The MariaDB client is not installed."
+    exit 1
+  fi
+
+  if is_mysql_root_password_set; then
+    echo "Database root password already set"
+    exit 1
+  fi
+
+mysql --user=root <<EOF
+  UPDATE mysql.user SET Password=PASSWORD('${MYSQL_ROOT_PASS}') WHERE User='root';
+  DELETE FROM mysql.user WHERE User='';
+  DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+  DROP DATABASE IF EXISTS test;
+  DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+  FLUSH PRIVILEGES;
+EOF
+return 0
 }
 
 configure_centos() {
@@ -291,7 +260,7 @@ read -p "Do you want to start the installation? y/n" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-  echo "Before we start the installation and further configuration, the script will add some repositories to your system"
+  echo "Before we start the installation and further configuration, the script will add some repositories to your system. This will take a few seconds."
   read -p "Press ENTER to confirm"
   initialize_os
 
@@ -321,11 +290,13 @@ then
               *) printf '%s\n' 'invalid option';;
           esac
       done
-  done
+    done
     clear
     printf "######################################\nInstallation of SLEMP will start now\n######################################\n"
     printf "Installing nginx . . . "
     if install_nginx $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring nginx . . ."
+    if initialize_nginx $1; then echo "[X]"; else echo "Failed..."; fi
     printf "\nInstalling MariaDB . . . "
     if install_mariadb $1; then echo "[X]"; else echo "Failed..."; fi
     printf "\nInstalling PHP . . . "
