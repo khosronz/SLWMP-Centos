@@ -129,14 +129,14 @@ install_nginx() {
                   # Add sources for debian from nginx website, import there key and install nginx
                   echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
                   echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
-                  cd /tmp && wget http://nginx.org/keys/nginx_signing.key > /dev/null && apt-key add nginx_signing.key > /dev/null
+                  cd /tmp && wget --quiet http://nginx.org/keys/nginx_signing.key > /dev/null && DEBIAN_FRONTEND=noninteractive apt-key -qq add nginx_signing.key < /dev/null > /dev/null
                   rm /tmp/nginx_signing.key
-                  apt-update > /dev/null
-                  apt-get install nginx -y > /dev/null
+                  DEBIAN_FRONTEND=noninteractive apt-get update -qq < /dev/null > /dev/null
+                  DEBIAN_FRONTEND=noninteractive apt-get install -qq nginx < /dev/null > /dev/null
               	fi
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
-                  cd /tmp && wget http://nginx.org/keys/nginx_signing.key
+                  cd /tmp && wget --quiet http://nginx.org/keys/nginx_signing.key
                   rpm --import nginx_signing.key
 cat >/etc/yum.repos.d/nginx.repo <<EOL
 [nginx]
@@ -177,28 +177,28 @@ install_phpfpm() {
 #if servicesCheck "php-fpm"; then
                 if [ $DISTRO = "debian" ]; then
                   #We will using sources from https://deb.sury.org/
-                  apt-get install apt-transport-https lsb-release ca-certificates -y > /dev/null
+                  DEBIAN_FRONTEND=noninteractive apt-get -qq install apt-transport-https lsb-release ca-certificates < /dev/null > /dev/null
                   cd /tmp && wget --quiet /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg > /dev/null
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
                   rm /tmp/php.gpg
-                  apt-get update > /dev/null
+                  DEBIAN_FRONTEND=noninteractive apt-get -qq update > < /dev/null > /dev/null
                   for opt in "${!php_opts[@]}"
                   do
                     if [[ ${php_opts[opt]} ]];then
                           if (($opt=="1")); then
-                            apt-get -q install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip -y > /dev/null
+                            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip -y < /dev/null > /dev/null
                             systemctl start php7.0-fpm
                             systemctl enable php7.0-fpm
                             printf "  - PHP 7.0 installed [X]"
                           fi
                           if (($opt=="2")); then
-                            apt-get -q install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y > /dev/null
+                            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y < /dev/null > /dev/null
                             systemctl start php7.1-fpm
                             systemctl enable php7.1-fpm
                             printf "  - PHP 7.1 installed [X]"
                           fi
                           if (($opt=="3")); then
-                            apt-get -q install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip -y > /dev/null
+                            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip -y < /dev/null > /dev/null
                             systemctl start php7.2-fpm
                             systemctl enable php7.2-fpm
                             printf "  - PHP 7.2 installed [X]"
