@@ -202,6 +202,9 @@ initialize_nginx() {
   systemctl -q enable nginx
 }
 
+initialize_mariadb() {
+}
+
 install_phpfpm() {
 #if servicesCheck "php-fpm"; then
                 if [ $DISTRO = "debian" ]; then
@@ -321,16 +324,16 @@ then
   done
     clear
     printf "######################################\nInstallation of SLEMP will start now\n######################################\n"
-    printf "nginx installation . . . "
+    printf "Installing nginx . . . "
     if install_nginx $1; then echo "[X]"; else echo "Failed..."; fi
-    printf "\nMariaDB installation . . . "
+    printf "\nInstalling MariaDB . . . "
     if install_mariadb $1; then echo "[X]"; else echo "Failed..."; fi
-    printf "\nPHP installation . . . "
-    if install_phpfpm $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nInstalling PHP . . . "
+    if install_phpfpm $1; then echo ""; else echo "Failed..."; fi
     #install_letsencrypt
 
     if [ $DISTRO = "centos" ]; then
-      printf "Configure some CentOS related things..."
+      printf "Configure CentOS . . ."
       configure_centos
     fi
     [ $? -ne "0" ] && exit 1

@@ -34,7 +34,7 @@ if [ $DISTRO = "debian" ]; then
   	if [ ! -f /usr/bin/git ]; then
   		echo "Installing git . . ."
   		apt-get -qq update
-  		DEBIAN_FRONTEND=noninteractive apt-get -qq install git -y < /dev/null > /dev/null
+  		DEBIAN_FRONTEND=noninteractive apt-get -qq install git curl -y < /dev/null > /dev/null
       git clone \
         https://github.com/timscha/SLEMP.git \
         $HOME/SLEMP \
@@ -49,7 +49,7 @@ if [ $DISTRO = "centos" ]; then
   	if [ ! -f /usr/bin/git ]; then
   		echo "Installing git . . ."
   		yum update
-  		yum install -y git < /dev/null
+  		yum install -y git curl < /dev/null
       echo "Downloading SLEMP files . . ."
       git clone \
         https://github.com/timscha/SLEMP.git \
