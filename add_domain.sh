@@ -182,20 +182,17 @@ USAGE
 NGINX_USER="nginx"
 PHPVERSION="php71"
 
-## Parse args and execute tasks
-while getopts 'd:m:p:s:t:h' option; do
-	case $option in
-	d)	WP_DOMAIN_FULL=$OPTARG;;
-  m)  MYSQL_ROOT_PASS=$OPTARG;;
-  p)  PHPVERSION=$OPTARG;;
-  s)  SELECTED_SYSTEM=$OPTARG;;
-	h)	usage
-		exit 0;;
-	[?])	usage
-		exit 1;;
-    esac
-done
-shift $(($OPTIND - 1))
+# Menu
+
+echo "Adding a host now..."
+
+# Fragen ob Domain oder Subdomain
+# PHP-Version anfragen
+# Datenbank abfragen
+# cms installieren?
+
+
+
 
 WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
 WP_LOCATION_USER_OWNER=$WP_DOMAINNAME

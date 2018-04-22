@@ -28,7 +28,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-# Clone the Mail-in-a-Box repository if it doesn't exist.
+if ! [ $DISTRO = "debian" ]; then
+
 if [ ! -d $HOME/SLEMP ]; then
 	if [ ! -f /usr/bin/git ]; then
 		echo Installing git . . .
@@ -36,6 +37,20 @@ if [ ! -d $HOME/SLEMP ]; then
 		DEBIAN_FRONTEND=noninteractive apt-get -q -q install -y git < /dev/null
 		echo
 	fi
+
+fi
+
+if ! [ $DISTRO = "centos" ]; then
+
+if [ ! -d $HOME/SLEMP ]; then
+	if [ ! -f /usr/bin/git ]; then
+		echo Installing git . . .
+		yum update
+		yum install -y git < /dev/null
+		echo
+	fi
+
+fi
 
 	echo Downloading SLEMP files . . .
 	git clone \
@@ -47,4 +62,4 @@ fi
 
 # Change directory to it and start the setup
 cd $HOME/SLEMP
-./install.sh
+./installer.sh

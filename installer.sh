@@ -16,15 +16,14 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
-PHPVERSION="php71"
-
-servicesCheck(){
-ps cax | grep $1 > /dev/null
-if [ $? -eq 0 ]; then
-  return 1
-else
-  return 0
-fi
+php_version_choice () {
+    local php_version_choice=$1
+    if [[ ${opts[php_version_choice]} ]] # toggle
+    then
+        opts[php_version_choice]=
+    else
+        opts[php_version_choice]=[X]
+    fi
 }
 
 install_mariadb(){
@@ -155,26 +154,29 @@ EOL
                   yum update -y && yum install nginx -y
                   rm -f /tmp/nginx_signing.key
                 fi
-                if [ ! -d "/var/www" ]; then
-                  mkdir /var/www
-                fi
-                # First, we not longer show nginx used version
-                sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
-                # Next, we changed some backlog variables
-                echo "net.core.netdev_max_backlog=4096" >> /etc/sysctl.conf
-                echo "net.core.somaxconn=4096" >> /etc/sysctl.conf
-                echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf
-                sysctl -p
-
-                openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
-
-                systemctl start nginx
-                systemctl enable nginx
     else
       echo "$(tput setaf 1)#################################################################"
                   echo "# nginx server running, skipping installation..."
                   echo "#################################################################$(tput sgr0)"
     fi
+}
+
+initialize_nginx() {
+  if [ ! -d "/var/www" ]; then
+    mkdir /var/www
+  fi
+  # First, we not longer show nginx used version
+  sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
+  # Next, we changed some backlog variables
+  echo "net.core.netdev_max_backlog=4096" >> /etc/sysctl.conf
+  echo "net.core.somaxconn=4096" >> /etc/sysctl.conf
+  echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf
+  sysctl -p
+
+  openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
+
+  systemctl start nginx
+  systemctl enable nginx
 }
 
 install_phpfpm() {
@@ -313,9 +315,6 @@ Options:
 USAGE
 }
 
-# Default PHP version,if nothing is choosen
-PHPVERSION="php71"
-
 ## Parse args and execute tasks
 while getopts 'p:h' option; do
 	case $option in
@@ -328,31 +327,6 @@ while getopts 'p:h' option; do
 done
 shift $(($OPTIND - 1))
 
-# for debuggging only
-
-echo "CHOOSEN PHP Version: $PHPVERSION"
-
-echo <<EOF "
-#################################################################
-#
-# SLEMP installation starting:
-#
-# This script will help you to install your own secure LEMP
-# The following componentens will be installed to your system:
-# nginx, MariaDB (later), php-fpm and Let's Encrypt.
-# It using in most cases the repos of the original developer
-# For PHP it using reliable repositories.
-#
-# $(tput setaf 1)Be warned:
-# The installation need time, because we will generate a 4096 bit key for Diffie-Hellman!$(tput sgr0)
-#
-# $(tput setaf 1)ATTENTION CentOS users: This script will DEACTIVATE SELinux!
-# You have to restart your server after installation!$(tput sgr0)
-#
-#################################################################
-"
-EOF
-
 echo <<EOF "
 $(basename $0) will attempt to install SLEMP.
 This script is provided as it is, no warraties implied.
@@ -363,10 +337,41 @@ read -p "Do you want to start the installation? y/n" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
+    echo "nginx installation . . ."
     install_nginx
-    install_phpfpm
-    install_letsencrypt
+    echo "MariaDB installation . . ."
     install_mariadb
+    echo "Installation of PHP . . ."
+    PS3='Please select the PHP versions: '
+    while :
+    do
+        options=("PHP 7.0 ${opts[1]}" "PHP 7.1 ${opts[2]}" "PHP 7.2 ${opts[3]}" "Done")
+        select opt in "${options[@]}"
+        do
+            case $opt in
+                "PHP 7.0 ${opts[1]}")
+                    php_version_choice 1
+                    break
+                    ;;
+                "PHP 7.1 ${opts[2]}")
+                    php_version_choice 2
+                    break
+                    ;;
+                "PHP 7.2 ${opts[3]}")
+                    php_version_choice 3
+                    break
+                    ;;
+                "Done")
+                    break 2
+                    ;;
+                *) printf '%s\n' 'invalid option';;
+            esac
+        done
+    done
+
+    #install_phpfpm
+    #install_letsencrypt
+
     if [ $DISTRO = "centos" ]; then
       configure_centos
     fi
@@ -374,24 +379,7 @@ then
 fi
 
 echo <<EOF "
-#################################################################
-#
-# SLEMP installation done:
-#
-# Next step is using add_vhost.sh to configure
-# php-fpm-pool, nginx, add an ssl certifcate
-# Configure the DB and finally install Wordpress.
-#
 # $(tput setaf 1)!!! YOUR MYSQL-ROOT-PASSWORD: $MYSQL_ROOT_PASS !!!$(tput sgr0)
-# Be sure to safe it on a safe place
-# $(tput setaf 1)CentOS users have to restart their server to apply the changes to SELinux!$(tput sgr0)
-#
-# Make sure you have a DNS record $WP_DOMAIN pointing to the server ip.
-#
-# Note: In case the $WP_DOMAIN is matching the server hostname (overlaping default site config),
-# the site may not work, you may need to disable the default site in debian based systems or check
-# nginx configuration
-#################################################################
 "
 EOF
 
