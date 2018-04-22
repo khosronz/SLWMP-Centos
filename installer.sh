@@ -25,13 +25,13 @@ else
 fi
 }
 
-php_version_choice () {
-    local php_version_choice=$1
-    if [[ ${opts[php_version_choice]} ]] # toggle
+choice () {
+    local choice=$1
+    if [[ ${php_opts[choice]} ]] # toggle
     then
-        opts[php_version_choice]=
+        php_opts[choice]=
     else
-        opts[php_version_choice]=[X]
+        php_opts[choice]=[X]
     fi
 }
 
@@ -182,9 +182,9 @@ install_phpfpm() {
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
                   rm /tmp/php.gpg
                   apt-get update > /dev/null
-                  for opt in "${!opts[@]}"
+                  for opt in "${!php_opts[@]}"
                   do
-                    if [[ ${opts[opt]} ]];then
+                    if [[ ${php_opts[opt]} ]];then
                           if (($opt=="1")); then
                             apt install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip -y > /dev/null
                             systemctl start php7.0-fpm
@@ -212,9 +212,9 @@ install_phpfpm() {
                   yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y > /dev/null
                   yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y > /dev/null
                   yum update -y && yum install yum-utils -y > /dev/null
-                  for opt in "${!opts[@]}"
+                  for opt in "${!php_opts[@]}"
                   do
-                    if [[ ${opts[opt]} ]];then
+                    if [[ ${php_opts[opt]} ]];then
                           if (($opt=="1")); then
                             yum install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip -y > /dev/null
                             systemctl start php70-php-fpm
@@ -291,20 +291,20 @@ then
   while :
   do
       clear
-      options=("PHP 7.0 ${opts[1]}" "PHP 7.1 ${opts[2]}" "PHP 7.2 ${opts[3]}" "Done")
+      options=("PHP 7.0 ${php_opts[1]}" "PHP 7.1 ${php_opts[2]}" "PHP 7.2 ${php_opts[3]}" "Done")
       select opt in "${options[@]}"
       do
           case $opt in
-              "PHP 7.0 ${opts[1]}")
-                  php_version_choice 1
+              "PHP 7.0 ${php_opts[1]}")
+                  choice 1
                   break
                   ;;
-              "PHP 7.1 ${opts[2]}")
-                  php_version_choice 2
+              "PHP 7.1 ${php_opts[2]}")
+                  choice 2
                   break
                   ;;
-              "PHP 7.2 ${opts[3]}")
-                  php_version_choice 3
+              "PHP 7.2 ${php_opts[3]}")
+                  choice 3
                   break
                   ;;
               "Done")
