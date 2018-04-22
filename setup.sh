@@ -17,7 +17,7 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
-if ! [ $DISTRO = "debian" ] || ! [ $DISTRO = "debian" ] ||; then
+if ! [ $DISTRO = "debian" ] || ! [ $DISTRO = "centos" ] ||; then
 	echo "This script runs on Debian and CentOS only. Exit now."
 	exit
 fi

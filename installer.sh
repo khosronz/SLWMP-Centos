@@ -129,10 +129,10 @@ install_nginx() {
                   # Add sources for debian from nginx website, import there key and install nginx
                   echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
                   echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
-                  cd /tmp && wget http://nginx.org/keys/nginx_signing.key && apt-key add nginx_signing.key
+                  cd /tmp && wget http://nginx.org/keys/nginx_signing.key > /dev/null && apt-key add nginx_signing.key > /dev/null
                   rm /tmp/nginx_signing.key
-                  apt update && apt install nginx -y > /dev/null
-
+                  apt-update > /dev/null
+                  apt-get install nginx -y > /dev/null
               	fi
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
@@ -177,8 +177,8 @@ install_phpfpm() {
 #if servicesCheck "php-fpm"; then
                 if [ $DISTRO = "debian" ]; then
                   #We will using sources from https://deb.sury.org/
-                  apt-get install apt-transport-https lsb-release ca-certificates -y
-                  cd /tmp && wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+                  apt-get install apt-transport-https lsb-release ca-certificates -y > /dev/null
+                  cd /tmp && wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg > /dev/null
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
                   rm /tmp/php.gpg
                   apt-get update > /dev/null
@@ -198,7 +198,7 @@ install_phpfpm() {
                             printf "  - PHP 7.1 installed [X]"
                           fi
                           if (($opt=="3")); then
-                            apt install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-mcrypt php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-mcrypt php7.2-imagick php7.2-xml php7.2-zip -y > /dev/null
+                            apt install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip -y > /dev/null
                             systemctl start php7.2-fpm
                             systemctl enable php7.2-fpm
                             printf "  - PHP 7.2 installed [X]"
