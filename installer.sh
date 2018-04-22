@@ -181,7 +181,7 @@ install_phpfpm() {
                   cd /tmp && wget --quiet /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg > /dev/null
                   sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
                   rm /tmp/php.gpg
-                  DEBIAN_FRONTEND=noninteractive apt-get -qq update > < /dev/null > /dev/null
+                  DEBIAN_FRONTEND=noninteractive apt-get -qq update < /dev/null > /dev/null
                   for opt in "${!php_opts[@]}"
                   do
                     if [[ ${php_opts[opt]} ]];then
