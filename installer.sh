@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Copyright original script by Rimuhosting.com
-# Copyright 2017 Tim Scharner (https://scharner.me)
+# Copyright 2017-2018 Tim Scharner (https://timscha.io)
 # Version 0.5.0-dev
 
 if [[ $EUID -ne 0 ]]; then
@@ -35,21 +34,75 @@ choice () {
     fi
 }
 
+initialize_os() {
+  if [ $DISTRO = "debian" ]; then
+    # MariaDB
+    apt-get -qq install expect curl software-properties-common dirmngr -y < /dev/null > /dev/null
+    DEBIAN_FRONTEND=noninteractive apt-get -qq update < /dev/null > /dev/null
+
+    DEBIAN_FRONTEND=noninteractive apt-key adv --recv-keys -qq --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8 < /dev/null > /dev/null
+    add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian stretch main'
+
+    echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
+    echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
+    curl -O -s https://nginx.org/keys/nginx_signing.key && apt-key -qq add ./nginx_signing.key < /dev/null > /dev/null
+    rm ./nginx_signing.key
+
+    apt-get -qq update
+
+    #We will using sources from https://deb.sury.org/
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install apt-transport-https lsb-release ca-certificates < /dev/null > /dev/null
+    cd /tmp && wget --quiet -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+    sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
+
+    apt-get -qq update
+
+  fi
+
+  if [ $DISTRO = "centos" ]; then
+
+    #maridb
+    cat >/etc/yum.repos.d/MariaDB.repo <<EOL
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.2/centos7-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOL
+    rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+    yum update -y
+
+    #nginx
+    cd /tmp && wget --quiet http://nginx.org/keys/nginx_signing.key
+    rpm --import nginx_signing.key
+cat >/etc/yum.repos.d/nginx.repo <<EOL
+[nginx]
+name=nginx repo
+baseurl=http://nginx.org/packages/mainline/centos/7/\$basearch/
+gpgcheck=0
+enabled=1
+EOL
+
+    #php
+    # Using Remis Repo https://rpms.remirepo.net/
+    yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y > /dev/null
+    yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y > /dev/null
+    yum update -y && yum install yum-utils -y > /dev/null
+
+  fi
+}
+
 install_mariadb(){
 
 	if servicesCheck "mysql"; then
                 MYSQL_ROOT_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14)
 
                 if [ $DISTRO = "debian" ]; then
-                  # Add sources for debian from nginx website, import there key and install nginx
-                  apt install expect software-properties-common dirmngr -y > /dev/null
-                  apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8
-                  add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian stretch main'
 
-                  DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server mariadb-client -y
+                  DEBIAN_FRONTEND=noninteractive apt-get -qq install mariadb-server mariadb-client -y < /dev/null > /dev/null
 
-                  systemctl enable mariadb
-                  systemctl start mariadb
+                  systemctl -q enable mariadb
+                  systemctl -q start mariadb
 
                   expect -f - <<-EOF
                   set timeout 3
@@ -77,19 +130,10 @@ EOF
 
                 fi
                 if [ $DISTRO = "centos" ]; then
-cat >/etc/yum.repos.d/MariaDB.repo <<EOL
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.2/centos7-amd64
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-EOL
+                  yum install MariaDB-server MariaDB-client expect -y > /dev/null
 
-                  rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-                  yum update -y && yum install MariaDB-server MariaDB-client expect -y > /dev/null
-
-                  systemctl enable mariadb
-                  systemctl start mariadb
+                  systemctl -q enable mariadb
+                  systemctl -q start mariadb
 
                   SECURE_MYSQL=$(expect -c "
 
@@ -126,25 +170,10 @@ EOL
 install_nginx() {
     if servicesCheck "nginx"; then
                 if [ $DISTRO = "debian" ]; then
-                  # Add sources for debian from nginx website, import there key and install nginx
-                  echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
-                  echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
-                  cd /tmp && wget --quiet http://nginx.org/keys/nginx_signing.key > /dev/null && DEBIAN_FRONTEND=noninteractive apt-key -qq add nginx_signing.key < /dev/null > /dev/null
-                  rm /tmp/nginx_signing.key
-                  DEBIAN_FRONTEND=noninteractive apt-get update -qq < /dev/null > /dev/null
-                  DEBIAN_FRONTEND=noninteractive apt-get install -qq nginx < /dev/null > /dev/null
+                  DEBIAN_FRONTEND=noninteractive apt-get -qq install nginx -y < /dev/null > /dev/null
               	fi
                 if [ $DISTRO = "centos" ]; then
                   # Addd sources for centos from nginx website.
-                  cd /tmp && wget --quiet http://nginx.org/keys/nginx_signing.key
-                  rpm --import nginx_signing.key
-cat >/etc/yum.repos.d/nginx.repo <<EOL
-[nginx]
-name=nginx repo
-baseurl=http://nginx.org/packages/mainline/centos/7/\$basearch/
-gpgcheck=0
-enabled=1
-EOL
                   yum update -y && yum install nginx -y > /dev/null
                   rm -f /tmp/nginx_signing.key
                 fi
@@ -169,38 +198,32 @@ initialize_nginx() {
 
   openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
 
-  systemctl start nginx
-  systemctl enable nginx
+  systemctl -q start nginx
+  systemctl -q enable nginx
 }
 
 install_phpfpm() {
 #if servicesCheck "php-fpm"; then
                 if [ $DISTRO = "debian" ]; then
-                  #We will using sources from https://deb.sury.org/
-                  DEBIAN_FRONTEND=noninteractive apt-get -qq install apt-transport-https lsb-release ca-certificates < /dev/null > /dev/null
-                  cd /tmp && wget --quiet /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg > /dev/null
-                  sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
-                  rm /tmp/php.gpg
-                  DEBIAN_FRONTEND=noninteractive apt-get -qq update < /dev/null > /dev/null
                   for opt in "${!php_opts[@]}"
                   do
                     if [[ ${php_opts[opt]} ]];then
                           if (($opt=="1")); then
                             DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip -y < /dev/null > /dev/null
-                            systemctl start php7.0-fpm
-                            systemctl enable php7.0-fpm
+                            systemctl -q start php7.0-fpm
+                            systemctl -q enable php7.0-fpm
                             printf "  - PHP 7.0 installed [X]"
                           fi
                           if (($opt=="2")); then
                             DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y < /dev/null > /dev/null
-                            systemctl start php7.1-fpm
-                            systemctl enable php7.1-fpm
+                            systemctl -q start php7.1-fpm
+                            systemctl -q enable php7.1-fpm
                             printf "  - PHP 7.1 installed [X]"
                           fi
                           if (($opt=="3")); then
                             DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip -y < /dev/null > /dev/null
-                            systemctl start php7.2-fpm
-                            systemctl enable php7.2-fpm
+                            systemctl -q start php7.2-fpm
+                            systemctl -q enable php7.2-fpm
                             printf "  - PHP 7.2 installed [X]"
                           fi
                     fi
@@ -208,29 +231,25 @@ install_phpfpm() {
                   return 0
                 fi
                 if [ $DISTRO = "centos" ]; then
-                  # Using Remis Repo https://rpms.remirepo.net/
-                  yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y > /dev/null
-                  yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y > /dev/null
-                  yum update -y && yum install yum-utils -y > /dev/null
                   for opt in "${!php_opts[@]}"
                   do
                     if [[ ${php_opts[opt]} ]];then
                           if (($opt=="1")); then
                             yum install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip -y > /dev/null
-                            systemctl start php70-php-fpm
-                            systemctl enable php70-php-fpm
+                            systemctl -q start php70-php-fpm
+                            systemctl -q enable php70-php-fpm
                             printf "  - PHP 7.0 installed [X]"
                           fi
                           if (($opt=="2")); then
                             apt install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y > /dev/null
-                            systemctl start php7.1-fpm
-                            systemctl enable php7.1-fpm
+                            systemctl -q start php7.1-fpm
+                            systemctl -q enable php7.1-fpm
                             printf "  - PHP 7.1 installed [X]"
                           fi
                           if (($opt=="3")); then
                             yum install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-imagick php72-php-xml php72-php-zip -y > /dev/null
-                            systemctl start php72-php-fpm
-                            systemctl enable php72-php-fpm
+                            systemctl -q start php72-php-fpm
+                            systemctl -q enable php72-php-fpm
                             printf "  - PHP 7.2 installed [X]"
                           fi
                     fi
@@ -259,24 +278,6 @@ configure_centos() {
   return 0
 }
 
-usage(){
-	echo <<USAGE "
-Usage: $(basename $0) [OPTION...]
-$(basename $0) will attempt to install all configurations for wordpress  by default,
-it will generate random passwords and the relevant ones will be informed.This script
-is provided as it is, no warraties implied.
-
-Options:
- -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
- -m <your_mysql_root_pw> You have to specify your mysql root password if you want to add an database
- -s wordpress Optional: If you add this paramter, Wordpress be downloaded and the config prepared
- -p     Select which PHP-version do you want to installation
- Valid options are "php70", "php71", "php72" or "all"
- -h			this Help
-"
-USAGE
-}
-
 echo <<EOF "
 $(basename $0) will attempt to install SLEMP.
 This script is provided as it is, no warraties implied.
@@ -287,6 +288,10 @@ read -p "Do you want to start the installation? y/n" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
+  echo "Before we start the installation and further configuration, the script will add some repositories to your system"
+  read -p "Press ENTER to confirm"
+  initialize_os
+
   PS3='Please select your PHP versions: '
   while :
   do
@@ -319,7 +324,7 @@ then
     printf "nginx installation . . . "
     if install_nginx $1; then echo "[X]"; else echo "Failed..."; fi
     printf "\nMariaDB installation . . . "
-    #if install_mariadb $1; then echo "[X]"; else echo "Failed..."; fi
+    if install_mariadb $1; then echo "[X]"; else echo "Failed..."; fi
     printf "\nPHP installation . . . "
     if install_phpfpm $1; then echo "[X]"; else echo "Failed..."; fi
     #install_letsencrypt
