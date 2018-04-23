@@ -29,7 +29,14 @@ create_skeleton_dirs() {
 
 configure_letsencrypt_domain() {
   # Need to be rewritten
-  return 0
+  if [ $USER_DOMAIN_TYP = "0" ]; then
+    acme.sh --issue --test -k ec-256 -w /var/www/$USER_MAINDOMAIN/htdocs -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+    return 0
+  fi
+  if [ $USER_DOMAIN_TYP = "1" ]; then
+    acme.sh --issue --test -k ec-256 -w /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs -d $USER_SUBDOMAIN
+    return 0
+  fi
 }
 
 configure_nginx_vhost(){
@@ -163,19 +170,6 @@ EOSQL
 
 NGINX_USER="nginx"
 
-# Menu
-
-echo "Adding a host now..."
-
-
-WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
-HOST_LOCATION_USER=$WP_DOMAINNAME
-WP_DB_USER=$WP_DOMAINNAME'_usr'
-WP_DB_DATABASE=$WP_DOMAINNAME
-WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
-WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
-WP_ROOTLOCATION="/var/www/$WP_DOMAIN_FULL"
-
 # ref http://dev.mysql.com/doc/refman/5.7/en/identifiers.html
 #pat='0-9,a-z,A-Z,$_'
 #if [[ ! "${WP_DB_DATABASE}" =~ ["^${pat}"] ]]; then
@@ -249,6 +243,16 @@ then
   then
       # Generating SSL certifcate
   fi
+
+# Do we get everything we need?
+WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
+HOST_LOCATION_USER=$WP_DOMAINNAME
+WP_DB_USER=$WP_DOMAINNAME'_usr'
+WP_DB_DATABASE=$WP_DOMAINNAME
+WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
+WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
+WP_ROOTLOCATION="/var/www/$WP_DOMAIN_FULL"
+
   #configure_fpm_pool
   #configure_letsencrypt_domain
   #configure_nginx_vhost

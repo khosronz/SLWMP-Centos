@@ -183,6 +183,8 @@ if servicesCheck "php-fpm"; then
 
 install_letsencrypt() {
   #curl https://get.acme.sh | sh
+  #/root/.acme.sh/account.conf
+  #CERT_HOME="/etc/ssl/private"
   return 0
 }
 
