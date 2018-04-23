@@ -54,7 +54,7 @@ configure_nginx_vhost(){
   sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_DOMAINNAME/$WP_DOMAINNAME/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
-  sed -i "s|WP_LOCATION|$WP_LOCATION|" /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+  sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
 
   systemctl restart nginx
 
@@ -189,7 +189,7 @@ read -p "Do you want to add the vhost? y/n " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-
+  clear
   PS3='Do you want to add a domain or subdomain? '
   options=("Domain" "Subdomain")
   select opt in "${options[@]}"
@@ -208,10 +208,9 @@ then
       *) echo invalid option;;
     esac
   done
-
-  read -p 'Domain (example.com): ' USER_MAINDOMAIN
+  read -p 'Domain [example.com]: ' USER_MAINDOMAIN
   if [ $USER_DOMAIN_TYP = "1" ]; then
-    read -p 'Subdomain (subdomain.example.com): ' USER_SUBDOMAIN
+    read -p 'Subdomain [subdomain.example.com]: ' USER_SUBDOMAIN
   fi
 
   PS3='Select the PHP for your domain: '
@@ -237,25 +236,38 @@ then
       *) echo invalid option;;
     esac
   done
-  read -p "Do you want to secure your site with SSL? " -n 1 -r
+  read -p "Do you want to secure your site with SSL? [y/n]" -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
-      # Generating SSL certifcate
+    USER_SSL_SITE=1
+  else
+    USER_SSL_SITE=0
   fi
 
-# Do we get everything we need?
-WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
-HOST_LOCATION_USER=$WP_DOMAINNAME
-WP_DB_USER=$WP_DOMAINNAME'_usr'
-WP_DB_DATABASE=$WP_DOMAINNAME
-WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
-WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
-WP_ROOTLOCATION="/var/www/$WP_DOMAIN_FULL"
+  read -p "Do you want to add a database? [y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+    printf "Please provide your MySQL-Root-Password when asked."
+    USER_DB_SITE=1
+  else
+    USER_DB_SITE=0
+  fi
 
+  # Do we got everything we need?
+  WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
+  HOST_LOCATION_USER=$WP_DOMAINNAME
+  WP_DB_USER=$WP_DOMAINNAME'_usr'
+  WP_DB_DATABASE=$WP_DOMAINNAME
+  WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
+  HOST_HTTPD_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
+  HOST_MAINDOMAIN_ROOT_LOCATION="/var/www/$WP_DOMAIN_FULL"
+
+  create_skeleton_dirs
   #configure_fpm_pool
-  #configure_letsencrypt_domain
   #configure_nginx_vhost
+  # configure_letsencrypt_domain
   #configure_database
 
   [ $? -ne "0" ] && exit 1
@@ -267,7 +279,7 @@ echo <<EOF "
 # SLEMP used the following enviroment:
 #
 # Domain: $WP_DOMAIN_FULL
-# Absolute path: $WP_LOCATION
+# Absolute path: $HOST_HTTPD_LOCATION
 # MySQL username: $WP_DB_USER
 # MySQL password: $WP_DB_PASS
 # MyMySQL database: $WP_DB_DATABASE
