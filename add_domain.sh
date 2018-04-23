@@ -10,20 +10,19 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
-
 create_skeleton_dirs() {
-  mkdir -p /var/www/$MAINDOMAIN/htdocs
-  mkdir /var/www/$MAINDOMAIN/logs
-  mkdir /var/www/$MAINDOMAIN/tmp
-  chown -R $WEBUSER: /var/www/$MAINDOMAIN
-  chmod 755 /var/www/$MAINDOMAIN
+  mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
+  mkdir /var/www/$USER_MAINDOMAIN/logs
+  mkdir /var/www/$USER_MAINDOMAIN/tmp
+  chown -R $WEBUSER: /var/www/$USER_MAINDOMAIN
+  chmod 755 /var/www/$USER_MAINDOMAIN
 
   if [$USER_DOMAIN_TYP = "1" ]; then
-    mkdir -p /var/www/$MAINDOMAIN/$SUBDOMAIN/htdocs
-    mkdir /var/www/$MAINDOMAIN/$SUBDOMAIN/logs
-    mkdir /var/www/$MAINDOMAIN/$SUBDOMAIN/tmp
-    chown -R $WEBUSER: /var/www/$MAINDOMAIN/$SUBDOMAIN
-    chmod 755 /var/www/$MAINDOMAIN/$SUBDOMAIN
+    mkdir -p /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs
+    mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs
+    mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/tmp
+    chown -R $WEBUSER: /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
+    chmod 755 /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
   fi
   return 0
 }
@@ -34,16 +33,16 @@ configure_letsencrypt_domain() {
 }
 
 configure_nginx_vhost(){
-  if [ $PHPVERSION = "php72" ]; then
+  if [ $USER_PHP_VERSION = "php72" ]; then
     NGXSOCKET="/var/run/php72-fpm-WP_DOMAINNAME.sock;"
   fi
-  if [ $PHPVERSION = "php71" ]; then
+  if [ $USER_PHP_VERSION = "php71" ]; then
     NGXSOCKET="/var/run/php71-fpm-WP_DOMAINNAME.sock;"
   fi
-  if [ $PHPVERSION = "php70" ]; then
+  if [ $USER_PHP_VERSION = "php70" ]; then
     NGXSOCKET="/var/run/php70-fpm-WP_DOMAINNAME.sock;"
   fi
-	cp nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+	cp templates/nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
 
   sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
   sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
@@ -78,56 +77,56 @@ configure_fpm_pool(){
   # A user have to be added first for every pool
   # Not sure if this the right place for the user setup
 
-  useradd $WP_LOCATION_USER_OWNER -d /var/www/$WP_DOMAIN_FULL
-  usermod -aG $WP_LOCATION_USER_OWNER $NGINX_USER
+  useradd $HOST_LOCATION_USER -d /var/www/$WP_DOMAIN_FULL
+  usermod -aG $HOST_LOCATION_USER $NGINX_USER
 
   if [ $DISTRO = "debian" ]; then
-    if [ $PHPVERSION = "php72" ]; then
+    if [ $USER_PHP_VERSION = "php72" ]; then
     cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
-    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+    sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
     sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
     systemctl restart php7.2-fpm
     fi
-    if [ $PHPVERSION = "php71" ]; then
+    if [ $USER_PHP_VERSION = "php71" ]; then
     cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
-    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+    sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
     sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
 
     systemctl restart php7.1-fpm
     fi
-    if [ $PHPVERSION = "php70" ]; then
+    if [ $USER_PHP_VERSION = "php70" ]; then
     cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
 
-    sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+    sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
     sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
 
     systemctl restart php7.0-fpm
     fi
   fi
   if [ $DISTRO = "centos" ]; then
-    if [ $PHPVERSION = "php72" ]; then
+    if [ $USER_PHP_VERSION = "php72" ]; then
       cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 
-      sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+      sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
       sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 
       systemctl restart php72-php-fpm
     fi
-    if [ $PHPVERSION = "php71" ]; then
+    if [ $USER_PHP_VERSION = "php71" ]; then
       cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 
-      sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+      sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
       sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
 
       systemctl restart php71-php-fpm
     fi
-    if [ $PHPVERSION = "php70" ]; then
+    if [ $USER_PHP_VERSION = "php70" ]; then
       cp phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
 
-      sed -i s/WP_LOCATION_USER_OWNER/$WP_LOCATION_USER_OWNER/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+      sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
       sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
 
       systemctl restart php70-php-fpm
@@ -160,48 +159,22 @@ FLUSH PRIVILEGES;"
 EOSQL
 }
 
-usage(){
-	echo <<USAGE "
-Usage: $(basename $0) [OPTION...]
-$(basename $0) will attempt to install all configurations for wordpress  by default,
-it will generate random passwords and the relevant ones will be informed.This script
-is provided as it is, no warraties implied.
-
-Options:
- -d <domain>		domain where wordpress will operate WITHOUT www. DEFAULT: $WP_DOMAIN
- -m <your_mysql_root_pw> You have to specify your mysql root password if you want to add an database
- -s wordpress Optional: If you add this paramter, Wordpress be downloaded and the config prepared
- -p     Select which PHP-version do you want to use, you can choose between "php70", "php71" and "php72"
- -h			this Help
-"
-USAGE
-}
-
 ## Initialization variables
 
 NGINX_USER="nginx"
-PHPVERSION="php71"
 
 # Menu
 
 echo "Adding a host now..."
 
-# Fragen ob Domain oder Subdomain
-# PHP-Version anfragen
-# Datenbank abfragen
-# cms installieren?
-
-
-
 
 WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
-WP_LOCATION_USER_OWNER=$WP_DOMAINNAME
+HOST_LOCATION_USER=$WP_DOMAINNAME
 WP_DB_USER=$WP_DOMAINNAME'_usr'
 WP_DB_DATABASE=$WP_DOMAINNAME
 WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
 WP_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
 WP_ROOTLOCATION="/var/www/$WP_DOMAIN_FULL"
-# sanity checks, will be addded again later maybe
 
 # ref http://dev.mysql.com/doc/refman/5.7/en/identifiers.html
 #pat='0-9,a-z,A-Z,$_'
@@ -209,26 +182,6 @@ WP_ROOTLOCATION="/var/www/$WP_DOMAIN_FULL"
 #  echo "! Database names can only contain basic Latin letters, digits 0-9, dollar, underscore."
 #  exit 1
 #fi
-
-echo <<EOF "
-#################################################################
-#
-# SLEMP is using the following variables for your vhost:
-# Be sure to save your MySQL login details!
-#
-# Domain: $WP_DOMAIN_FULL
-# Absolute path: $WP_LOCATION
-# MySQL username: $WP_DB_USER
-# MySQL password: $WP_DB_PASS
-# MyMySQL database: $WP_DB_DATABASE
-# Location owner: $WP_LOCATION_USER_OWNER
-# Selected PHP-Version: $PHPVERSION
-#
-# Make sure you have a DNS record $WP_DOMAIN (with and without www. pointing to the server ip.
-#
-#################################################################
-"
-EOF
 
 echo <<EOF "
 $(basename $0) will attempt to add the config files for your vhost,
@@ -242,15 +195,66 @@ read -p "Do you want to add the vhost? y/n " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-    configure_fpm_pool
-    configure_letsencrypt_domain
-    configure_nginx_vhost
-    configure_database
-    if [ $SELECTED_SYSTEM = "wordpress" ]; then
-      install_wordpress
-      configure_wordpress
-    fi
-    [ $? -ne "0" ] && exit 1
+
+  PS3='Do you want to add a domain or subdomain? '
+  options=("Domain" "Subdomain")
+  select opt in "${options[@]}"
+  do
+    case $opt in
+      "Domain")
+        echo "Domain selected"
+        USER_DOMAIN_TYP=0
+        break
+        ;;
+      "Subdomain")
+        echo "Subdomain selected"
+        USER_DOMAIN_TYP=1
+  	    break
+        ;;
+      *) echo invalid option;;
+    esac
+  done
+
+  read -p 'Domain (example.com): ' USER_MAINDOMAIN
+  if [ $USER_DOMAIN_TYP = "1" ]; then
+    read -p 'Subdomain (subdomain.example.com): ' USER_SUBDOMAIN
+  fi
+
+  PS3='Select the PHP for your domain: '
+  options=("PHP 7.0" "PHP 7.1" "PHP 7.2")
+  select opt in "${options[@]}"
+  do
+    case $opt in
+      "PHP 7.0")
+        echo "PHP 7.0 selected"
+        USER_PHP_VERSION=php70
+        break
+        ;;
+      "PHP 7.1")
+        echo "PHP 7.1 selected"
+        USER_PHP_VERSION=php71
+        break
+        ;;
+      "PHP 7.2")
+        echo "PHP 7.2 selected"
+        USER_PHP_VERSION=php72
+        break
+        ;;
+      *) echo invalid option;;
+    esac
+  done
+  read -p "Do you want to secure your site with SSL? " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+      # Generating SSL certifcate
+  fi
+  #configure_fpm_pool
+  #configure_letsencrypt_domain
+  #configure_nginx_vhost
+  #configure_database
+
+  [ $? -ne "0" ] && exit 1
 fi
 
 echo <<EOF "
@@ -263,7 +267,7 @@ echo <<EOF "
 # MySQL username: $WP_DB_USER
 # MySQL password: $WP_DB_PASS
 # MyMySQL database: $WP_DB_DATABASE
-# Location owner: $WP_LOCATION_USER_OWNER
+# Location owner: $HOST_LOCATION_USER
 #
 # Finish the wordpress setup by going to https://$WP_DOMAIN and complete the famous five
 # minute WordPress installation process.
