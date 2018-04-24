@@ -46,24 +46,25 @@ configure_letsencrypt_domain() {
 }
 
 configure_nginx_vhost(){
-  if [ $USER_PHP_VERSION = "php72" ]; then
-    NGXSOCKET="/var/run/php72-fpm-WP_DOMAINNAME.sock;"
-  fi
-  if [ $USER_PHP_VERSION = "php71" ]; then
-    NGXSOCKET="/var/run/php71-fpm-WP_DOMAINNAME.sock;"
-  fi
-  if [ $USER_PHP_VERSION = "php70" ]; then
-    NGXSOCKET="/var/run/php70-fpm-WP_DOMAINNAME.sock;"
-  fi
-	cp templates/nginx_wordpress.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+  if [ $USER_DOMAIN_TYP = "0" ]; then
+    if [ $USER_PHP_VERSION = "php72" ]; then
+      NGXSOCKET="/var/run/php72-fpm-WP_DOMAINNAME.sock;"
+    fi
+    if [ $USER_PHP_VERSION = "php71" ]; then
+      NGXSOCKET="/var/run/php71-fpm-WP_DOMAINNAME.sock;"
+    fi
+    if [ $USER_PHP_VERSION = "php70" ]; then
+      NGXSOCKET="/var/run/php70-fpm-WP_DOMAINNAME.sock;"
+    fi
+  	cp templates/nginx_wordpress.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
 
-  sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-  sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-  sed -i s/WP_DOMAINNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-  sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i s/WP_DOMAINNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
 
-  systemctl restart nginx
-
+    systemctl restart nginx
+  fi
 	return 0
 }
 
