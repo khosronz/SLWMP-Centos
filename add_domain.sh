@@ -11,19 +11,25 @@ elif [ -e /etc/debian_version ]; then
 fi
 
 create_skeleton_dirs() {
+  useradd $HOST_LOCATION_USER -d /var/www/$USER_MAINDOMAIN
+  usermod -aG $HOST_LOCATION_USER nginx
+
   mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
   mkdir /var/www/$USER_MAINDOMAIN/logs
   mkdir /var/www/$USER_MAINDOMAIN/tmp
-  chown -R $WEBUSER: /var/www/$USER_MAINDOMAIN
+
+  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN
   chmod 755 /var/www/$USER_MAINDOMAIN
 
-  if [$USER_DOMAIN_TYP = "1" ]; then
+  if [ $USER_DOMAIN_TYP = "1" ]; then
     mkdir -p /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs
     mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs
     mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/tmp
-    chown -R $WEBUSER: /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
+
+    chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
     chmod 755 /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
   fi
+
   return 0
 }
 
@@ -49,12 +55,12 @@ configure_nginx_vhost(){
   if [ $USER_PHP_VERSION = "php70" ]; then
     NGXSOCKET="/var/run/php70-fpm-WP_DOMAINNAME.sock;"
   fi
-	cp templates/nginx_wordpress.template /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+	cp templates/nginx_wordpress.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
 
-  sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
-  sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
-  sed -i s/WP_DOMAINNAME/$WP_DOMAINNAME/g /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
-  sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$WP_DOMAIN_FULL.conf
+  sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+  sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+  sed -i s/WP_DOMAINNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+  sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
 
   systemctl restart nginx
 
@@ -63,83 +69,140 @@ configure_nginx_vhost(){
 
 create_logrorate_nginx() {
   # Logrotation for nginx
-cat >> /etc/logrotate.d/nginx <<EOL
-/var/log/www/$WP_DOMAIN_FULL/logs/*.log {
-        daily
-        copytruncate
-        missingok
-        notifempty
-        compress
-        delaycompress
-        postrotate
-                if [ -f /var/run/nginx.pid ]; then
-                        kill -USR1 `cat /var/run/nginx.pid`
-                fi
-        endscript
-}
+  if [ $USER_DOMAIN_TYP = "0" ]; then
+    cat >> /etc/logrotate.d/nginx <<EOL
+    /var/log/www/$USER_MAINDOMAIN/logs/*.log {
+            daily
+            copytruncate
+            missingok
+            notifempty
+            compress
+            delaycompress
+            postrotate
+                    if [ -f /var/run/nginx.pid ]; then
+                            kill -USR1 `cat /var/run/nginx.pid`
+                    fi
+            endscript
+    }
 EOL
+  fi
+  if [ $USER_DOMAIN_TYP = "1" ]; then
+    cat >> /etc/logrotate.d/nginx <<EOL
+    /var/log/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs/*.log {
+            daily
+            copytruncate
+            missingok
+            notifempty
+            compress
+            delaycompress
+            postrotate
+                    if [ -f /var/run/nginx.pid ]; then
+                            kill -USR1 `cat /var/run/nginx.pid`
+                    fi
+            endscript
+    }
+EOL
+  fi
 }
 
 configure_fpm_pool(){
-  # A user have to be added first for every pool
-  # Not sure if this the right place for the user setup
-
-  useradd $HOST_LOCATION_USER -d /var/www/$WP_DOMAIN_FULL
-  usermod -aG $HOST_LOCATION_USER $NGINX_USER
 
   if [ $DISTRO = "debian" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
-    cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
 
-    sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
-    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
 
-    systemctl restart php7.2-fpm
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php7.2-fpm
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
-    cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
 
-    sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
-    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.1/fpm/pool.d/$WP_DOMAINNAME.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
 
-    systemctl restart php7.1-fpm
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php7.1-fpm
     fi
+
     if [ $USER_PHP_VERSION = "php70" ]; then
-    cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
 
-    sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
-    sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/php/7.0/fpm/pool.d/$WP_DOMAINNAME.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
 
-    systemctl restart php7.0-fpm
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php7.0-fpm
     fi
   fi
   if [ $DISTRO = "centos" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
-      cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
 
-      sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
-      sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
 
-      systemctl restart php72-php-fpm
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php72-php-fpm
     fi
+
     if [ $USER_PHP_VERSION = "php71" ]; then
-      cp phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
 
-      sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
-      sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php71/php-fpm.d/$WP_DOMAINNAME.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
 
-      systemctl restart php71-php-fpm
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php71-php-fpm
     fi
     if [ $USER_PHP_VERSION = "php70" ]; then
-      cp phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
 
-      sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
-      sed -i s/WP_DOMAIN_FULL/$WP_DOMAIN_FULL/g /etc/opt/remi/php70/php-fpm.d/$WP_DOMAINNAME.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
 
-      systemctl restart php70-php-fpm
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php70-php-fpm
     fi
   fi
-
 	return 0
 }
 
@@ -165,10 +228,6 @@ GRANT ALL PRIVILEGES ON $WP_DB_DATABASE.* TO '$WP_DB_USER'@'localhost' IDENTIFIE
 FLUSH PRIVILEGES;"
 EOSQL
 }
-
-## Initialization variables
-
-NGINX_USER="nginx"
 
 # ref http://dev.mysql.com/doc/refman/5.7/en/identifiers.html
 #pat='0-9,a-z,A-Z,$_'
@@ -257,9 +316,9 @@ then
 
   # Do we got everything we need?
   WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
-  HOST_LOCATION_USER=$WP_DOMAINNAME
-  WP_DB_USER=$WP_DOMAINNAME'_usr'
-  WP_DB_DATABASE=$WP_DOMAINNAME
+  HOST_LOCATION_USER=$USER_MAINDOMAIN
+  WP_DB_USER=$USER_MAINDOMAIN'_usr'
+  WP_DB_DATABASE=$USER_MAINDOMAIN
   WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
   HOST_HTTPD_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
   HOST_MAINDOMAIN_ROOT_LOCATION="/var/www/$WP_DOMAIN_FULL"
