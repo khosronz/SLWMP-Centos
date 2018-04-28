@@ -35,14 +35,16 @@ create_skeleton_dirs() {
 
 configure_letsencrypt_domain() {
   # Need to be rewritten
+  systemctl -q stop nginx
   if [ $USER_DOMAIN_TYP = "0" ]; then
-    acme.sh --issue --test -k ec-256 -w /var/www/$USER_MAINDOMAIN/htdocs -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+    certbot certonly --standalone --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
     return 0
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
-    acme.sh --issue --test -k ec-256 -w /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs -d $USER_SUBDOMAIN
+    certbot certonly --standalone --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
     return 0
   fi
+  systemctl -q start nginx
 }
 
 configure_nginx_vhost(){

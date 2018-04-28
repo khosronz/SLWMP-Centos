@@ -182,9 +182,14 @@ if servicesCheck "php-fpm"; then
 }
 
 install_letsencrypt() {
-  #curl https://get.acme.sh | sh
-  #/root/.acme.sh/account.conf
-  #CERT_HOME="/etc/ssl/private"
+  if [ $DISTRO = "debian" ]; then
+    DEBIAN_FRONTEND=noninteractive apt -qq update && apt install certbot -y < /dev/null > /dev/null
+  fi
+  if [ $DISTRO = "centos" ]; then
+    yum -q update && yum install certbot -y
+  fi
+  # Cronjob for renewals
+  echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
   return 0
 }
 
