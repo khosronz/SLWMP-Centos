@@ -13,10 +13,12 @@ fi
 create_skeleton_dirs() {
   useradd $HOST_LOCATION_USER -d /var/www/$USER_MAINDOMAIN
   usermod -aG $HOST_LOCATION_USER nginx
-
-  mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
-  mkdir /var/www/$USER_MAINDOMAIN/logs
-  mkdir /var/www/$USER_MAINDOMAIN/tmp
+  
+  if [ ! -d /var/www/$USER_MAINDOMAIN ]; then
+	mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
+	mkdir /var/www/$USER_MAINDOMAIN/logs
+	mkdir /var/www/$USER_MAINDOMAIN/tmp
+  fi
 
   chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN
   chmod 755 /var/www/$USER_MAINDOMAIN
@@ -33,18 +35,111 @@ create_skeleton_dirs() {
   return 0
 }
 
-configure_letsencrypt_domain() {
-  # Need to be rewritten
-  systemctl -q stop nginx
-  if [ $USER_DOMAIN_TYP = "0" ]; then
-    certbot certonly --standalone --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
-    return 0
+configure_fpm_pool(){
+
+  if [ $DISTRO = "debian" ]; then
+    if [ $USER_PHP_VERSION = "php72" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
+		sed -i s/PHP-SOCKET/php72-fpm-$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php7.2-fpm
+    fi
+    if [ $USER_PHP_VERSION = "php71" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+		sed -i s/PHP-SOCKET/php71-fpm-$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php7.1-fpm
+    fi
+
+    if [ $USER_PHP_VERSION = "php70" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+		sed -i s/PHP-SOCKET/php70-fpm-$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php7.0-fpm
+    fi
   fi
-  if [ $USER_DOMAIN_TYP = "1" ]; then
-    certbot certonly --standalone --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
-    return 0
+  if [ $DISTRO = "centos" ]; then
+    if [ $USER_PHP_VERSION = "php72" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
+		sed -i s/PHP-SOCKET/php72-fpm-$HOST_LOCATION_USER/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php72-php-fpm
+    fi
+
+    if [ $USER_PHP_VERSION = "php71" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+		sed -i s/PHP-SOCKET/php71-fpm-$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php71-php-fpm
+    fi
+    if [ $USER_PHP_VERSION = "php70" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+		sed -i s/PHP-SOCKET/php70-fpm-$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
+
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php70-php-fpm
+    fi
   fi
-  systemctl -q start nginx
+	return 0
 }
 
 configure_nginx_vhost(){
@@ -60,8 +155,8 @@ configure_nginx_vhost(){
     fi
     cp templates/nginx_default.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-    sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-    sed -i s/WP_DOMAINNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i s/HOST_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i s/HOST_DOMAINNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -76,12 +171,26 @@ configure_nginx_vhost(){
     fi
     cp templates/nginx_default.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-    sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-    sed -i s/WP_DOMAINNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    sed -i s/HOST_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    sed -i s/HOST_DOMAINNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
   fi
     systemctl reload nginx
 	return 0
+}
+
+configure_letsencrypt_domain() {
+  # Need to be rewritten
+  systemctl -q stop nginx
+  if [ $USER_DOMAIN_TYP = "0" ]; then
+    certbot certonly --standalone --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+    return 0
+  fi
+  if [ $USER_DOMAIN_TYP = "1" ]; then
+    certbot certonly --standalone --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+    return 0
+  fi
+  systemctl -q start nginx
 }
 
 create_logrorate_nginx() {
@@ -122,113 +231,13 @@ EOL
   fi
 }
 
-configure_fpm_pool(){
-
-  if [ $DISTRO = "debian" ]; then
-    if [ $USER_PHP_VERSION = "php72" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
-      fi
-      systemctl reload php7.2-fpm
-    fi
-    if [ $USER_PHP_VERSION = "php71" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
-      fi
-      systemctl reload php7.1-fpm
-    fi
-
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-      fi
-      systemctl reload php7.0-fpm
-    fi
-  fi
-  if [ $DISTRO = "centos" ]; then
-    if [ $USER_PHP_VERSION = "php72" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
-      fi
-      systemctl reload php72-php-fpm
-    fi
-
-    if [ $USER_PHP_VERSION = "php71" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
-      fi
-      systemctl reload php71-php-fpm
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i s/WP_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-      fi
-      systemctl reload php70-php-fpm
-    fi
-  fi
-	return 0
-}
 
 configure_database(){
 	echo <<EOFMW "
 #################################################################
 #
-# $0 is about to create the mysql database called '$WP_DB_DATABASE',
-# and also will setup a mysql database user '$WP_DB_USER'.
+# $0 is about to create the mysql database called '$HOST_DB_DATABASE',
+# and also will setup a mysql database user '$HOST_DB_USER'.
 #
 #
 # Warning: if the database exists it will be dropped, if the user
@@ -239,16 +248,16 @@ configure_database(){
 "
 EOFMW
 
-	mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $WP_DB_DATABASE ;
-CREATE DATABASE $WP_DB_DATABASE;
-GRANT ALL PRIVILEGES ON $WP_DB_DATABASE.* TO '$WP_DB_USER'@'localhost' IDENTIFIED BY '$WP_DB_PASS';
+	mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $HOST_DB_DATABASE ;
+CREATE DATABASE $HOST_DB_DATABASE;
+GRANT ALL PRIVILEGES ON $HOST_DB_DATABASE.* TO '$HOST_DB_USER'@'localhost' IDENTIFIED BY '$HOST_DB_PASS';
 FLUSH PRIVILEGES;"
 EOSQL
 }
 
 # ref http://dev.mysql.com/doc/refman/5.7/en/identifiers.html
 #pat='0-9,a-z,A-Z,$_'
-#if [[ ! "${WP_DB_DATABASE}" =~ ["^${pat}"] ]]; then
+#if [[ ! "${HOST_DB_DATABASE}" =~ ["^${pat}"] ]]; then
 #  echo "! Database names can only contain basic Latin letters, digits 0-9, dollar, underscore."
 #  exit 1
 #fi
@@ -332,16 +341,16 @@ then
   fi
 
   # Do we got everything we need?
-  WP_DOMAINNAME=(${WP_DOMAIN_FULL//./ })
-  HOST_LOCATION_USER=$USER_MAINDOMAIN
-  WP_DB_USER=$USER_MAINDOMAIN'_usr'
-  WP_DB_DATABASE=$USER_MAINDOMAIN
-  WP_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
-  HOST_HTTPD_LOCATION="/var/www/$WP_DOMAIN_FULL/htdocs"
-  HOST_MAINDOMAIN_ROOT_LOCATION="/var/www/$WP_DOMAIN_FULL"
+  HOST_DOMAINNAME=(${USER_MAINDOMAIN//./ })
+  HOST_LOCATION_USER=(${USER_MAINDOMAIN//./ })
+  HOST_DB_USER=$HOST_LOCATION_USER'_usr'
+  HOST_DB_DATABASE=$USER_MAINDOMAIN
+  HOST_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
+  HOST_HTTPD_LOCATION="/var/www/$HOST_DOMAIN_FULL/htdocs"
+  HOST_MAINDOMAIN_ROOT_LOCATION="/var/www/$HOST_DOMAIN_FULL"
 
   create_skeleton_dirs
-  #configure_fpm_pool
+  configure_fpm_pool
   #configure_nginx_vhost
   # configure_letsencrypt_domain
   #configure_database
@@ -354,17 +363,17 @@ echo <<EOF "
 #
 # SLEMP used the following enviroment:
 #
-# Domain: $WP_DOMAIN_FULL
+# Domain: $HOST_DOMAIN_FULL
 # Absolute path: $HOST_HTTPD_LOCATION
-# MySQL username: $WP_DB_USER
-# MySQL password: $WP_DB_PASS
-# MyMySQL database: $WP_DB_DATABASE
+# MySQL username: $HOST_DB_USER
+# MySQL password: $HOST_DB_PASS
+# MyMySQL database: $HOST_DB_DATABASE
 # Location owner: $HOST_LOCATION_USER
 #
-# Finish the wordpress setup by going to https://$WP_DOMAIN and complete the famous five
+# Finish the wordpress setup by going to https://$HOST_DOMAIN and complete the famous five
 # minute WordPress installation process.
 #
-# Note: In case the $WP_DOMAIN is matching the server hostname (overlaping default site config),
+# Note: In case the $HOST_DOMAIN is matching the server hostname (overlaping default site config),
 # the site may not work, you may need to disable the default site in debian based systems or check
 # nginx configuration
 #################################################################
