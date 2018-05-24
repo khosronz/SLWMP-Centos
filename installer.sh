@@ -187,6 +187,8 @@ install_letsencrypt() {
   if [ $DISTRO = "centos" ]; then
     yum -q update && yum install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
+  
+  mkdir /var/www/acme-challenges
   # Cronjob for renewals
   #echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
   return 0
