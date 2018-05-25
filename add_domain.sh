@@ -60,7 +60,7 @@ configure_fpm_pool(){
 		
 		sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
-        sed -i s#HOST_DOMAIN_FULL#$HOST_MAINDOMAIN_ROOT_LOCATION#g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
 		sed -i s/PHP-SOCKET/php72-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -68,7 +68,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
-        sed -i s#HOST_DOMAIN_FULL#$HOST_SUBDOMAIN_ROOT_LOCATION#g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
 		sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
       fi
       systemctl reload php7.2-fpm
@@ -79,7 +79,7 @@ configure_fpm_pool(){
 		
 		sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_MAINDOMAIN_ROOT_LOCATION/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
 		sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -87,7 +87,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_SUBDOMAIN_ROOT_LOCATION/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
 		sed -i s/PHP-SOCKET/php71-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
       fi
       systemctl reload php7.1-fpm
@@ -99,7 +99,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_MAINDOMAIN_ROOT_LOCATION/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
 		sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -107,7 +107,7 @@ configure_fpm_pool(){
 		
 		sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_SUBDOMAIN_ROOT_LOCATION/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
 		sed -i s/PHP-SOCKET/php70-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
       fi
       systemctl reload php7.0-fpm
@@ -120,7 +120,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i s#HOST_DOMAIN_FULL#$HOST_MAINDOMAIN_ROOT_LOCATION#g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
 		sed -i s/PHP-SOCKET/php72-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -140,7 +140,7 @@ configure_fpm_pool(){
 		
 		sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_MAINDOMAIN_ROOT_LOCATION/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
 		sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -148,7 +148,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_SUBDOMAIN_ROOT_LOCATION/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
 		sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       systemctl reload php71-php-fpm
@@ -159,7 +159,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_MAINDOMAIN_ROOT_LOCATION/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
 		sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -167,7 +167,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_SUBDOMAIN_ROOT_LOCATION/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_DOMAIN_FULL/$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
 		sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       systemctl reload php70-php-fpm
