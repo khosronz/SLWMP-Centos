@@ -159,7 +159,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
 		sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -167,7 +167,7 @@ configure_fpm_pool(){
 
 		sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i s/HOST_DOMAIN_FULL/$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
 		sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       systemctl reload php70-php-fpm
@@ -179,19 +179,19 @@ configure_fpm_pool(){
 configure_nginx_vhost(){
   if [ $USER_DOMAIN_TYP = "0" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
-      NGXSOCKET="/var/run/php72-fpm-$USER_MAINDOMAIN.sock;"
+      NGXSOCKET="/var/run/php72-fpm-$USER_DOMAIN_HYPHEN.sock;"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
-      NGXSOCKET="/var/run/php71-fpm-$USER_MAINDOMAIN.sock;"
+      NGXSOCKET="/var/run/php71-fpm-$USER_DOMAIN_HYPHEN.sock;"
     fi
     if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_MAINDOMAIN.sock;"
+      NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock;"
     fi
     cp templates/nginx_default.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-    sed -i s/HOST_DOMAIN_FULL/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-    sed -i s/HOST_DOMAINNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-    sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+	sed -i s/SSL_DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
@@ -205,9 +205,9 @@ configure_nginx_vhost(){
     fi
     cp templates/nginx_default.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-    sed -i s/HOST_DOMAIN_FULL/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-    sed -i s/HOST_DOMAINNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-    sed -i "s|HOST_HTTPD_LOCATION|$HOST_HTTPD_LOCATION|" /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	sed -i s/SSL_DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
   fi
     systemctl reload nginx
 	return 0
