@@ -58,3 +58,4 @@ You will find the config and files at the following paths:
 - CMS installations (Wordpress and Nextcloud planed)
 - Apache
 - Maybe Apache + nginx (as proxy)
+- fail2ban

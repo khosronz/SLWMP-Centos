@@ -1,20 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.5.0
-
-# "Domain: $USER_MAINDOMAIN"
-# "Subdomain $USER_SUBDOMAIN"
-# "Absolute path maindomain: $HOST_MAINDOMAIN_ROOT_LOCATION"
-# "Absolute path subdomain: $HOST_SUBDOMAIN_ROOT_LOCATION"
-# "Absolute path htdocs maindomain: $HOST_MAINDOMAIN_HTTPD_LOCATION"
-# "Absolute path htdocs subdomain: $HOST_SUBDOMAIN_HTTPD_LOCATION"
-# "MySQL username: $HOST_DB_USER"
-# "MySQL password: $HOST_DB_PASS"
-# "MySQL database: $HOST_DB_DATABASE"
-# "Location owner: $HOST_LOCATION_USER"
-# "Domain with hyphen: $USER_DOMAIN_HYPHEN"
-# "Subdomain with hyphen: $USER_SUBDOMAIN_HYPHEN"
+# Version 0.6.0-dev
 
 if [ -e /etc/redhat-release ]; then
      DISTRO="centos"
@@ -188,8 +175,8 @@ configure_nginx_vhost(){
     sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+	sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+	sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -206,8 +193,8 @@ configure_nginx_vhost(){
     sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
   fi
 	return 0
@@ -288,14 +275,6 @@ EOSQL
 
 echo <<EOF "
 $(basename $0) will attempt to add a vhost to your system now.
-
--------------------------------------------------------------------------------
-For Let's Encrypt, please read the Terms of Service at
-https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf.
-With using this script you agree in order to register with the ACME server at
-https://acme-v01.api.letsencrypt.org/directory
--------------------------------------------------------------------------------
-
 This script is provided as it is, no warraties implied. (Ctrl-c to abort)
 "
 EOF

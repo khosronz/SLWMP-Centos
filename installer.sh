@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.5.0
+# Version 0.6.0-dev
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -187,7 +187,7 @@ install_letsencrypt() {
   if [ $DISTRO = "centos" ]; then
     yum -q update && yum install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
-  
+
   # Cronjob for renewals
   #echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
   return 0
@@ -227,6 +227,18 @@ EOF
 return 0
 }
 
+install_redis() {
+  apt install redis-server php-redis -y
+  cp /etc/redis/redis.conf /etc/redis/redis.conf.bak
+  sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
+  sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
+  sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
+  sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
+  usermod -a -G redis nginx
+
+  return 0
+}
+
 configure_centos() {
   firewall-cmd --permanent --zone=public --add-service=http > /dev/null 2>&1
   firewall-cmd --permanent --zone=public --add-service=https > /dev/null 2>&1
@@ -239,6 +251,14 @@ configure_centos() {
 
 echo <<EOF "
 $(basename $0) will attempt to install SLEMP.
+
+-------------------------------------------------------------------------------
+For Let's Encrypt, please read the Terms of Service at
+https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf.
+With using this script you agree in order to register with the ACME server at
+https://acme-v01.api.letsencrypt.org/directory
+-------------------------------------------------------------------------------
+
 This script is provided as it is, no warraties implied.
 "
 EOF
