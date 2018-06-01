@@ -360,10 +360,10 @@ then
 
   HOST_DB_USER=$HOST_LOCATION_USER'_usr'
   if [ $USER_DOMAIN_TYP = "0" ]; then
-  HOST_DB_DATABASE=$USER_MAINDOMAIN
+  HOST_DB_DATABASE=${USER_MAINDOMAIN/./_}
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
-  HOST_DB_DATABASE=$USER_SUBDOMAIN
+  HOST_DB_DATABASE=${USER_SUBDOMAIN//./_}
   fi
 
   HOST_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
