@@ -58,7 +58,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php72-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
@@ -66,7 +66,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp templates/phpfpmpool.template /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
@@ -77,7 +77,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
@@ -85,7 +85,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php71-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
@@ -97,7 +97,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
@@ -105,7 +105,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php70-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
@@ -118,7 +118,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php72-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -126,7 +126,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
@@ -138,7 +138,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -146,7 +146,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -157,7 +157,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -165,7 +165,7 @@ configure_fpm_pool(){
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
 
-		    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -188,6 +188,7 @@ configure_nginx_vhost(){
       NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock;"
     fi
     cp templates/nginx_default.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
 	  sed -i s/SSL_DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
@@ -204,6 +205,7 @@ configure_nginx_vhost(){
       NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN.sock;"
     fi
     cp templates/nginx_default.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/NGXSOCKET/$NGXSOCKET/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
 	  sed -i s/SSL_DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
