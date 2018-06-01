@@ -190,6 +190,7 @@ configure_nginx_vhost(){
     sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
 	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
 	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
@@ -207,6 +208,7 @@ configure_nginx_vhost(){
     sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
 	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
 	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
   fi
 	return 0
 }
