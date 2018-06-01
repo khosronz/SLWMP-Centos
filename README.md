@@ -1,57 +1,58 @@
 # SLEMP
 
 SLEMP stands for Secure LEMP.
+It will support latest versions of Debian (Stretch) and CentOS (7.x).
 
-It will support latest versions of Debian (Stretch) and CentOS (7.x). Successfully tested on both systems.
+## Features
 
-Why all the effort? Because I want to learn! Yes, at this moment the script is really stupid, but I hope that will change soon. :-)
-
-## What it does?
-
-- Install nginx and MariaDB packages from original developers
-- Install PHP 7.1 packages from http://deb.sury.org/ (Debian) and Remi's RPM repository (http://rpms.famillecollet.com/) (CentOS)
-- Add an user for the vhost, add an PHP-FPM pool
-- Requested a certifcate from Let's Encrypt using certbot
-- Add a Nginx and Logrotation config, compatible with Wordpress
-- Add an MySQL database and user
-- If you use the -s paramter, wordpress will be downloaded and the configuration will be prepared.
+- Setup a secure nginx config
+- Secure your host with a Let's Encrypt certificate
+- Subdomain support
+- Multiple PHP versions (7.0, 7.1, 7.2) running as FPM
+- MariaDB database with generated passwords
 
 ## Requirements
 
-- OS: Debian 9 (Stretch) or CentOS 7.x
-- Clean minimal installation (git and wget necessary)
-- Important: NO webserver, MySQL/MariaDB or PHP-FPM may be installed!
+- OS: Debian 9 (Stretch) or CentOS 7.x, clean install!
 
 ## Installation
-
 ```
-Be sure to be root!
-cd /root && wget https://github.com/timscha/SLEMP/archive/0.4.0.zip
-unzip 0.4.0.zip && cd SLEMP-0.4.0 && chmod +x add_vhost.sh install_slemp.sh
-
-./install_slemp.sh -p (php70/php71/php72/all)
+ curl https://timscha.io/setup_slemp.sh | sudo bash
 ```
+The setup script will add the following repositories, dependent on your OS:
 
-Optional: If you want to select the PHP-version add the -p paramter.
-Default version is PHP 7.1, you can choose between "php70", "php71", "php72" and "all"
+- NGINX (original repository by the nginx developers)
+- PHP
+  - Debian: DEB.SURY.ORG https://deb.sury.org/
+  - CentOS: Remi's RPM repository (https://rpms.remirepo.net)
+- MariaDB (original repository by the MariaDB developers)
 
-Please notice: At this time, PHP 7.2 is only available as RC. Do not use it in productive enviroment!
+After the installer is finished, CentOS user have to restart there system!
+Also  safe your MySQL root password on a secure place! You will see the password at the end of the installation.
 
-Please safe your MySQL root password on a safe place! This will show you at the end of the installation!
+If something goes wrong there is an installer log available at /tmp/slemp_install.txt
 
 ## Usage
-
-After installation you can add an Vhost with
-
 ```
-./add_vhost.sh -d <YOUR_DOMAINNAME> -m <Your_MariaDB_Root_Password> -p php70/php71 -s wordpress
+./add_domain.sh
 ```
 
-"-s wordpress" is optional
-"-p php which you want to use on the vhost"
+The script will guide you through the setup.
+Be sure to point your domain to the IP of your server (www and non-www dns record)
 
-Please NOT adding WWW before your domain! The script will do this for you!
+You will find the config and files at the following paths:
 
-## To Dos
+#### nginx
+- /etc/nginx/conf.d/
 
-- Subdomain support
+#### PHP
+- CentOS: /etc/opt/remi/php7x/php-fpm.d/
+- Debian: /etc/php/7.x/fpm/pool.d/
+
+### Web
+- /var/www/YOUR-DOMAIN/
+
+## What's next
+- CMS installations (Wordpress and Nextcloud planed)
+- Apache
+- Maybe Apache + nginx (as proxy)

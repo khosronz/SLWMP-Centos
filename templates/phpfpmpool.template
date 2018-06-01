@@ -1,10 +1,10 @@
-[WP_LOCATION_USER_OWNER]
-listen = /var/run/php71-fpm-WP_LOCATION_USER_OWNER.sock
+[DOMAINNAME_HYPHEN]
+listen = /var/run/PHP-SOCKET.sock
 listen.backlog = 4096
-user = WP_LOCATION_USER_OWNER
-group = WP_LOCATION_USER_OWNER
-listen.owner = WP_LOCATION_USER_OWNER
-listen.group = WP_LOCATION_USER_OWNER
+user = HOST_LOCATION_USER
+group = HOST_LOCATION_USER
+listen.owner = HOST_LOCATION_USER
+listen.group = HOST_LOCATION_USER
 listen.allowed_clients = 127.0.0.1
 listen.mode = 0660
 pm = dynamic
@@ -18,5 +18,5 @@ env[PATH] = /usr/local/bin:/usr/bin:/bin
 env[TMP] = /tmp
 env[TMPDIR] = /tmp
 env[TEMP] = /tmp
-php_admin_value[open_basedir] = /var/www/WP_DOMAIN_FULL/:/tmp/
+php_admin_value[open_basedir] = HOST_DOMAIN_FULL/:/tmp/
 php_admin_value[date.timezone] = Europe/Berlin
