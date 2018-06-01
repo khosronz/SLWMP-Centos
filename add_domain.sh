@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.5.0-dev
+# Version 0.5.0
 
 # "Domain: $USER_MAINDOMAIN"
 # "Subdomain $USER_SUBDOMAIN"
@@ -288,6 +288,14 @@ EOSQL
 
 echo <<EOF "
 $(basename $0) will attempt to add a vhost to your system now.
+
+-------------------------------------------------------------------------------
+For Let's Encrypt, please read the Terms of Service at
+https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf.
+With using this script you agree in order to register with the ACME server at
+https://acme-v01.api.letsencrypt.org/directory
+-------------------------------------------------------------------------------
+
 This script is provided as it is, no warraties implied. (Ctrl-c to abort)
 "
 EOF
@@ -388,23 +396,6 @@ then
 
   [ $? -ne "0" ] && exit 1
 fi
-
-# Debugging
-
-echo "Domain: $USER_MAINDOMAIN"
-echo "Subdomain $USER_SUBDOMAIN"
-echo "Absolute path maindomain: $HOST_MAINDOMAIN_ROOT_LOCATION"
-echo "Absolute path subdomain: $HOST_SUBDOMAIN_ROOT_LOCATION"
-echo "Absolute path htdocs maindomain: $HOST_MAINDOMAIN_HTTPD_LOCATION"
-echo "Absolute path htdocs subdomain: $HOST_SUBDOMAIN_HTTPD_LOCATION"
-echo "MySQL username: $HOST_DB_USER"
-echo "MySQL password: $HOST_DB_PASS"
-echo "MySQL database: $HOST_DB_DATABASE"
-echo "Location owner: $HOST_LOCATION_USER"
-echo "Domain with hyphen: $USER_DOMAIN_HYPHEN"
-echo "Subdomain with hyphen: $USER_SUBDOMAIN_HYPHEN"
-
-# Debugging
 
 echo <<EOF "
 #################################################################
