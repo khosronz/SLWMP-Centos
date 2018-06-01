@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.5.0-dev
+# Version 0.5.0
 
 #########################################################
 # This script is intended to be run like this:
 #
-#   curl https://timscha.io/setup.sh | sudo bash
+#   curl https://timscha.io/setup_slemp.sh | sudo bash
 #
 #########################################################
 
@@ -61,4 +61,6 @@ if [ $DISTRO = "centos" ]; then
 fi
 # Change directory to it and start the setup
 cd $HOME/SLEMP
+chmod +x installer.sh
+chmod +x add_domain.sh
 ./installer.sh
