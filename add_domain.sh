@@ -252,11 +252,11 @@ EOL
 
 configure_letsencrypt_nginx() {
   if [ $USER_DOMAIN_TYP = "0" ]; then
-    certbot certonly --standalone --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+    certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
     return 0
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
-    certbot certonly --standalone --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+    certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
     return 0
   fi
 }
