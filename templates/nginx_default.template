@@ -12,8 +12,8 @@ server {
 
 	root DOMAIN_HTTPD_LOCATION;
 	client_max_body_size 1G;
-	access_log DOMAIN_ROOT_PATH/logs/access.log;
-	error_log ROOT_PATH/logs/error.log;
+	access_log HOST_DOMAIN_FULL/logs/access.log;
+	error_log HOST_DOMAIN_FULL/logs/error.log;
 	index index.php;
 
 	server_name DOMAIN_FULLNAME www.DOMAIN_FULLNAME;
