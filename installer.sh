@@ -38,7 +38,7 @@ initialize_os() {
   if [ $DISTRO = "debian" ]; then
 	DEBIAN_FRONTEND=noninteractive apt-get -qq update >> /tmp/slemp_install.txt 2>&1
     DEBIAN_FRONTEND=noninteractive apt-get -qq install apt-transport-https lsb-release ca-certificates curl wget software-properties-common dirmngr -y >> /tmp/slemp_install.txt 2>&1
-    
+
     DEBIAN_FRONTEND=noninteractive apt-key adv --recv-keys -qq --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8 >> /tmp/slemp_install.txt 2>&1
     add-apt-repository -y 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian stretch main' >> /tmp/slemp_install.txt 2>&1
 
@@ -79,7 +79,7 @@ EOL
     yum -q install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
     yum -q install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
     yum -q update -y && yum -q install firewalld yum-utils -y >> /tmp/slemp_install.txt 2>&1
-	
+
 	systemctl -q enable firewalld
     systemctl -q start firewalld
   fi
@@ -101,7 +101,7 @@ install_nginx() {
 }
 
 install_mariadb(){
-  if servicesCheck "mysql"; then 
+  if servicesCheck "mysql"; then
 
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install mariadb-server mariadb-client -y >> /tmp/slemp_install.txt 2>&1
@@ -110,7 +110,7 @@ install_mariadb(){
 
     fi
     if [ $DISTRO = "centos" ]; then
-      yum -q install MariaDB-server MariaDB-client -y > /dev/null	   
+      yum -q install MariaDB-server MariaDB-client -y > /dev/null
       systemctl -q enable mariadb
       systemctl -q start mariadb
 
@@ -188,7 +188,6 @@ install_letsencrypt() {
     yum -q update && yum install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
   
-  mkdir /var/www/acme-challenges
   # Cronjob for renewals
   #echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
   return 0
