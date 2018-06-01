@@ -17,7 +17,9 @@ It will support latest versions of Debian (Stretch) and CentOS (7.x).
 
 ## Installation
 ```
- curl https://timscha.io/setup_slemp.sh | sudo bash
+git clone https://github.com/timscha/SLEMP SLEMP
+chmod +x installer.sh add_domain.sh
+./installer.sh
 ```
 The setup script will add the following repositories, dependent on your OS:
 
