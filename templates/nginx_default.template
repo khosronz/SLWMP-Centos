@@ -1,5 +1,5 @@
 upstream DOMAIN_HYPHEN-php-handler {
-    server unix:NGXSOCKET;
+    server unix:NGXSOCKET
 }
 
 server {
