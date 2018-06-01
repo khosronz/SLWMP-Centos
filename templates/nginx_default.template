@@ -54,16 +54,25 @@ server {
 	}
 
     location ~ \.php$ {
-         fastcgi_split_path_info ^(.+\.php)(/.+)$;
-         fastcgi_pass DOMAIN_HYPHENphp-handler;
-         fastcgi_param PATH_TRANSLATED $document_root$fastcgi_script_name;
-         fastcgi_index index.php;
-	     fastcgi_buffers 16 16k;
-         fastcgi_buffer_size 32k;
-         include fastcgi_params;
+		fastcgi_split_path_info ^(.+\.php)(/.+)$;
+		fastcgi_pass DOMAIN_HYPHENphp-handler;
+        fastcgi_param PATH_TRANSLATED $document_root$fastcgi_script_name;
+        fastcgi_index index.php;
+	    fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+        include fastcgi_params;
     }
+	
+	location /.well-known/acme-challenge {
+		alias /var/www/acme-challenges;
+
+		location ~ /.well-known/acme-challenge/(.*) {
+			default_type text/plain;
+		}
+	}
+	
 	location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
-		    expires max;
+		expires max;
         log_not_found off;
     }
 }
