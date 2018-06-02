@@ -160,6 +160,10 @@ configure_fpm_pool(){
 	return 0
 }
 
+configure_apache_vhost() {
+  return 0
+}
+
 configure_nginx_vhost(){
   if [ $USER_DOMAIN_TYP = "0" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
@@ -175,26 +179,26 @@ configure_nginx_vhost(){
     sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-	sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-	sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
-      NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN.sock;"
+      NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
-      NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN.sock;"
+      NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
     fi
     if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN.sock;"
+      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
     fi
     cp templates/nginx_default.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-	sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-	sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
   fi
 	return 0
@@ -353,14 +357,18 @@ then
     esac
   done
 
-  read -p "Do you want to add a database? [y/n] " -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]
-  then
-    printf "Please provide your MySQL-Root-Password when asked."
+  if [ $USER_CMS_CHOICE = "nextcloud" ] || [ $USER_CMS_CHOICE = "wordpress" ]; then
     USER_DB_SITE=1
   else
-    USER_DB_SITE=0
+    read -p "Do you want to add a database? [y/n] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+      printf "Please provide your MySQL-Root-Password when asked."
+      USER_DB_SITE=1
+    else
+      USER_DB_SITE=0
+    fi
   fi
 
   HOST_LOCATION_USER=(${USER_MAINDOMAIN//./ })

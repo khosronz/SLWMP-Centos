@@ -85,6 +85,17 @@ EOL
   fi
 }
 
+install_apache() {
+  if servicesCheck "apache2"; then
+    if [ $DISTRO = "debian" ]; then
+    # For now we only support debian, because the apache version of centos does not support unix proxy
+    fi
+    return 0
+  else
+    return 1
+  fi
+}
+
 install_nginx() {
   if servicesCheck "nginx"; then
     if [ $DISTRO = "debian" ]; then
@@ -110,7 +121,7 @@ install_mariadb(){
 
     fi
     if [ $DISTRO = "centos" ]; then
-      yum -q install MariaDB-server MariaDB-client -y > /dev/null
+      yum -q install MariaDB-server MariaDB-client -y >> /tmp/slemp_install.txt 2>&1
       systemctl -q enable mariadb
       systemctl -q start mariadb
 
@@ -203,6 +214,19 @@ install_redis() {
   fi
 }
 
+initialize_apache() {
+  if [ ! -d "/var/www" ]; then
+    mkdir /var/www
+  fi
+  a2enmod rewrite > /dev/null 2>&1
+  a2enmod headers > /dev/null 2>&1
+  a2enmod env > /dev/null 2>&1
+  a2enmod dir > /dev/null 2>&1
+  a2enmod mime > /dev/null 2>&1
+  a2enmod setenvif > /dev/null 2>&1
+  return 0
+}
+
 initialize_nginx() {
   if [ ! -d "/var/www" ]; then
     mkdir /var/www
@@ -219,9 +243,17 @@ initialize_nginx() {
 
   systemctl -q start nginx
   systemctl -q enable nginx
+  return 0
 }
 
 initialize_php(){
+#opcache.enable=1
+#opcache.enable_cli=1
+#opcache.interned_strings_buffer=8
+#opcache.max_accelerated_files=10000
+#opcache.memory_consumption=128
+#opcache.save_comments=1
+#opcache.revalidate_freq=1
   return 0
 }
 
@@ -341,6 +373,12 @@ then
     if install_nginx $1; then echo "[X]"; else echo "Failed..."; fi
     printf "\nConfiguring nginx . . . "
     if initialize_nginx $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
+  if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+    printf "Installing Apache . . . "
+    if install_apache $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring Apache . . . "
+    if initialize_apache $1; then echo "[X]"; else echo "Failed..."; fi
   fi
   printf "\nInstalling MariaDB . . . "
   if install_mariadb $1; then echo "[X]"; else echo "Failed..."; fi

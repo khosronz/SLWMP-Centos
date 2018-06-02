@@ -13,17 +13,10 @@
     ServerAdmin hostmaster@hostname
     DocumentRoot /var/www/#/htdocs/
     <Directory /var/www/#/htdocs/>
-          Options Indexes +FollowSymLinks
+          Options Indexes FollowSymLinks MultiViews
           AllowOverride All
           Order allow,deny
           allow from all
-          <IfModule mod_dav.c>
-            Dav off
-          </IfModule>
-
-          SetEnv HOME /var/www/nextcloud
-          SetEnv HTTP_HOME /var/www/nextcloud
-
     </Directory>
     ErrorLog /var/www/#/logs/error.log
     LogLevel warn
@@ -37,19 +30,29 @@
     SSLCipherSuite 'EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA:EECDH:EDH+AESGCM:EDH:+3DES:ECDH+AESGCM:ECDH+AES:ECDH:AES:HIGH:MEDIUM:!RC4:!CAMELLIA:!SEED:!aNULL:!MD5:!eNULL:!LOW:!EXP:!DSS:!PSK:!SRP'
     SSLProtocol all -SSLv2 -SSLv3
 
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+
     # HSTS (mod_headers is required) (15768000 seconds = 6 months)
     #Header always set Strict-Transport-Security "max-age=15768000"
 
-    # AddType text/html .php
-    # DirectoryIndex index.php
+    AddType text/html .php
+    DirectoryIndex index.php
 
     <FilesMatch \.php$>
           # Tachtler
           # default:    SetHandler application/x-httpd-php
           # TCP/IP-Port
           # SetHandler "proxy:fcgi://127.0.0.1:9001"
-          # UNIX-Socket - Supported since Apache 2.4.9 / CentOS 7 use Apache 2.4.6
-          SetHandler "proxy:unix:/var/run/php-fpm-www.sock|fcgi://localhost/"
+          # UNIX-Socket - Since Apache 2.4.9 / CentOS 7 use Apache 2.4.6 !
+          # SetHandler "proxy:unix:/var/run/php-fpm-www.sock|fcgi://localhost/"
     </FilesMatch>
 
 </VirtualHost>
