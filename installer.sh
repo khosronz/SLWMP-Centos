@@ -196,13 +196,7 @@ install_letsencrypt() {
 install_redis() {
   if servicesCheck "php-fpm"; then
     apt install redis-server php-redis -y
-    cp /etc/redis/redis.conf /etc/redis/redis.conf.bak
-    sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
-    sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
-    sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
-    sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
-    usermod -a -G redis nginx
-
+    cp /etc/redis/redis.conf /etc/redis/redis.conf.org
     return 0
   else
     return 1
@@ -248,7 +242,6 @@ return 0
 }
 
 initialize_redis() {
-  cp /etc/redis/redis.conf /etc/redis/redis.conf.org
   sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
   sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
   sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
