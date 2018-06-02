@@ -218,6 +218,7 @@ initialize_apache() {
   if [ ! -d "/var/www" ]; then
     mkdir /var/www
   fi
+  # a2enmod http2  I have to check if the package is available in debian
   a2enmod rewrite > /dev/null 2>&1
   a2enmod headers > /dev/null 2>&1
   a2enmod env > /dev/null 2>&1
