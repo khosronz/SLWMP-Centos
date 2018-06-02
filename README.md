@@ -5,11 +5,13 @@ It will support latest versions of Debian (Stretch) and CentOS (7.x).
 
 ## Features
 
-- Setup a secure nginx config
+- Setup a secure nginx or apache (only on Debian) config
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
 - Multiple PHP versions (7.0, 7.1, 7.2) running as FPM
 - MariaDB database with generated passwords
+- Install Nextcloud or Wordpress with an optimized configuration
+- Redis support
 
 ## Requirements
 

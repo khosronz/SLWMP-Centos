@@ -331,7 +331,29 @@ then
     esac
   done
 
-  read -p "Do you want to add a database? [y/n]" -n 1 -r
+  PS3='Select an Installer for your domain: '
+  options=("Nextcloud" "Wordpress" "None")
+  select opt in "${options[@]}"
+  do
+    case $opt in
+      "Nextcloud")
+        echo "Nextcloud selected"
+        USER_CMS_CHOICE=nextcloud
+        break
+        ;;
+      "Wordpress")
+        echo "Wordpress selected"
+        USER_CMS_CHOICE=wordpress
+        break
+        ;;
+      "None")
+        break
+        ;;
+      *) echo invalid option;;
+    esac
+  done
+
+  read -p "Do you want to add a database? [y/n] " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
@@ -340,8 +362,6 @@ then
   else
     USER_DB_SITE=0
   fi
-
-  # Do we got everything we need?
 
   HOST_LOCATION_USER=(${USER_MAINDOMAIN//./ })
 
@@ -381,12 +401,21 @@ echo <<EOF "
 #
 # Your domain is ready to use:
 #
-# Domain: $USER_MAINDOMAIN
-# Absolute path: $HOST_MAINDOMAIN_ROOT_LOCATION
-# MySQL username: $HOST_DB_USER
-# MySQL password: $HOST_DB_PASS
-# MyMySQL database: $HOST_DB_DATABASE
-# Location owner: $HOST_LOCATION_USER
+"
+EOF
+echo "Domain: $USER_MAINDOMAIN"
+if [ $USER_DOMAIN_TYP = "1" ]; then
+  echo "Subdomain: $USER_SUBDOMAIN"
+fi
+echo "Absolute path domain: $HOST_MAINDOMAIN_ROOT_LOCATION"
+if [ $USER_DOMAIN_TYP = "1" ]; then
+  echo "Absolute path subdomain: $HOST_SUBDOMAIN_ROOT_LOCATION"
+fi
+echo "MySQL username: $HOST_DB_USER"
+echo "MySQL password: $HOST_DB_PASS"
+echo "MyMySQL database: $HOST_DB_DATABASE"
+echo "Location owner: $HOST_LOCATION_USER"
+echo <<EOF "
 #
 #
 #################################################################

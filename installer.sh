@@ -26,7 +26,7 @@ fi
 
 choice () {
     local choice=$1
-    if [[ ${php_opts[choice]} ]] # toggle
+    if [[ ${php_opts[choice]} ]]
     then
         php_opts[choice]=
     else
@@ -193,6 +193,22 @@ install_letsencrypt() {
   return 0
 }
 
+install_redis() {
+  if servicesCheck "php-fpm"; then
+    apt install redis-server php-redis -y
+    cp /etc/redis/redis.conf /etc/redis/redis.conf.bak
+    sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
+    sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
+    sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
+    sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
+    usermod -a -G redis nginx
+
+    return 0
+  else
+    return 1
+  fi
+}
+
 initialize_nginx() {
   if [ ! -d "/var/www" ]; then
     mkdir /var/www
@@ -211,6 +227,10 @@ initialize_nginx() {
   systemctl -q enable nginx
 }
 
+initialize_php(){
+  return 0
+}
+
 initialize_mariadb() {
 
 MYSQL_ROOT_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14)
@@ -227,15 +247,12 @@ EOF
 return 0
 }
 
-install_redis() {
-  apt install redis-server php-redis -y
-  cp /etc/redis/redis.conf /etc/redis/redis.conf.bak
+initialize_redis() {
+  cp /etc/redis/redis.conf /etc/redis/redis.conf.org
   sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
   sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
   sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
   sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
-  usermod -a -G redis nginx
-
   return 0
 }
 
@@ -270,6 +287,25 @@ then
   echo "Before we start the installation and further configuration, the script will add some repositories and dependencies to your system. This will take a few seconds."
   read -p "Press ENTER to confirm"
   initialize_os
+  if [ $DISTRO = "debian" ]; then
+    PS3='Which webserver do you want to install? '
+    options=("NGINX" "Apache" "Quit")
+    select opt in "${options[@]}"
+    do
+        case $opt in
+            "NGINX")
+                INSTALLING_HTTPD_SERVER="0"
+                ;;
+            "Apache")
+                INSTALLING_HTTPD_SERVER="1"
+                ;;
+            "Quit")
+                break
+                ;;
+            *) echo invalid option;;
+        esac
+    done
+  fi
   PS3='Please select your PHP versions: '
   while :
   do
@@ -298,11 +334,21 @@ then
     done
   done
   clear
+  read -p "Do you want to install Redis server? (recommended for Nextcloud) [y/n] " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+    INSTALLING_REDIS=1
+  else
+    INSTALLING_REDIS=0
+  fi
   printf "######################################\nInstallation of SLEMP\n######################################\n"
-  printf "Installing nginx . . . "
-  if install_nginx $1; then echo "[X]"; else echo "Failed..."; fi
-  printf "\nConfiguring nginx . . . "
-  if initialize_nginx $1; then echo "[X]"; else echo "Failed..."; fi
+  if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
+    printf "Installing nginx . . . "
+    if install_nginx $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring nginx . . . "
+    if initialize_nginx $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
   printf "\nInstalling MariaDB . . . "
   if install_mariadb $1; then echo "[X]"; else echo "Failed..."; fi
   printf "\nConfiguring MariaDB . . . "
@@ -311,6 +357,12 @@ then
   if install_phpfpm $1; then echo ""; else echo "Failed..."; fi
   printf "\nInstalling Certbot . . . "
   if install_letsencrypt $1; then echo "[X]"; else echo "Failed..."; fi
+  if [ $INSTALLING_REDIS = "1" ]; then
+    printf "\nInstalling Redis . . . "
+    if install_redis $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring Redis . . . "
+    if initialize_redis $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
 
   if [ $DISTRO = "centos" ]; then
     printf "\nConfigure CentOS . . ."
