@@ -8,7 +8,6 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-## Detect distro version
 if [ -e /etc/redhat-release ]; then
      DISTRO="centos"
 elif [ -e /etc/debian_version ]; then
@@ -196,17 +195,22 @@ install_letsencrypt() {
     DEBIAN_FRONTEND=noninteractive apt-get -qq install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
   if [ $DISTRO = "centos" ]; then
-    yum -q update && yum install certbot -y >> /tmp/slemp_install.txt 2>&1
+    yum -q install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
 
   # Cronjob for renewals
-  #echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
+  echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
   return 0
 }
 
 install_redis() {
   if servicesCheck "php-fpm"; then
-    apt install redis-server php-redis -y
+    if [ $DISTRO = "debian" ]; then
+      DEBIAN_FRONTEND=noninteractive apt-get -qq install redis-server -y >> /tmp/slemp_install.txt 2>&1
+    fi
+    if [ $DISTRO = "centos" ]; then
+      yum -q install redis-server -y >> /tmp/slemp_install.txt 2>&1
+    fi
     cp /etc/redis/redis.conf /etc/redis/redis.conf.org
     return 0
   else
@@ -218,13 +222,14 @@ initialize_apache() {
   if [ ! -d "/var/www" ]; then
     mkdir /var/www
   fi
-  # a2enmod http2  I have to check if the package is available in debian
+  a2enmod http2 > /dev/null 2>&1
   a2enmod rewrite > /dev/null 2>&1
   a2enmod headers > /dev/null 2>&1
   a2enmod env > /dev/null 2>&1
   a2enmod dir > /dev/null 2>&1
   a2enmod mime > /dev/null 2>&1
   a2enmod setenvif > /dev/null 2>&1
+  systemctl -q restart apache2
   return 0
 }
 
@@ -232,9 +237,7 @@ initialize_nginx() {
   if [ ! -d "/var/www" ]; then
     mkdir /var/www
   fi
-  # First, we not longer show nginx used version
   sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
-  # Next, we changed some backlog variables
   echo "net.core.netdev_max_backlog=4096" >> /etc/sysctl.conf > /dev/null 2>&1
   echo "net.core.somaxconn=4096" >> /etc/sysctl.conf > /dev/null 2>&1
   echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf > /dev/null 2>&1
@@ -248,6 +251,13 @@ initialize_nginx() {
 }
 
 initialize_php(){
+  if [ $DISTRO = "debian" ]; then
+
+  fi
+  if [ $DISTRO = "centos" ]; then
+
+  fi
+
 #opcache.enable=1
 #opcache.enable_cli=1
 #opcache.interned_strings_buffer=8
@@ -313,6 +323,7 @@ then
   echo "Before we start the installation and further configuration, the script will add some repositories and dependencies to your system. This will take a few seconds."
   read -p "Press ENTER to confirm"
   initialize_os
+  clear
   if [ $DISTRO = "debian" ]; then
     PS3='Which webserver do you want to install? '
     options=("NGINX" "Apache" "Quit")
@@ -321,9 +332,11 @@ then
         case $opt in
             "NGINX")
                 INSTALLING_HTTPD_SERVER="0"
+                break
                 ;;
             "Apache")
                 INSTALLING_HTTPD_SERVER="1"
+                break
                 ;;
             "Quit")
                 break

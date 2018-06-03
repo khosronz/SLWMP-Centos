@@ -205,7 +205,6 @@ configure_nginx_vhost(){
 }
 
 configure_logrorate_nginx() {
-  # Logrotation for nginx
   if [ $USER_DOMAIN_TYP = "0" ]; then
     cat >> /etc/logrotate.d/nginx <<EOL
     /var/log/www/$USER_MAINDOMAIN/logs/*.log {
