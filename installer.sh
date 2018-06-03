@@ -198,7 +198,6 @@ install_letsencrypt() {
     yum -q install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
 
-  # Cronjob for renewals
   echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
   return 0
 }
