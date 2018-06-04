@@ -171,8 +171,8 @@ if servicesCheck "php-fpm"; then
           fi
           if (($opt=="2")); then
             yum -q install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip php71-php-opcache -y >> /tmp/slemp_install.txt 2>&1
-            systemctl -q start php7.1-fpm
-            systemctl -q enable php7.1-fpm
+            systemctl -q start php71-php-fpm
+            systemctl -q enable php71-php-fpm
             printf "\n- PHP 7.1 installed [X]"
           fi
           if (($opt=="3")); then
@@ -251,19 +251,25 @@ initialize_nginx() {
 
 initialize_php(){
   if [ $DISTRO = "debian" ]; then
-
+cat <<EOF >/etc/php/7.2/mods-available/opcache.ini
+# optimizations for nextcloud
+opcache.enable=1
+opcache.enable_cli=1
+opcache.interned_strings_buffer=8
+opcache.max_accelerated_files=10000
+opcache.memory_consumption=128
+opcache.save_comments=1
+opcache.revalidate_freq=1
+EOF
+  sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/php/7.x/fpm/php.ini
+  sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.x/fpm/php.ini
+  sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.x/fpm/php.ini
+  sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/php/7.x/fpm/php.ini
   fi
   if [ $DISTRO = "centos" ]; then
-
+  # /etc/opt/remi/php71/php.d/10-opcache.ini
+  # /etc/opt/remi/php71/php.ini
   fi
-
-#opcache.enable=1
-#opcache.enable_cli=1
-#opcache.interned_strings_buffer=8
-#opcache.max_accelerated_files=10000
-#opcache.memory_consumption=128
-#opcache.save_comments=1
-#opcache.revalidate_freq=1
   return 0
 }
 
@@ -284,10 +290,20 @@ return 0
 }
 
 initialize_redis() {
+  if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
+    usermod -a -G redis nginx
+  fi
+  if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+    usermod -a -G redis www-data
+  fi
+
+  REDIS_HASHPW=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
+
   sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
   sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
   sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
   sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
+  sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
   return 0
 }
 
@@ -343,7 +359,10 @@ then
             *) echo invalid option;;
         esac
     done
+  else
+    INSTALLING_HTTPD_SERVER="0"
   fi
+
   PS3='Please select your PHP versions: '
   while :
   do
