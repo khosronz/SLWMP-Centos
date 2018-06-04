@@ -161,8 +161,8 @@ if servicesCheck "php-fpm"; then
           fi
           if (($opt=="2")); then
             yum -q install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip -y >> /tmp/slemp_install.txt 2>&1
-            systemctl -q start php7.1-fpm
-            systemctl -q enable php7.1-fpm
+            systemctl -q start php71-php-fpm
+            systemctl -q enable php71-php-fpm
             printf "\n- PHP 7.1 installed [X]"
           fi
           if (($opt=="3")); then
@@ -187,7 +187,7 @@ install_letsencrypt() {
   if [ $DISTRO = "centos" ]; then
     yum -q update && yum install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
-  
+
   # Cronjob for renewals
   #echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
   return 0
