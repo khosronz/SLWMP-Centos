@@ -312,7 +312,7 @@ initialize_redis() {
   if [ $DISTRO = "debian" ]; then
     sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
-    sed -i "s/unixsocket /var/run/redis/redis.sock/unixsocket /var/run/redis.sock/" /etc/redis/redis.conf
+    sed -i 's|unixsocket /var/run/redis/redis.sock|unixsocket /var/run/redis.sock|g' /etc/redis/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
@@ -320,7 +320,7 @@ initialize_redis() {
   if [ $DISTRO = "centos" ]; then
     sed -i "s/port 6379/port 0/" /etc/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf
-    sed -i "s/unixsocket /tmp/redis.sock/unixsocket /var/run/redis.sock/" /etc/redis/redis.conf
+    sed -i 's|'/unixsocket /tmp/redis.sock'|'/unixsocket /var/run/redis.sock'|g' /etc/redis/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis.conf

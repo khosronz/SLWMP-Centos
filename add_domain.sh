@@ -499,7 +499,7 @@ then
   if [ $USER_DB_SITE = "1" ]; then
   configure_database
   fi
-  
+
   if [ $USER_CMS_CHOICE = "nextcloud" ]; then
     configure_nextcloud
   elif [ $USER_CMS_CHOICE = "wordpress" ]; then
