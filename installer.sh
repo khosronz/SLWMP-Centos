@@ -197,20 +197,30 @@ install_letsencrypt() {
   if [ $DISTRO = "centos" ]; then
     yum -q install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
-
-  echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
+  if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
+    echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
+  elif [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+    echo "@weekly certbot renew --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --renew-hook "systemctl reload apache2" --quiet" >> /etc/crontab
+  fi
   return 0
 }
 
 install_redis() {
-  if servicesCheck "php-fpm"; then
+  if servicesCheck "redis"; then
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install redis-server -y >> /tmp/slemp_install.txt 2>&1
       cp /etc/redis/redis.conf /etc/redis/redis.conf.org
+
+      systemctl -q start redis
+      systemctl -q enable redis-server
+
     fi
     if [ $DISTRO = "centos" ]; then
       yum -q install redis -y >> /tmp/slemp_install.txt 2>&1
       cp /etc/redis.conf /etc/redis.conf.org
+
+      systemctl -q start redis-server
+      systemctl -q enable redis-server
     fi
     return 0
   else
@@ -349,7 +359,7 @@ This script is provided as it is, no warraties implied.
 "
 EOF
 
-read -p "Do you want to start the installation? y/n" -n 1 -r
+read -p "Do you want to start the installation? y/n " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -408,7 +418,7 @@ then
       esac
     done
   done
-  clear
+
   read -p "Do you want to install Redis server? (recommended for Nextcloud) [y/n] " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]
@@ -417,6 +427,7 @@ then
   else
     INSTALLING_REDIS=0
   fi
+  clear
   printf "######################################\nInstallation of SLEMP\n######################################\n"
   if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
     printf "Installing nginx . . . "
