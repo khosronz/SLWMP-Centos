@@ -307,12 +307,7 @@ return 0
 
 initialize_redis() {
   REDIS_HASHPW=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
-  if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
-    usermod -a -G redis nginx
-  fi
-  if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
-    usermod -a -G redis www-data
-  fi
+  echo "vm.overcommit_memory=1" >> /etc/sysctl.conf > /dev/null 2>&1
   # Maybe I need to change the path to the redis socket to the same on both OS
   if [ $DISTRO = "debian" ]; then
     sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
