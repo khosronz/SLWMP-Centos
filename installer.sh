@@ -314,7 +314,7 @@ initialize_redis() {
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
-    sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
+    sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis.conf
   fi
   return 0
 }
