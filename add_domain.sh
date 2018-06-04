@@ -449,6 +449,7 @@ then
         break
         ;;
       "None")
+        USER_CMS_CHOICE=none
         break
         ;;
       *) echo invalid option;;
@@ -462,7 +463,7 @@ then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
-      printf "Please provide your MySQL-Root-Password when asked."
+      printf "\nPlease provide your MySQL-Root-Password when asked."
       USER_DB_SITE=1
     else
       USER_DB_SITE=0
@@ -494,9 +495,15 @@ then
   configure_fpm_pool
   configure_nginx_vhost
   configure_logrorate_nginx
-  configure_letsencrypt_nginx
+  configure_letsencrypt
   if [ $USER_DB_SITE = "1" ]; then
   configure_database
+  fi
+  
+  if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+    configure_nextcloud
+  elif [ $USER_CMS_CHOICE = "wordpress" ]; then
+    configure_wordpress
   fi
 
   [ $? -ne "0" ] && exit 1

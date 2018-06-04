@@ -4,4 +4,12 @@
 # Version 0.6.0-dev
 
 #wget https://download.nextcloud.com/server/releases/latest.tar.bz2
-#tar xfvj latest.tar.bz2 
+#tar xfvj latest.tar.bz2
+
+configure_nextcloud() {
+  return 0
+}
+
+configure_wordpress() {
+  return 0
+}
