@@ -138,19 +138,19 @@ if servicesCheck "php-fpm"; then
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip php7.0-opcache -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip php7.0-apcu php7.0-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.0-fpm
             systemctl -q enable php7.0-fpm
             printf "\n - PHP 7.0 installed [X]"
           fi
           if (($opt=="2")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip php7.1-opcache -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip php7.1-apcu php7.1-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.1-fpm
             systemctl -q enable php7.1-fpm
             printf "\n - PHP 7.1 installed [X]"
           fi
           if (($opt=="3")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip php7.2-opcache -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip php7.2-apcu php7.2-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.2-fpm
             systemctl -q enable php7.2-fpm
             printf "\n- PHP 7.2 installed [X]"
@@ -164,19 +164,19 @@ if servicesCheck "php-fpm"; then
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            yum -q install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip php70-php-opcache -y >> /tmp/slemp_install.txt 2>&1
+            yum -q install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip php70-php-apcu php70-php-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php70-php-fpm
             systemctl -q enable php70-php-fpm
             printf "\n- PHP 7.0 installed [X]"
           fi
           if (($opt=="2")); then
-            yum -q install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip php71-php-opcache -y >> /tmp/slemp_install.txt 2>&1
+            yum -q install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip php71-php-apcu php71-php-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php71-php-fpm
             systemctl -q enable php71-php-fpm
             printf "\n- PHP 7.1 installed [X]"
           fi
           if (($opt=="3")); then
-            yum -q install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-imagick php72-php-xml php72-php-zip php72-php-opcache-y >> /tmp/slemp_install.txt 2>&1
+            yum -q install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-imagick php72-php-xml php72-php-zip php72-php-apcu php72-php-opcache-y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php72-php-fpm
             systemctl -q enable php72-php-fpm
             printf "\n- PHP 7.2 installed [X]"
@@ -307,6 +307,7 @@ initialize_redis() {
   if [ $DISTRO = "debian" ]; then
     sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
+    sed -i "s/unixsocket /var/run/redis/redis.sock/unixsocket /var/run/redis.sock/" /etc/redis/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
@@ -314,6 +315,7 @@ initialize_redis() {
   if [ $DISTRO = "centos" ]; then
     sed -i "s/port 6379/port 0/" /etc/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf
+    sed -i "s/unixsocket /tmp/redis.sock/unixsocket /var/run/redis.sock/" /etc/redis/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis.conf
