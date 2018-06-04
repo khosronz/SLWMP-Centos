@@ -25,14 +25,13 @@ configure_wordpress() {
   tar -xz -C /tmp -f /tmp/wordpress.tar.gz
   rm -f /tmp/wordpress.tar.gz
 
-  if [ -d $WP_LOCATION ]; then
-    echo "#################################################################"
-    echo "# Directory $WP_LOCATION already exists, move away and proceed? (Ctrl-c to abort)"
-    echo "#################################################################"
-    mv -v $WP_LOCATION $WP_LOCATION.$(date '+%s')
-  fi
-
   if [ $USER_DOMAIN_TYP = "0" ]; then
+    if [ -d $HOST_MAINDOMAIN_HTTPD_LOCATION ]; then
+      echo "#################################################################"
+      echo "# Directory $HOST_MAINDOMAIN_HTTPD_LOCATION already exists, move away and proceed? (Ctrl-c to abort)"
+      echo "#################################################################"
+      mv -v $HOST_MAINDOMAIN_HTTPD_LOCATION $HOST_MAINDOMAIN_HTTPD_LOCATION.$(date '+%s')
+    fi
     mv /tmp/wordpress/ $HOST_MAINDOMAIN_HTTPD_LOCATION
     find $HOST_MAINDOMAIN_HTTPD_LOCATION -type d -exec chmod 755 {} \;
     find $HOST_MAINDOMAIN_HTTPD_LOCATION -type f -exec chmod 644 {} \;
@@ -52,7 +51,13 @@ configure_wordpress() {
     done
     chown -R $HOST_LOCATION_USER: $HOST_MAINDOMAIN_HTTPD_LOCATION
 
-  elif [ $USER_DOMAIN_TYP = "1" ]; the
+  elif [ $USER_DOMAIN_TYP = "1" ]; then
+    if [ -d $HOST_SUBDOMAIN_HTTPD_LOCATION ]; then
+      echo "#################################################################"
+      echo "# Directory $HOST_SUBDOMAIN_HTTPD_LOCATION already exists, move away and proceed? (Ctrl-c to abort)"
+      echo "#################################################################"
+      mv -v $HOST_SUBDOMAIN_HTTPD_LOCATION $HOST_SUBDOMAIN_HTTPD_LOCATION.$(date '+%s')
+    fi
     mv /tmp/wordpress/ $HOST_SUBDOMAIN_HTTPD_LOCATION
     find $HOST_SUBDOMAIN_HTTPD_LOCATION -type d -exec chmod 755 {} \;
     find $HOST_SUBDOMAIN_HTTPD_LOCATION -type f -exec chmod 644 {} \;
