@@ -206,11 +206,12 @@ install_redis() {
   if servicesCheck "php-fpm"; then
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install redis-server -y >> /tmp/slemp_install.txt 2>&1
+      cp /etc/redis/redis.conf /etc/redis/redis.conf.org
     fi
     if [ $DISTRO = "centos" ]; then
-      yum -q install redis-server -y >> /tmp/slemp_install.txt 2>&1
+      yum -q install redis -y >> /tmp/slemp_install.txt 2>&1
+      cp /etc/redis.conf /etc/redis.conf.org
     fi
-    cp /etc/redis/redis.conf /etc/redis/redis.conf.org
     return 0
   else
     return 1
@@ -261,13 +262,16 @@ opcache.memory_consumption=128
 opcache.save_comments=1
 opcache.revalidate_freq=1
 EOF
-  sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/php/7.x/fpm/php.ini
-  sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.x/fpm/php.ini
-  sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.x/fpm/php.ini
-  sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/php/7.x/fpm/php.ini
+  sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/php/7.*/fpm/php.ini
+  sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.*/fpm/php.ini
+  sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.*/fpm/php.ini
+  sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/php/7.*/fpm/php.ini
   fi
   if [ $DISTRO = "centos" ]; then
-  # /etc/opt/remi/php71/php.d/10-opcache.ini
+  sed -i "s/;opcache.enable_cli=0/opcache.enable_cli=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+  sed -i "s/opcache.max_accelerated_files=4000/opcache.max_accelerated_files=10000/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+  sed -i "s/;opcache.save_comments=1/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+  sed -i "s/;opcache.revalidate_freq=2/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
   # /etc/opt/remi/php71/php.ini
   fi
   return 0
@@ -290,20 +294,28 @@ return 0
 }
 
 initialize_redis() {
+  REDIS_HASHPW=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
   if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
     usermod -a -G redis nginx
   fi
   if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
     usermod -a -G redis www-data
   fi
-
-  REDIS_HASHPW=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
-
-  sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
-  sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
-  sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
-  sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
-  sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
+  # Maybe I need to change the path to the redis socket to the same on both OS
+  if [ $DISTRO = "debian" ]; then
+    sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
+    sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
+    sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
+    sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
+    sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
+  fi
+  if [ $DISTRO = "centos" ]; then
+    sed -i "s/port 6379/port 0/" /etc/redis.conf
+    sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf
+    sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
+    sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
+    sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
+  fi
   return 0
 }
 
