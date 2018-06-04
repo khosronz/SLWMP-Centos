@@ -79,7 +79,7 @@ EOL
     yum -q install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
     yum -q update -y && yum -q install firewalld yum-utils -y >> /tmp/slemp_install.txt 2>&1
 
-	systemctl -q enable firewalld
+	  systemctl -q enable firewalld
     systemctl -q start firewalld
   fi
 }
@@ -229,6 +229,8 @@ initialize_apache() {
   a2enmod dir > /dev/null 2>&1
   a2enmod mime > /dev/null 2>&1
   a2enmod setenvif > /dev/null 2>&1
+
+  systemctl -q enable apache2
   systemctl -q restart apache2
   return 0
 }
@@ -316,6 +318,8 @@ initialize_redis() {
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis.conf
   fi
+  systemctl -q restart redis
+  systemctl -q enable redis
   return 0
 }
 
