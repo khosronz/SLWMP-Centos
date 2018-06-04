@@ -9,9 +9,21 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
+if [ -e /etc/apache2/apache.conf ]; then
+     WEBSRV="apache"
+elif [ -e /etc/nginx/nginx.conf ]; then
+     WEBSRV="nginx"
+fi
+
 create_skeleton_dirs() {
 	useradd $HOST_LOCATION_USER -d /var/www/$USER_MAINDOMAIN
+
+  if [ $WEBSRV = "nginx" ]; then
 	usermod -aG $HOST_LOCATION_USER nginx
+  fi
+  elif [ $WEBSRV = "apache" ]; then
+	usermod -aG $HOST_LOCATION_USER www-data
+  fi
 
   if [ ! -d /var/www/$USER_MAINDOMAIN ]; then
 	   mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
@@ -154,13 +166,72 @@ configure_fpm_pool(){
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
-      systemctl reload php70-php-fpm
+      systemctl -q reload php70-php-fpm
     fi
   fi
 	return 0
 }
 
 configure_apache_vhost() {
+  if [ $USER_DOMAIN_TYP = "0" ]; then
+    if [ $USER_PHP_VERSION = "php72" ]; then
+      NGXSOCKET="/var/run/php72-fpm-$USER_DOMAIN_HYPHEN.sock;"
+    fi
+    if [ $USER_PHP_VERSION = "php71" ]; then
+      NGXSOCKET="/var/run/php71-fpm-$USER_DOMAIN_HYPHEN.sock;"
+    fi
+    if [ $USER_PHP_VERSION = "php70" ]; then
+      NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock;"
+    fi
+    if [ $USER_CMS_CHOICE = "none" ]; then
+      cp templates/apache_default.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    fi
+    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+      cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    fi
+    if [ $USER_CMS_CHOICE = "wordpress" ]; then
+      cp templates/apache_wordpress.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    fi
+
+    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+
+    a2ensite $USER_MAINDOMAIN.conf
+  fi
+
+  if [ $USER_DOMAIN_TYP = "1" ]; then
+    if [ $USER_PHP_VERSION = "php72" ]; then
+      NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+    fi
+    if [ $USER_PHP_VERSION = "php71" ]; then
+      NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+    fi
+    if [ $USER_PHP_VERSION = "php70" ]; then
+      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+    fi
+    if [ $USER_CMS_CHOICE = "none" ]; then
+      cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    fi
+    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+      cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    fi
+    if [ $USER_CMS_CHOICE = "wordpress" ]; then
+      cp templates/apache_wordpress.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    fi
+
+    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+
+    a2ensite $USER_SUBDOMAIN.conf
+  fi
   return 0
 }
 
@@ -175,7 +246,15 @@ configure_nginx_vhost(){
     if [ $USER_PHP_VERSION = "php70" ]; then
       NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock;"
     fi
-    cp templates/nginx_default.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    if [ $USER_CMS_CHOICE = "none" ]; then
+      cp templates/nginx_default.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    fi
+    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+      cp templates/nginx_nextcloud.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    fi
+    if [ $USER_CMS_CHOICE = "wordpress" ]; then
+      cp templates/nginx_wordpress.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+    fi
     sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
@@ -193,7 +272,15 @@ configure_nginx_vhost(){
     if [ $USER_PHP_VERSION = "php70" ]; then
       NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
     fi
-    cp templates/nginx_default.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    if [ $USER_CMS_CHOICE = "none" ]; then
+      cp templates/nginx_default.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    fi
+    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+      cp templates/nginx_nextcloud.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    fi
+    if [ $USER_CMS_CHOICE = "wordpress" ]; then
+      cp templates/nginx_wordpress.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+    fi
     sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
@@ -242,14 +329,26 @@ EOL
   return 0
 }
 
-configure_letsencrypt_nginx() {
-  if [ $USER_DOMAIN_TYP = "0" ]; then
-    certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
-    return 0
+configure_letsencrypt() {
+  if [ $WEBSRV = "nginx" ]; then
+    if [ $USER_DOMAIN_TYP = "0" ]; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+      return 0
+    fi
+    if [ $USER_DOMAIN_TYP = "1" ]; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+      return 0
+    fi
   fi
-  if [ $USER_DOMAIN_TYP = "1" ]; then
-    certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
-    return 0
+  if [ $WEBSRV = "apache" ]; then
+    if [ $USER_DOMAIN_TYP = "0" ]; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+      return 0
+    fi
+    if [ $USER_DOMAIN_TYP = "1" ]; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+      return 0
+    fi
   fi
 }
 
