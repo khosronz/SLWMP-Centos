@@ -308,7 +308,8 @@ return 0
 initialize_redis() {
   REDIS_HASHPW=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
   echo "vm.overcommit_memory=1" >> /etc/sysctl.conf > /dev/null 2>&1
-  # Maybe I need to change the path to the redis socket to the same on both OS
+  sysctl -p
+  
   if [ $DISTRO = "debian" ]; then
     sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
@@ -316,6 +317,7 @@ initialize_redis() {
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
+    systemctl -q enable redis-server
   fi
   if [ $DISTRO = "centos" ]; then
     mkdir /var/run/redis
@@ -326,9 +328,9 @@ initialize_redis() {
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis.conf
+    systemctl -q enable redis
   fi
-  systemctl -q restart redis
-  systemctl -q enable redis
+    systemctl -q restart redis
   return 0
 }
 
