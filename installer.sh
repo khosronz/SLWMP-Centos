@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.0-dev
+# Version 0.6.0
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -176,7 +176,7 @@ if servicesCheck "php-fpm"; then
             printf "\n- PHP 7.1 installed [X]"
           fi
           if (($opt=="3")); then
-            yum -q install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-imagick php72-php-xml php72-php-zip php72-php-apcu php72-php-opcache-y >> /tmp/slemp_install.txt 2>&1
+            yum -q install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-imagick php72-php-xml php72-php-zip php72-php-apcu php72-php-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php72-php-fpm
             systemctl -q enable php72-php-fpm
             printf "\n- PHP 7.2 installed [X]"
@@ -309,7 +309,7 @@ initialize_redis() {
   REDIS_HASHPW=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
   echo "vm.overcommit_memory=1" >> /etc/sysctl.conf > /dev/null 2>&1
   sysctl -p
-  
+
   if [ $DISTRO = "debian" ]; then
     sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
@@ -321,10 +321,10 @@ initialize_redis() {
   fi
   if [ $DISTRO = "centos" ]; then
     mkdir /var/run/redis
-    chown -R /var/run/redis
+    chown redis:redis -R /var/run/redis
     sed -i "s/port 6379/port 0/" /etc/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf
-    sed -i 's|/unixsocket /tmp/redis.sock|/unixsocket /var/run/redis/redis.sock|g' /etc/redis/redis.conf
+    sed -i 's|unixsocket /tmp/redis.sock|unixsocket /var/run/redis/redis.sock|g' /etc/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis.conf
