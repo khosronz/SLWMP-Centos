@@ -33,11 +33,11 @@ create_skeleton_dirs() {
   fi
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
-	if [ ! -d /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN ]; then
-    mkdir -p /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs
-		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs
-		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/tmp
-	fi
+  	if [ ! -d /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN ]; then
+      mkdir -p /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs
+  		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs
+  		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/tmp
+  	fi
   fi
 
   chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN
