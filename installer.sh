@@ -210,17 +210,12 @@ install_redis() {
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install redis-server -y >> /tmp/slemp_install.txt 2>&1
       cp /etc/redis/redis.conf /etc/redis/redis.conf.org
-
       systemctl -q start redis
-      systemctl -q enable redis-server
-
     fi
     if [ $DISTRO = "centos" ]; then
       yum -q install redis -y >> /tmp/slemp_install.txt 2>&1
       cp /etc/redis.conf /etc/redis.conf.org
-
-      systemctl -q start redis-server
-      systemctl -q enable redis-server
+      systemctl -q start redis
     fi
     return 0
   else
