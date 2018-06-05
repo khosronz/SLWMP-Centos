@@ -3,6 +3,8 @@
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
 # Version 0.6.0-dev
 
+source includes/install_web.sh
+
 if [ -e /etc/redhat-release ]; then
      DISTRO="centos"
 elif [ -e /etc/debian_version ]; then
@@ -20,7 +22,6 @@ create_skeleton_dirs() {
 
   if [ $WEBSRV = "nginx" ]; then
 	usermod -aG $HOST_LOCATION_USER nginx
-  fi
   elif [ $WEBSRV = "apache" ]; then
 	usermod -aG $HOST_LOCATION_USER www-data
   fi
