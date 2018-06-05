@@ -318,9 +318,11 @@ initialize_redis() {
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
   fi
   if [ $DISTRO = "centos" ]; then
+    mkdir /var/run/redis
+    chown -R /var/run/redis
     sed -i "s/port 6379/port 0/" /etc/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf
-    sed -i 's|'/unixsocket /tmp/redis.sock'|'/unixsocket /var/run/redis.sock'|g' /etc/redis/redis.conf
+    sed -i 's|/unixsocket /tmp/redis.sock|/unixsocket /var/run/redis/redis.sock|g' /etc/redis/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
     sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis.conf
@@ -364,7 +366,7 @@ then
   clear
   if [ $DISTRO = "debian" ]; then
     PS3='Which webserver do you want to install? '
-    options=("NGINX" "Apache" "Quit")
+    options=("NGINX" "Apache")
     select opt in "${options[@]}"
     do
         case $opt in
@@ -374,9 +376,6 @@ then
                 ;;
             "Apache")
                 INSTALLING_HTTPD_SERVER="1"
-                break
-                ;;
-            "Quit")
                 break
                 ;;
             *) echo invalid option;;
