@@ -1,4 +1,4 @@
-# SLEMP
+# SL(A)EMP
 
 SL(A)EMP stands for Secure L(A)EMP.
 It support latest versions of Debian (Stretch) and CentOS (7.x).
@@ -20,6 +20,9 @@ It support latest versions of Debian (Stretch) and CentOS (7.x).
 - OS: Debian 9 (Stretch) or CentOS 7.x, clean install!
 
 ## Installation
+Important: SL(A)EMP makes use of various open-source software.
+Please assure you agree with their license before using it. Any part of SL(A)EMP itself is released under GNU General Public License, Version 3.
+
 ```
 git clone https://github.com/timscha/SLEMP SLEMP
 chmod +x installer.sh add_domain.sh
@@ -60,4 +63,5 @@ You will find the config and files at the following paths:
 
 ## What's next
 - fail2ban
+- UFW for debian
 - Cleanup the script

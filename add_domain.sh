@@ -11,7 +11,7 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
-if [ -e /etc/apache2/apache.conf ]; then
+if [ -e /etc/apache2/apache2.conf ]; then
      WEBSRV="apache"
 elif [ -e /etc/nginx/nginx.conf ]; then
      WEBSRV="nginx"
@@ -292,7 +292,7 @@ configure_nginx_vhost(){
 	return 0
 }
 
-configure_logrorate_nginx() {
+configure_logrotate() {
   if [ $USER_DOMAIN_TYP = "0" ]; then
     cat >> /etc/logrotate.d/nginx <<EOL
     /var/log/www/$USER_MAINDOMAIN/logs/*.log {
@@ -494,8 +494,12 @@ then
 
   create_skeleton_dirs
   configure_fpm_pool
-  configure_nginx_vhost
-  configure_logrorate_nginx
+  if [ $WEBSRV = "nginx" ]; then
+    configure_nginx_vhost
+  elif [ $WEBSRV = "apache" ]; then
+    configure_apache_vhost
+  fi
+  configure_logrotate
   configure_letsencrypt
   if [ $USER_DB_SITE = "1" ]; then
   configure_database
