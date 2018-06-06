@@ -4,23 +4,80 @@
 # Version 0.6.0-dev
 
 configure_nextcloud() {
+echo <<EOFMW "
+#################################################################
+#
+# We will now download and install the latest version of Nextcloud!
+# Everything will be setup automatically fory you.
+#
+# Please enter your desired Username and Password for Nextcloud now.
+#
+#################################################################
+"
+EOFMW
+  read -p "Your Nextcloud Username: " USER_NC_USERNAME
+  echo
+  read -p "Your Nextcloud User password: " USER_NC_PASSWD
+  echo
+
   wget https://download.nextcloud.com/server/releases/latest.tar.bz2 -O /tmp/nextcloud.tar.bz2
-  tar xfvj -C /tmp -f /tmp/nextcloud.tar.bz2
+  tar -xjf /tmp/nextcloud.tar.bz2 -C /tmp
   rm -f /tmp/nextcloud.tar.bz2
 
   if [ $USER_DOMAIN_TYP = "0" ]; then
-    mv /tmp/nextcloud/ $HOST_MAINDOMAIN_HTTPD_LOCATION
-    chown -R $HOST_LOCATION_USER: $HOST_MAINDOMAIN_HTTPD_LOCATION
+    mv /tmp/nextcloud/* $HOST_MAINDOMAIN_HTTPD_LOCATION
+    mkdir $HOST_MAINDOMAIN_ROOT_LOCATION/data
+    chown -R $HOST_LOCATION_USER: $HOST_MAINDOMAIN_HTTPD_LOCATION/*
+    chown -R $HOST_LOCATION_USER: $HOST_MAINDOMAIN_ROOT_LOCATION/data
+    chmod +x $HOST_MAINDOMAIN_HTTPD_LOCATION/occ
+
+    sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ maintenance:install --database "mysql" --database-name "$HOST_DB_DATABASE"  --database-user "$HOST_DB_USER" --database-pass "$HOST_DB_PASS" --admin-user "$USER_NC_USERNAME" --admin-pass "$USER_NC_PASSWD" --data-dir "$HOST_MAINDOMAIN_ROOT_LOCATION/data"
+    echo "*/15 * * * * php -f $HOST_MAINDOMAIN_HTTPD_LOCATION/cron.php > /dev/null 2>&1" | crontab -u $HOST_LOCATION_USER -
+
+    sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ config:system:set trusted_domains 1 --value=$USER_MAINDOMAIN
+    sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ config:system:set overwrite.cli.url --value=https://$USER_MAINDOMAIN
+    sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ background:cron
+
   elif [ $USER_DOMAIN_TYP = "1" ]; then
-    mv /tmp/nextcloud/ $HOST_SUBDOMAIN_HTTPD_LOCATION
-    chown -R $HOST_LOCATION_USER: $HOST_SUBDOMAIN_HTTPD_LOCATION
+    mv /tmp/nextcloud/* $HOST_SUBDOMAIN_HTTPD_LOCATION
+    mkdir $HOST_SUBDOMAIN_ROOT_LOCATION/data
+    chown -R $HOST_LOCATION_USER: $HOST_SUBDOMAIN_HTTPD_LOCATION/*
+    chown -R $HOST_LOCATION_USER: $HOST_SUBDOMAIN_ROOT_LOCATION/data
+    chmod +x $HOST_SUBDOMAIN_HTTPD_LOCATION/occ
+
+    sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ maintenance:install --database "mysql" --database-name "$HOST_DB_DATABASE"  --database-user "$HOST_DB_USER" --database-pass "$HOST_DB_PASS" --admin-user "$USER_NC_USERNAME" --admin-pass "$USER_NC_PASSWD" --data-dir "$HOST_SUBDOMAIN_ROOT_LOCATION/data"
+    echo "*/15 * * * * php -f $HOST_SUBDOMAIN_HTTPD_LOCATION/cron.php > /dev/null 2>&1" | crontab -u $HOST_LOCATION_USER -
+
+    sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ config:system:set trusted_domains 1 --value=$USER_SUBDOMAIN
+    sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ config:system:set overwrite.cli.url --value=https://$USER_SUBDOMAIN
+    sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ background:cron
   fi
 
+  rm -rf /tmp/nextcloud
+  echo <<EOFMW "
+  #################################################################
+  #
+  # Your Nextcloud installation is finished!
+  # Open a browser and go to your domain to login.
+  #
+  # Login with your previous provided login credentials!
+  #
+  #################################################################
+  "
+EOFMW
   return 0
 }
 
 configure_wordpress() {
-
+echo <<EOFMW "
+  #################################################################
+  #
+  # We will now download and install the latest version of Wordpress!
+  # After download and installation you have to create your account.
+  #
+  #################################################################
+  "
+EOFMW
   wget --no-check-certificate http://wordpress.org/latest.tar.gz -O /tmp/wordpress.tar.gz
   tar -xz -C /tmp -f /tmp/wordpress.tar.gz
   rm -f /tmp/wordpress.tar.gz
@@ -77,5 +134,14 @@ configure_wordpress() {
     done
     chown -R $HOST_LOCATION_USER: $HOST_SUBDOMAIN_HTTPD_LOCATION
   fi
+echo <<EOFMW "
+    #################################################################
+    #
+    # Your Wordpress installation is now finished.
+    # Open a browser and go to your domain to finish the setup!
+    #
+    #################################################################
+    "
+EOFMW
   return 0
 }

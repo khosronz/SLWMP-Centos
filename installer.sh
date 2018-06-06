@@ -138,19 +138,19 @@ if servicesCheck "php-fpm"; then
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip php7.0-apcu php7.0-opcache -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip php7.0-apcu php7.0-opcache php7.0-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.0-fpm
             systemctl -q enable php7.0-fpm
             printf "\n - PHP 7.0 installed [X]"
           fi
           if (($opt=="2")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip php7.1-apcu php7.1-opcache -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip php7.1-apcu php7.1-opcache php7.1-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.1-fpm
             systemctl -q enable php7.1-fpm
             printf "\n - PHP 7.1 installed [X]"
           fi
           if (($opt=="3")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip php7.2-apcu php7.2-opcache -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip php7.2-apcu php7.2-opcache php7.2-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.2-fpm
             systemctl -q enable php7.2-fpm
             printf "\n- PHP 7.2 installed [X]"
@@ -261,16 +261,14 @@ initialize_nginx() {
 
 initialize_php(){
   if [ $DISTRO = "debian" ]; then
-cat <<EOF >/etc/php/7.2/mods-available/opcache.ini
-# optimizations for nextcloud
-opcache.enable=1
-opcache.enable_cli=1
-opcache.interned_strings_buffer=8
-opcache.max_accelerated_files=10000
-opcache.memory_consumption=128
-opcache.save_comments=1
-opcache.revalidate_freq=1
-EOF
+    sed -i "s/;opcache.enable=1/opcache.enable=1/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.enable_cli=0/opcache.enable_cli=1/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.memory_consumption=128/opcache.memory_consumption=128/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.interned_strings_buffer=8/opcache.interned_strings_buffer=8/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.max_accelerated_files=10000/opcache.max_accelerated_files=10000/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.revalidate_freq=2/opcache.revalidate_freq=1/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.save_comments=1/opcache.save_comments=1/" /etc/php/7.*/fpm/php.ini
+
     sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/php/7.*/fpm/php.ini
     sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.*/fpm/php.ini
     sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.*/fpm/php.ini
@@ -280,13 +278,13 @@ EOF
         do
           if [[ ${php_opts[opt]} ]];then
             if (($opt=="1")); then
-              a2enconf -q php7.0-fpm
+              a2enconf -q php7.0-fpm > /dev/null 2>&1
             fi
             if (($opt=="2")); then
-              a2enconf -q php7.1-fpm
+              a2enconf -q php7.1-fpm > /dev/null 2>&1
             fi
             if (($opt=="3")); then
-              a2enconf -q php7.2-fpm
+              a2enconf -q php7.2-fpm > /dev/null 2>&1
             fi
           fi
       done
@@ -319,7 +317,6 @@ return 0
 }
 
 initialize_redis() {
-  REDIS_HASHPW=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
   echo "vm.overcommit_memory=1" >> /etc/sysctl.conf > /dev/null 2>&1
   sysctl -p
 
@@ -328,7 +325,6 @@ initialize_redis() {
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
-    sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis/redis.conf
     systemctl -q enable redis-server
   fi
   if [ $DISTRO = "centos" ]; then
@@ -339,7 +335,6 @@ initialize_redis() {
     sed -i 's|unixsocket /tmp/redis.sock|unixsocket /var/run/redis/redis.sock|g' /etc/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
-    sed -i "s/# requirepass foobared/requirepass $REDIS_HASHPW /" /etc/redis.conf
     systemctl -q enable redis
   fi
     systemctl -q restart redis
