@@ -176,13 +176,13 @@ configure_fpm_pool(){
 configure_apache_vhost() {
   if [ $USER_DOMAIN_TYP = "0" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
-      NGXSOCKET="/var/run/php72-fpm-$USER_DOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php72-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
-      NGXSOCKET="/var/run/php71-fpm-$USER_DOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php71-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
     if [ $USER_CMS_CHOICE = "none" ]; then
       cp templates/apache_default.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
@@ -201,7 +201,7 @@ configure_apache_vhost() {
     sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
 
-    a2ensite $USER_MAINDOMAIN.conf
+    a2ensite -q $USER_MAINDOMAIN.conf
   fi
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -231,7 +231,7 @@ configure_apache_vhost() {
     sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
 
-    a2ensite $USER_SUBDOMAIN.conf
+    a2ensite -q $USER_SUBDOMAIN.conf
   fi
   return 0
 }
@@ -464,7 +464,7 @@ then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
-      printf "\nPlease provide your MySQL-Root-Password when asked."
+      printf "\nPlease provide your MySQL-Root-Password when asked.\n"
       USER_DB_SITE=1
     else
       USER_DB_SITE=0

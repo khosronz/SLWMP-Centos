@@ -233,7 +233,25 @@ initialize_apache() {
   a2enmod env > /dev/null 2>&1
   a2enmod dir > /dev/null 2>&1
   a2enmod mime > /dev/null 2>&1
+  a2enmod proxy_fcgi > /dev/null 2>&1
   a2enmod setenvif > /dev/null 2>&1
+  a2enmod ssl > /dev/null 2>&1
+  if [ $DISTRO = "debian" ]; then
+    for opt in "${!php_opts[@]}"
+      do
+        if [[ ${php_opts[opt]} ]];then
+          if (($opt=="1")); then
+            a2enconf -q php7.0-fpm
+          fi
+          if (($opt=="2")); then
+            a2enconf -q php7.1-fpm
+          fi
+          if (($opt=="3")); then
+            a2enconf -q php7.2-fpm
+          fi
+        fi
+      done
+  fi
 
   systemctl -q enable apache2
   systemctl -q restart apache2

@@ -7,6 +7,8 @@
     RewriteCond %{HTTPS} off
     RewriteRule (.*) https://%{SERVER_NAME}/$1 [R,L]
 </VirtualHost>
+SSLUseStapling on
+SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
 <VirtualHost *:443>
     Protocols h2 http/1.1
     ServerName DOMAIN_FULLNAME
@@ -36,8 +38,6 @@
     Header always set X-Content-Type-Options nosniff
     # Requires Apache >= 2.4
     SSLCompression off
-    SSLUseStapling on
-    SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
     # Requires Apache >= 2.4.11
     SSLSessionTickets Off
 
