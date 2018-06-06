@@ -236,22 +236,6 @@ initialize_apache() {
   a2enmod proxy_fcgi > /dev/null 2>&1
   a2enmod setenvif > /dev/null 2>&1
   a2enmod ssl > /dev/null 2>&1
-  if [ $DISTRO = "debian" ]; then
-    for opt in "${!php_opts[@]}"
-      do
-        if [[ ${php_opts[opt]} ]];then
-          if (($opt=="1")); then
-            a2enconf -q php7.0-fpm
-          fi
-          if (($opt=="2")); then
-            a2enconf -q php7.1-fpm
-          fi
-          if (($opt=="3")); then
-            a2enconf -q php7.2-fpm
-          fi
-        fi
-      done
-  fi
 
   systemctl -q enable apache2
   systemctl -q restart apache2
@@ -287,10 +271,26 @@ opcache.memory_consumption=128
 opcache.save_comments=1
 opcache.revalidate_freq=1
 EOF
-  sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/php/7.*/fpm/php.ini
-  sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.*/fpm/php.ini
-  sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.*/fpm/php.ini
-  sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/php/7.*/fpm/php.ini
+    if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+      for opt in "${!php_opts[@]}"
+        do
+          if [[ ${php_opts[opt]} ]];then
+            if (($opt=="1")); then
+              a2enconf -q php7.0-fpm
+            fi
+            if (($opt=="2")); then
+              a2enconf -q php7.1-fpm
+            fi
+            if (($opt=="3")); then
+              a2enconf -q php7.2-fpm
+            fi
+          fi
+      done
+    fi
   fi
   if [ $DISTRO = "centos" ]; then
   sed -i "s/;opcache.enable_cli=0/opcache.enable_cli=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
@@ -455,6 +455,8 @@ then
   if initialize_mariadb $1; then echo "[X]"; else echo "Failed..."; fi
   printf "\nInstalling PHP . . . "
   if install_phpfpm $1; then echo ""; else echo "Failed..."; fi
+  printf "\nConfiguring PHP . . . "
+  if initialize_php $1; then echo ""; else echo "Failed..."; fi
   printf "\nInstalling Certbot . . . "
   if install_letsencrypt $1; then echo "[X]"; else echo "Failed..."; fi
   if [ $INSTALLING_REDIS = "1" ]; then
