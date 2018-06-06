@@ -221,7 +221,7 @@ configure_apache_vhost() {
       cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     fi
     if [ $USER_CMS_CHOICE = "wordpress" ]; then
-      cp templates/apache_wordpress.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     fi
 
     sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf

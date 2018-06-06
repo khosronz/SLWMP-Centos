@@ -1,0 +1,67 @@
+<VirtualHost *:80>
+    ServerName DOMAIN_FULLNAME
+    ServerAlias www.DOMAIN_FULLNAME
+    ServerAdmin hostmaster@hostname
+
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://%{SERVER_NAME}/$1 [R,L]
+</VirtualHost>
+<VirtualHost *:443>
+    Protocols h2 http/1.1
+    ServerName DOMAIN_FULLNAME
+    ServerAlias www.DOMAIN_FULLNAME
+    ServerAdmin hostmaster@hostname
+    DocumentRoot DOMAIN_HTTPD_LOCATION
+    <Directory DOMAIN_HTTPD_LOCATION>
+          Options Indexes FollowSymLinks MultiViews
+          AllowOverride All
+          Order allow,deny
+          allow from all
+    </Directory>
+    ErrorLog HOST_ROOT_LOCATION/logs/error_apache.log
+    LogLevel warn
+    CustomLog HOST_ROOT_LOCATION/logs/access_apache.log combined
+    ServerSignature Off
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/SSL_DOMAINNAME_FULLNAME/cert.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/SSL_DOMAINNAME_FULLNAME/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/SSL_DOMAINNAME_FULLNAME/chain.pem
+    # We are using https://cipherli.st
+    SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+    SSLProtocol All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+    SSLHonorCipherOrder On
+    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+    Header always set X-Frame-Options DENY
+    Header always set X-Content-Type-Options nosniff
+    # Requires Apache >= 2.4
+    SSLCompression off
+    SSLUseStapling on
+    SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
+    # Requires Apache >= 2.4.11
+    SSLSessionTickets Off
+
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+
+    # HSTS (mod_headers is required) (15768000 seconds = 6 months)
+    #Header always set Strict-Transport-Security "max-age=15768000"
+
+    AddType text/html .php
+    DirectoryIndex index.php
+
+    <FilesMatch \.php$>
+          # TCP/IP-Port
+          # SetHandler "proxy:fcgi://127.0.0.1:9001"
+          # UNIX-Socket - Since Apache 2.4.9 / CentOS 7 use Apache 2.4.6 !
+          SetHandler "proxy:unix:NGXSOCKET|fcgi://localhost/"
+    </FilesMatch>
+
+</VirtualHost>
