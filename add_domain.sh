@@ -3,6 +3,15 @@
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
 # Version 0.6.0-dev
 
+servicesCheck(){
+ps cax | grep $1 > /dev/null
+if [ $? -eq 0 ]; then
+  return 1
+else
+  return 0
+fi
+}
+
 source includes/install_web.sh
 
 if [ -e /etc/redhat-release ]; then

@@ -24,6 +24,10 @@ EOFMW
   tar -xjf /tmp/nextcloud.tar.bz2 -C /tmp
   rm -f /tmp/nextcloud.tar.bz2
 
+  if ! servicesCheck "redis-server"; then
+    usermod -aG redis $HOST_LOCATION_USER
+  fi
+
   if [ $USER_DOMAIN_TYP = "0" ]; then
     mv /tmp/nextcloud/* $HOST_MAINDOMAIN_HTTPD_LOCATION
     mkdir $HOST_MAINDOMAIN_ROOT_LOCATION/data
@@ -38,6 +42,18 @@ EOFMW
     sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ config:system:set overwrite.cli.url --value=https://$USER_MAINDOMAIN
     sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ background:cron
 
+    #Todo
+    'htaccess.RewriteBase' => '/',
+    'memcache.local' => '\OC\Memcache\APCu',
+    'memcache.distributed' => '\OC\Memcache\Redis',
+    'memcache.locking' => '\OC\Memcache\Redis',
+    'redis' =>
+      array (
+      'host' => '/var/run/redis/redis.sock',
+      'port' => 0,
+      'timeout' => 0.0,
+    ),
+
   elif [ $USER_DOMAIN_TYP = "1" ]; then
     mv /tmp/nextcloud/* $HOST_SUBDOMAIN_HTTPD_LOCATION
     mkdir $HOST_SUBDOMAIN_ROOT_LOCATION/data
@@ -51,6 +67,7 @@ EOFMW
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ config:system:set trusted_domains 1 --value=$USER_SUBDOMAIN
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ config:system:set overwrite.cli.url --value=https://$USER_SUBDOMAIN
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ background:cron
+
   fi
 
   rm -rf /tmp/nextcloud
