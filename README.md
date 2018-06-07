@@ -1,21 +1,28 @@
-# SLEMP
+# SL(A)EMP
 
-SLEMP stands for Secure LEMP.
-It will support latest versions of Debian (Stretch) and CentOS (7.x).
+SL(A)EMP stands for Secure L(A)EMP.
+It supports latest versions of Debian (Stretch) and CentOS (7.x).
 
 ## Features
 
-- Setup a secure nginx config
+- Setup a secure nginx or apache (only on Debian) config
+  - Using the strong cipherlist from https://cipherli.st
+- Debian only: Choose between Apache OR Nginx
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
-- Multiple PHP versions (7.0, 7.1, 7.2) running as FPM
-- MariaDB database with generated passwords
+- Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
+- MariaDB databases with random generated passwords
+- Install Nextcloud or Wordpress with an optimized configuration for Apache and Nginx
+- Redis support (optional, but recommended if you are using Nextcloud)
 
 ## Requirements
 
 - OS: Debian 9 (Stretch) or CentOS 7.x, clean install!
 
 ## Installation
+Important: SL(A)EMP makes use of various open-source software.
+Please assure you agree with their license before using it. Any part of SL(A)EMP itself is released under GNU General Public License, Version 3.
+
 ```
 git clone https://github.com/timscha/SLEMP SLEMP
 chmod +x installer.sh add_domain.sh
@@ -30,7 +37,7 @@ The setup script will add the following repositories, dependent on your OS:
 - MariaDB (original repository by the MariaDB developers)
 
 After the installer is finished, CentOS user have to restart there system!
-Also  safe your MySQL root password on a secure place! You will see the password at the end of the installation.
+Also save your MySQL root password on a secure place! You will see the password at the end of the installation.
 
 If something goes wrong there is an installer log available at /tmp/slemp_install.txt
 
@@ -54,7 +61,12 @@ You will find the config and files at the following paths:
 ### Web
 - /var/www/YOUR-DOMAIN/
 
+### How I upload files?
+
+- Set a password to your location user
+
+
 ## What's next
-- CMS installations (Wordpress and Nextcloud planed)
-- Apache
-- Maybe Apache + nginx (as proxy)
+- fail2ban
+- UFW for debian
+- Cleanup the script

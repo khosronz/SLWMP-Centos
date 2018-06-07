@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.5.0
+# Version 0.6.0
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
    exit 1
 fi
 
-## Detect distro version
 if [ -e /etc/redhat-release ]; then
      DISTRO="centos"
 elif [ -e /etc/debian_version ]; then
@@ -26,7 +25,7 @@ fi
 
 choice () {
     local choice=$1
-    if [[ ${php_opts[choice]} ]] # toggle
+    if [[ ${php_opts[choice]} ]]
     then
         php_opts[choice]=
     else
@@ -80,8 +79,19 @@ EOL
     yum -q install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
     yum -q update -y && yum -q install firewalld yum-utils -y >> /tmp/slemp_install.txt 2>&1
 
-	systemctl -q enable firewalld
+	  systemctl -q enable firewalld
     systemctl -q start firewalld
+  fi
+}
+
+install_apache() {
+  if servicesCheck "apache2"; then
+    if [ $DISTRO = "debian" ]; then
+      DEBIAN_FRONTEND=noninteractive apt-get -qq install apache2 -y >> /tmp/slemp_install.txt 2>&1
+    fi
+    return 0
+  else
+    return 1
   fi
 }
 
@@ -110,7 +120,7 @@ install_mariadb(){
 
     fi
     if [ $DISTRO = "centos" ]; then
-      yum -q install MariaDB-server MariaDB-client -y > /dev/null
+      yum -q install MariaDB-server MariaDB-client -y >> /tmp/slemp_install.txt 2>&1
       systemctl -q enable mariadb
       systemctl -q start mariadb
 
@@ -128,19 +138,19 @@ if servicesCheck "php-fpm"; then
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip php7.0-apcu php7.0-opcache php7.0-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.0-fpm
             systemctl -q enable php7.0-fpm
             printf "\n - PHP 7.0 installed [X]"
           fi
           if (($opt=="2")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip php7.1-apcu php7.1-opcache php7.1-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.1-fpm
             systemctl -q enable php7.1-fpm
             printf "\n - PHP 7.1 installed [X]"
           fi
           if (($opt=="3")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip php7.2-apcu php7.2-opcache php7.2-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.2-fpm
             systemctl -q enable php7.2-fpm
             printf "\n- PHP 7.2 installed [X]"
@@ -154,19 +164,19 @@ if servicesCheck "php-fpm"; then
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            yum -q install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip -y >> /tmp/slemp_install.txt 2>&1
+            yum -q install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip php70-php-apcu php70-php-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php70-php-fpm
             systemctl -q enable php70-php-fpm
             printf "\n- PHP 7.0 installed [X]"
           fi
           if (($opt=="2")); then
-            yum -q install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip -y >> /tmp/slemp_install.txt 2>&1
+            yum -q install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip php71-php-apcu php71-php-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php71-php-fpm
             systemctl -q enable php71-php-fpm
             printf "\n- PHP 7.1 installed [X]"
           fi
           if (($opt=="3")); then
-            yum -q install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-imagick php72-php-xml php72-php-zip -y >> /tmp/slemp_install.txt 2>&1
+            yum -q install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-imagick php72-php-xml php72-php-zip php72-php-apcu php72-php-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php72-php-fpm
             systemctl -q enable php72-php-fpm
             printf "\n- PHP 7.2 installed [X]"
@@ -185,11 +195,51 @@ install_letsencrypt() {
     DEBIAN_FRONTEND=noninteractive apt-get -qq install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
   if [ $DISTRO = "centos" ]; then
-    yum -q update && yum install certbot -y >> /tmp/slemp_install.txt 2>&1
+    yum -q install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
+  if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
+    echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
+  elif [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+    echo "@weekly certbot renew --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --renew-hook "systemctl reload apache2" --quiet" >> /etc/crontab
+  fi
+  return 0
+}
 
-  # Cronjob for renewals
-  #echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
+install_redis() {
+  if servicesCheck "redis"; then
+    if [ $DISTRO = "debian" ]; then
+      DEBIAN_FRONTEND=noninteractive apt-get -qq install redis-server -y >> /tmp/slemp_install.txt 2>&1
+      cp /etc/redis/redis.conf /etc/redis/redis.conf.org
+      systemctl -q start redis
+    fi
+    if [ $DISTRO = "centos" ]; then
+      yum -q install redis -y >> /tmp/slemp_install.txt 2>&1
+      cp /etc/redis.conf /etc/redis.conf.org
+      systemctl -q start redis
+    fi
+    return 0
+  else
+    return 1
+  fi
+}
+
+initialize_apache() {
+  if [ ! -d "/var/www" ]; then
+    mkdir /var/www
+  fi
+  a2enmod http2 > /dev/null 2>&1
+  a2enmod rewrite > /dev/null 2>&1
+  a2enmod headers > /dev/null 2>&1
+  a2enmod env > /dev/null 2>&1
+  a2enmod dir > /dev/null 2>&1
+  a2enmod mime > /dev/null 2>&1
+  a2enmod proxy_fcgi > /dev/null 2>&1
+  a2enmod setenvif > /dev/null 2>&1
+  a2enmod ssl > /dev/null 2>&1
+
+  systemctl -q enable apache2
+  systemctl -q restart apache2
+
   return 0
 }
 
@@ -197,9 +247,7 @@ initialize_nginx() {
   if [ ! -d "/var/www" ]; then
     mkdir /var/www
   fi
-  # First, we not longer show nginx used version
   sed -i '/#gzip  on;/a server_tokens off;' /etc/nginx/nginx.conf
-  # Next, we changed some backlog variables
   echo "net.core.netdev_max_backlog=4096" >> /etc/sysctl.conf > /dev/null 2>&1
   echo "net.core.somaxconn=4096" >> /etc/sysctl.conf > /dev/null 2>&1
   echo "net.ipv4.tcp_max_syn_backlog=4096" >> /etc/sysctl.conf > /dev/null 2>&1
@@ -209,6 +257,48 @@ initialize_nginx() {
 
   systemctl -q start nginx
   systemctl -q enable nginx
+  return 0
+}
+
+initialize_php(){
+  if [ $DISTRO = "debian" ]; then
+    sed -i "s/;opcache.enable=1/opcache.enable=1/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.enable_cli=0/opcache.enable_cli=1/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.memory_consumption=128/opcache.memory_consumption=128/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.interned_strings_buffer=8/opcache.interned_strings_buffer=8/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.max_accelerated_files=10000/opcache.max_accelerated_files=10000/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.revalidate_freq=2/opcache.revalidate_freq=1/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/;opcache.save_comments=1/opcache.save_comments=1/" /etc/php/7.*/fpm/php.ini
+
+    sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.*/fpm/php.ini
+    sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/php/7.*/fpm/php.ini
+    if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+      for opt in "${!php_opts[@]}"
+        do
+          if [[ ${php_opts[opt]} ]];then
+            if (($opt=="1")); then
+              a2enconf -q php7.0-fpm > /dev/null 2>&1
+            fi
+            if (($opt=="2")); then
+              a2enconf -q php7.1-fpm > /dev/null 2>&1
+            fi
+            if (($opt=="3")); then
+              a2enconf -q php7.2-fpm > /dev/null 2>&1
+            fi
+          fi
+      done
+    fi
+  fi
+  if [ $DISTRO = "centos" ]; then
+  sed -i "s/;opcache.enable_cli=0/opcache.enable_cli=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+  sed -i "s/opcache.max_accelerated_files=4000/opcache.max_accelerated_files=10000/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+  sed -i "s/;opcache.save_comments=1/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+  sed -i "s/;opcache.revalidate_freq=2/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+  # /etc/opt/remi/php71/php.ini
+  fi
+  return 0
 }
 
 initialize_mariadb() {
@@ -227,6 +317,31 @@ EOF
 return 0
 }
 
+initialize_redis() {
+  echo "vm.overcommit_memory=1" >> /etc/sysctl.conf > /dev/null 2>&1
+  sysctl -p
+
+  if [ $DISTRO = "debian" ]; then
+    sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
+    sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
+    sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
+    sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
+    systemctl -q enable redis-server
+  fi
+  if [ $DISTRO = "centos" ]; then
+    mkdir /var/run/redis
+    chown redis:redis -R /var/run/redis
+    sed -i "s/port 6379/port 0/" /etc/redis.conf
+    sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf
+    sed -i 's|unixsocket /tmp/redis.sock|unixsocket /var/run/redis/redis.sock|g' /etc/redis.conf
+    sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
+    sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
+    systemctl -q enable redis
+  fi
+    systemctl -q restart redis
+  return 0
+}
+
 configure_centos() {
   firewall-cmd --permanent --zone=public --add-service=http > /dev/null 2>&1
   firewall-cmd --permanent --zone=public --add-service=https > /dev/null 2>&1
@@ -239,17 +354,47 @@ configure_centos() {
 
 echo <<EOF "
 $(basename $0) will attempt to install SLEMP.
+
+-------------------------------------------------------------------------------
+For Let's Encrypt, please read the Terms of Service at
+https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf.
+With using this script you agree in order to register with the ACME server at
+https://acme-v01.api.letsencrypt.org/directory
+-------------------------------------------------------------------------------
+
 This script is provided as it is, no warraties implied.
 "
 EOF
 
-read -p "Do you want to start the installation? y/n" -n 1 -r
+read -p "Do you want to start the installation? y/n " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
   echo "Before we start the installation and further configuration, the script will add some repositories and dependencies to your system. This will take a few seconds."
   read -p "Press ENTER to confirm"
   initialize_os
+  clear
+  if [ $DISTRO = "debian" ]; then
+    PS3='Which webserver do you want to install? '
+    options=("NGINX" "Apache")
+    select opt in "${options[@]}"
+    do
+        case $opt in
+            "NGINX")
+                INSTALLING_HTTPD_SERVER="0"
+                break
+                ;;
+            "Apache")
+                INSTALLING_HTTPD_SERVER="1"
+                break
+                ;;
+            *) echo invalid option;;
+        esac
+    done
+  else
+    INSTALLING_HTTPD_SERVER="0"
+  fi
+
   PS3='Please select your PHP versions: '
   while :
   do
@@ -277,20 +422,45 @@ then
       esac
     done
   done
+
+  read -p "Do you want to install Redis server? (recommended for Nextcloud) [y/n] " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+    INSTALLING_REDIS=1
+  else
+    INSTALLING_REDIS=0
+  fi
   clear
   printf "######################################\nInstallation of SLEMP\n######################################\n"
-  printf "Installing nginx . . . "
-  if install_nginx $1; then echo "[X]"; else echo "Failed..."; fi
-  printf "\nConfiguring nginx . . . "
-  if initialize_nginx $1; then echo "[X]"; else echo "Failed..."; fi
+  if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
+    printf "Installing nginx . . . "
+    if install_nginx $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring nginx . . . "
+    if initialize_nginx $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
+  if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+    printf "Installing Apache . . . "
+    if install_apache $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring Apache . . . "
+    if initialize_apache $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
   printf "\nInstalling MariaDB . . . "
   if install_mariadb $1; then echo "[X]"; else echo "Failed..."; fi
   printf "\nConfiguring MariaDB . . . "
   if initialize_mariadb $1; then echo "[X]"; else echo "Failed..."; fi
   printf "\nInstalling PHP . . . "
   if install_phpfpm $1; then echo ""; else echo "Failed..."; fi
+  printf "\nConfiguring PHP . . . "
+  if initialize_php $1; then echo ""; else echo "Failed..."; fi
   printf "\nInstalling Certbot . . . "
   if install_letsencrypt $1; then echo "[X]"; else echo "Failed..."; fi
+  if [ $INSTALLING_REDIS = "1" ]; then
+    printf "\nInstalling Redis . . . "
+    if install_redis $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring Redis . . . "
+    if initialize_redis $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
 
   if [ $DISTRO = "centos" ]; then
     printf "\nConfigure CentOS . . ."
