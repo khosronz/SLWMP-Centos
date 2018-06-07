@@ -5,9 +5,9 @@ It supports latest versions of Debian (Stretch) and CentOS (7.x).
 
 ## Features
 
-- Setup a secure nginx or apache (only on Debian) config
+- Setup a secure webserver config
   - Using the strong cipherlist from https://cipherli.st
-- Debian only: Choose between Apache OR Nginx
+- NGINX suppport (On Debian you can choose between NGINX and Apache)
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
 - Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
@@ -58,7 +58,7 @@ You will find the config and files at the following paths:
 - CentOS: /etc/opt/remi/php7x/php-fpm.d/
 - Debian: /etc/php/7.x/fpm/pool.d/
 
-### Web
+#### Web
 - /var/www/YOUR-DOMAIN/
 
 ### How I upload files?
