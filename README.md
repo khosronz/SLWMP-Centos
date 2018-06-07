@@ -64,6 +64,7 @@ You will find the config and files at the following paths:
 ### How I upload files?
 
 - Set a password to your location user
+- Connect over SCP with your server (Windows: WinSCP, macOS: Transmit)
 
 
 ## What's next
