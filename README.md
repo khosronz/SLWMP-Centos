@@ -7,7 +7,7 @@ It supports latest versions of Debian (Stretch) and CentOS (7.x).
 
 - Setup a secure webserver config
   - Using the strong cipherlist from https://cipherli.st
-- NGINX suppport (On Debian you can choose between NGINX and Apache)
+- NGINX OR Apache Support (Only on Debian, on CentOS nginx will be installed)
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
 - Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
