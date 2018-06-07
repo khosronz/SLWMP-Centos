@@ -34,25 +34,38 @@ EOFMW
     chown -R $HOST_LOCATION_USER: $HOST_MAINDOMAIN_HTTPD_LOCATION/*
     chown -R $HOST_LOCATION_USER: $HOST_MAINDOMAIN_ROOT_LOCATION/data
     chmod +x $HOST_MAINDOMAIN_HTTPD_LOCATION/occ
-
+    cat >> $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
+    <?php
+    $CONFIG = array (
+      'trusted_domains' =>
+      array (
+        0 => '$USER_MAINDOMAIN',
+      ),
+      'datadirectory' => '$HOST_MAINDOMAIN_ROOT_LOCATION/data',
+      'overwrite.cli.url' => 'https://$USER_MAINDOMAIN',
+      'htaccess.RewriteBase' => '/',
+      'dbtype' => 'mysql',
+      'dbname' => '$HOST_DB_DATABASE',
+      'dbhost' => 'localhost',
+      'dbport' => '',
+      'dbtableprefix' => 'oc_',
+      'mysql.utf8mb4' => true,
+      'dbuser' => '$HOST_DB_USER',
+      'dbpassword' => '$HOST_DB_PASS',
+      'memcache.local' => '\OC\Memcache\APCu',
+      'memcache.locking' => '\OC\Memcache\Redis',
+      'redis' => array(
+         'host' => '/var/run/redis/redis.sock',
+         'port' => 0,
+         'timeout' => 0.0,
+      ),
+      'installed' => false,
+    );
+EOL
+    chown $HOST_LOCATION_USER: $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php
     sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ maintenance:install --database "mysql" --database-name "$HOST_DB_DATABASE"  --database-user "$HOST_DB_USER" --database-pass "$HOST_DB_PASS" --admin-user "$USER_NC_USERNAME" --admin-pass "$USER_NC_PASSWD" --data-dir "$HOST_MAINDOMAIN_ROOT_LOCATION/data"
     echo "*/15 * * * * php -f $HOST_MAINDOMAIN_HTTPD_LOCATION/cron.php > /dev/null 2>&1" | crontab -u $HOST_LOCATION_USER -
-
-    sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ config:system:set trusted_domains 1 --value=$USER_MAINDOMAIN
-    sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ config:system:set overwrite.cli.url --value=https://$USER_MAINDOMAIN
     sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ background:cron
-
-    #Todo
-    'htaccess.RewriteBase' => '/',
-    'memcache.local' => '\OC\Memcache\APCu',
-    'memcache.distributed' => '\OC\Memcache\Redis',
-    'memcache.locking' => '\OC\Memcache\Redis',
-    'redis' =>
-      array (
-      'host' => '/var/run/redis/redis.sock',
-      'port' => 0,
-      'timeout' => 0.0,
-    ),
 
   elif [ $USER_DOMAIN_TYP = "1" ]; then
     mv /tmp/nextcloud/* $HOST_SUBDOMAIN_HTTPD_LOCATION
@@ -60,14 +73,38 @@ EOFMW
     chown -R $HOST_LOCATION_USER: $HOST_SUBDOMAIN_HTTPD_LOCATION/*
     chown -R $HOST_LOCATION_USER: $HOST_SUBDOMAIN_ROOT_LOCATION/data
     chmod +x $HOST_SUBDOMAIN_HTTPD_LOCATION/occ
-
+    cat >> $HOST_SUBDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
+    <?php
+    $CONFIG = array (
+      'trusted_domains' =>
+      array (
+        0 => '$USER_SUBDOMAIN',
+      ),
+      'datadirectory' => '$HOST_SUBDOMAIN_HTTPD_LOCATION/data',
+      'overwrite.cli.url' => 'https://$USER_SUBDOMAIN',
+      'htaccess.RewriteBase' => '/',
+      'dbtype' => 'mysql',
+      'dbname' => '$HOST_DB_DATABASE',
+      'dbhost' => 'localhost',
+      'dbport' => '',
+      'dbtableprefix' => 'oc_',
+      'mysql.utf8mb4' => true,
+      'dbuser' => '$HOST_DB_USER',
+      'dbpassword' => '$HOST_DB_PASS',
+      'memcache.local' => '\OC\Memcache\APCu',
+      'memcache.locking' => '\OC\Memcache\Redis',
+      'redis' => array(
+         'host' => '/var/run/redis/redis.sock',
+         'port' => 0,
+         'timeout' => 0.0,
+      ),
+      'installed' => false,
+    );
+EOL
+    chown $HOST_LOCATION_USER: $HOST_SUBDOMAIN_HTTPD_LOCATION/config/config.php
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ maintenance:install --database "mysql" --database-name "$HOST_DB_DATABASE"  --database-user "$HOST_DB_USER" --database-pass "$HOST_DB_PASS" --admin-user "$USER_NC_USERNAME" --admin-pass "$USER_NC_PASSWD" --data-dir "$HOST_SUBDOMAIN_ROOT_LOCATION/data"
     echo "*/15 * * * * php -f $HOST_SUBDOMAIN_HTTPD_LOCATION/cron.php > /dev/null 2>&1" | crontab -u $HOST_LOCATION_USER -
-
-    sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ config:system:set trusted_domains 1 --value=$USER_SUBDOMAIN
-    sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ config:system:set overwrite.cli.url --value=https://$USER_SUBDOMAIN
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ background:cron
-
   fi
 
   rm -rf /tmp/nextcloud

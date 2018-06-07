@@ -1,7 +1,7 @@
 # SL(A)EMP
 
 SL(A)EMP stands for Secure L(A)EMP.
-It support latest versions of Debian (Stretch) and CentOS (7.x).
+It supports latest versions of Debian (Stretch) and CentOS (7.x).
 
 ## Features
 
@@ -10,7 +10,7 @@ It support latest versions of Debian (Stretch) and CentOS (7.x).
 - Debian only: Choose between Apache OR Nginx
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
-- Multiple PHP versions (7.0, 7.1, 7.2) running as FPM
+- Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
 - MariaDB databases with random generated passwords
 - Install Nextcloud or Wordpress with an optimized configuration for Apache and Nginx
 - Redis support (optional, but recommended if you are using Nextcloud)
@@ -60,6 +60,9 @@ You will find the config and files at the following paths:
 
 ### Web
 - /var/www/YOUR-DOMAIN/
+
+### How I upload files
+
 
 ## What's next
 - fail2ban
