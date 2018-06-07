@@ -292,10 +292,10 @@ initialize_php(){
     fi
   fi
   if [ $DISTRO = "centos" ]; then
-  sed -i "s/;opcache.enable_cli=0/opcache.enable_cli=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
-  sed -i "s/opcache.max_accelerated_files=4000/opcache.max_accelerated_files=10000/" /etc/opt/remi/php7*/php.d/10-opcache.ini
-  sed -i "s/;opcache.save_comments=1/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
-  sed -i "s/;opcache.revalidate_freq=2/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+    sed -i "s/;opcache.enable_cli=0/opcache.enable_cli=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+    sed -i "s/opcache.max_accelerated_files=4000/opcache.max_accelerated_files=10000/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+    sed -i "s/;opcache.save_comments=1/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
+    sed -i "s/;opcache.revalidate_freq=2/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
   # /etc/opt/remi/php71/php.ini
   fi
   return 0
@@ -329,7 +329,6 @@ initialize_redis() {
     systemctl -q enable redis-server
   fi
   if [ $DISTRO = "centos" ]; then
-    mkdir /var/run/redis
     chown redis:redis -R /var/run/redis
     sed -i "s/port 6379/port 0/" /etc/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf

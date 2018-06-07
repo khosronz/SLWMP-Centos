@@ -268,8 +268,8 @@ configure_nginx_vhost(){
     sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-	sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-	sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
+	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
   fi
   if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -294,8 +294,8 @@ configure_nginx_vhost(){
     sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-	sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-	sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
   fi
 	return 0
@@ -352,11 +352,11 @@ configure_letsencrypt() {
   fi
   if [ $WEBSRV = "apache" ]; then
     if [ $USER_DOMAIN_TYP = "0" ]; then
-      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
       return 0
     fi
     if [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
       return 0
     fi
   fi
