@@ -239,6 +239,7 @@ initialize_apache() {
 
   systemctl -q enable apache2
   systemctl -q restart apache2
+
   return 0
 }
 
