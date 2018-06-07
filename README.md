@@ -61,7 +61,9 @@ You will find the config and files at the following paths:
 ### Web
 - /var/www/YOUR-DOMAIN/
 
-### How I upload files
+### How I upload files?
+
+- Set a password to your location user
 
 
 ## What's next
