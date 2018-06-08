@@ -1,4 +1,10 @@
-0.6.0 (work in progress)
+0.6.1
+=====
++ Changed the behaviour of subdomain creation
++ Added password to Redis
++ Other subdomain related fixes
+
+0.6.0
 =====
 + Add: Apache support (only on Debian for now)
 + Add: Support for Nextcloud and Wordpress
