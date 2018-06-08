@@ -318,7 +318,7 @@ return 0
 }
 
 initialize_redis() {
-  REDIS_PASSWDHASH=</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-'
+  REDIS_PASSWDHASH=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
   echo "vm.overcommit_memory=1" >> /etc/sysctl.conf > /dev/null 2>&1
   sysctl -p
 
