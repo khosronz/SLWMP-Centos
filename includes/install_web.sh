@@ -70,6 +70,8 @@ cat >> $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
 EOL
     chown $HOST_LOCATION_USER: $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php
     sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ maintenance:install --database "mysql" --database-name "$HOST_DB_DATABASE"  --database-user "$HOST_DB_USER" --database-pass "$HOST_DB_PASS" --admin-user "$USER_NC_USERNAME" --admin-pass "$USER_NC_PASSWD" --data-dir "$HOST_MAINDOMAIN_ROOT_LOCATION/data"
+    sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ config:system:set trusted_domains 0 --value=$USER_MAINDOMAIN
+    sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ config:system:set overwrite.cli.url --value=https://$USER_MAINDOMAIN
     echo "*/15 * * * * php -f $HOST_MAINDOMAIN_HTTPD_LOCATION/cron.php > /dev/null 2>&1" | crontab -u $HOST_LOCATION_USER -
     sudo -u $HOST_LOCATION_USER php $HOST_MAINDOMAIN_HTTPD_LOCATION/occ background:cron
 
@@ -84,7 +86,7 @@ EOL
     \$CONFIG = array (
       'trusted_domains' =>
       array (
-        0 => '$USER_SUBDOMAIN',
+        0 => 'localhost',
       ),
       'datadirectory' => '$HOST_SUBDOMAIN_ROOT_LOCATION/data',
       'overwrite.cli.url' => 'https://$USER_SUBDOMAIN',
@@ -100,7 +102,7 @@ EOL
       'memcache.local' => '\OC\Memcache\APCu',
 EOL
       if ! servicesCheck "redis-server"; then
-      cat >> $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
+      cat >> $HOST_SUBDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
       'memcache.locking' => '\OC\Memcache\Redis',
       'redis' => array(
         'host' => '/var/run/redis/redis.sock',
@@ -115,6 +117,9 @@ EOL
 EOL
     chown $HOST_LOCATION_USER: $HOST_SUBDOMAIN_HTTPD_LOCATION/config/config.php
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ maintenance:install --database "mysql" --database-name "$HOST_DB_DATABASE"  --database-user "$HOST_DB_USER" --database-pass "$HOST_DB_PASS" --admin-user "$USER_NC_USERNAME" --admin-pass "$USER_NC_PASSWD" --data-dir "$HOST_SUBDOMAIN_ROOT_LOCATION/data"
+    sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ config:system:set trusted_domains 0 --value=$USER_SUBDOMAIN
+    sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ config:system:set overwrite.cli.url --value=https://$USER_SUBDOMAIN
+
     echo "*/15 * * * * php -f $HOST_SUBDOMAIN_HTTPD_LOCATION/cron.php > /dev/null 2>&1" | crontab -u $HOST_LOCATION_USER -
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ background:cron
   fi
