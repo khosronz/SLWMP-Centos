@@ -237,8 +237,8 @@ configure_apache_vhost() {
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
 
     a2ensite -q $USER_SUBDOMAIN.conf
   fi
