@@ -65,6 +65,7 @@ EOL
   'redis' => array(
     'host' => '/var/run/redis/redis.sock',
     'port' => 0,
+    'password' => '$REDIS_PASSWDHASH',
     'timeout' => 0.0,
   ),
 EOL
@@ -111,7 +112,7 @@ EOL
       'redis' => array(
         'host' => '/var/run/redis/redis.sock',
         'port' => 0,
-        'password' => '%',
+        'password' => '$REDIS_PASSWDHASH',
         'timeout' => 0.0,
       ),
 EOL
