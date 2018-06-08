@@ -6,9 +6,9 @@
 configure_nextcloud() {
 
 if [ $DISTRO = "debian" ]; then
-  REDIS_PASSWDHASH=$(grep -oP '^requirepass\s+\K\S+') /etc/redis/redis.conf
+  REDIS_PASSWDHASH=$(grep -oP '^requirepass\s+\K\S+' /etc/redis/redis.conf)
 elif [ $DISTRO = "centos" ]; then
-  REDIS_PASSWDHASH=$(grep -oP '^requirepass\s+\K\S+') /etc/redis.conf
+  REDIS_PASSWDHASH=$(grep -oP '^requirepass\s+\K\S+' /etc/redis.conf)
 fi
 echo <<EOFMW "
 #################################################################
