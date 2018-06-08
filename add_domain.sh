@@ -557,7 +557,7 @@ if [ $USER_DOMAIN_TYP = "1" ]; then
 fi
 echo "MySQL username: $HOST_DB_USER"
 echo "MySQL password: $HOST_DB_PASS"
-echo "MyMySQL database: $HOST_DB_DATABASE"
+echo "MySQL database: $HOST_DB_DATABASE"
 echo "Location owner: $HOST_LOCATION_USER"
 echo <<EOF "
 #
