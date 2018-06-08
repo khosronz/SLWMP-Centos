@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.0
+# Version 0.6.1
 
 servicesCheck(){
 ps cax | grep $1 > /dev/null
@@ -233,7 +233,7 @@ configure_apache_vhost() {
       cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     fi
 
-    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
     sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
@@ -346,7 +346,7 @@ configure_letsencrypt() {
       return 0
     fi
     if [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_SUBDOMAIN
       return 0
     fi
   fi
@@ -356,7 +356,7 @@ configure_letsencrypt() {
       return 0
     fi
     if [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_SUBDOMAIN
       return 0
     fi
   fi
@@ -386,8 +386,25 @@ EOSQL
 }
 
 echo <<EOF "
-$(basename $0) will attempt to add a vhost to your system now.
-This script is provided as it is, no warraties implied. (Ctrl-c to abort)
+
+#################################################################
+#
+# $(basename $0) will attempt to add a vhost to your system now.
+# This script is provided as it is, no warraties implied. (Ctrl-c to abort)
+#
+# Be sure that your domain have the following DNS configuration:
+#
+# If you use a domain:
+# @   3600  IN  A  172.27.171.106
+# www.example.com.   3600  IN  A  YOUR_SERVER_IP
+#
+# If you use a subdomain:
+#
+# yoursubdomain.example.com.   3600  IN  A  YOUR_SERVER_IP
+#
+# If the dns setup is not correct, the setup will fail.
+#
+#################################################################
 "
 EOF
 
