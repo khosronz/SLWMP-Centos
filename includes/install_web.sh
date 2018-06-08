@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.2
+# Version 0.6.3
 
 configure_nextcloud() {
 
@@ -59,17 +59,17 @@ cat > $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
   'dbpassword' => '$HOST_DB_PASS',
   'memcache.local' => '\OC\Memcache\APCu',
 EOL
-#  if ! servicesCheck "redis-server"; then
-#  cat >> $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
-#  'memcache.locking' => '\OC\Memcache\Redis',
-#  'redis' => array(
-#    'host' => '/var/run/redis/redis.sock',
-#    'port' => 0,
-#    'password' => '$REDIS_PASSWDHASH',
-#    'timeout' => 0.0,
-#  ),
-#EOL
-#  fi
+if ! servicesCheck "redis-server"; then
+cat >> $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
+'memcache.locking' => '\\OC\\Memcache\\Redis',
+'redis' => array (
+'host' => '/var/run/redis/redis.sock',
+'port' => 0,
+'password' => '$REDIS_PASSWDHASH',
+'timeout' => 0.0,
+),
+EOL
+fi
 cat >> $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
   'installed' => false,
 );
@@ -106,17 +106,17 @@ EOL
       'dbpassword' => '$HOST_DB_PASS',
       'memcache.local' => '\OC\Memcache\APCu',
 EOL
-#      if ! servicesCheck "redis-server"; then
-#      cat >> $HOST_SUBDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
-#      'memcache.locking' => '\OC\Memcache\Redis',
-#      'redis' => array(
-#        'host' => '/var/run/redis/redis.sock',
-#        'port' => 0,
-#        'password' => '$REDIS_PASSWDHASH',
-#        'timeout' => 0.0,
-#      ),
-#EOL
-#      fi
+if ! servicesCheck "redis-server"; then
+cat >> $HOST_SUBDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
+'memcache.locking' => '\OC\Memcache\Redis',
+'redis' => array (
+'host' => '/var/run/redis/redis.sock',
+'port' => 0,
+'password' => '$REDIS_PASSWDHASH',
+'timeout' => 0.0,
+),
+EOL
+fi
     cat >> $HOST_SUBDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
       'installed' => false,
     );
@@ -130,6 +130,7 @@ EOL
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ background:cron
   fi
 
+  systemctl -q restart redis
   rm -rf /tmp/nextcloud
   echo <<EOFMW "
   #################################################################
@@ -138,6 +139,8 @@ EOL
   # Open a browser and go to your domain to login.
   #
   # Login with your previous provided login credentials!
+  # If you receive a Internal Server Error please comment out Redis
+  # in NC config. 
   #
   #################################################################
   "

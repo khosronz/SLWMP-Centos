@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.1
+# Version 0.6.3
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2

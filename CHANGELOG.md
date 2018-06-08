@@ -1,3 +1,9 @@
+0.6.3
+=====
++ Redis is available again in NC
+- If you have any problems please try to reload the NC a few times.
+  If this will not work, open a ticket please
+
 0.6.2
 =====
 + Removed Redis for now from NC config because of Internal Server error
