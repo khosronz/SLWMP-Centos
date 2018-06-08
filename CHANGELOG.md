@@ -1,3 +1,7 @@
+0.6.2
+=====
++ Removed Redis for now from NC config because of Internal Server error
+
 0.6.1
 =====
 + Changed the behaviour of subdomain creation
