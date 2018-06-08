@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.0
+# Version 0.6.1
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -318,6 +318,7 @@ return 0
 }
 
 initialize_redis() {
+  REDIS_PASSWDHASH=$(</dev/urandom tr -dc A-Za-z0-9 | head -c14 | sha256sum | tr -d '-')
   echo "vm.overcommit_memory=1" >> /etc/sysctl.conf > /dev/null 2>&1
   sysctl -p
 
@@ -325,6 +326,7 @@ initialize_redis() {
     sed -i "s/port 6379/port 0/" /etc/redis/redis.conf
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis/redis.conf
+    sed -i "/# requirepass foobared/a requirepass $REDIS_PASSWDHASH" /etc/redis/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis/redis.conf
     systemctl -q enable redis-server
   fi
@@ -334,6 +336,7 @@ initialize_redis() {
     sed -i s/\#\ unixsocket/\unixsocket/g /etc/redis.conf
     sed -i 's|unixsocket /tmp/redis.sock|unixsocket /var/run/redis/redis.sock|g' /etc/redis.conf
     sed -i "s/unixsocketperm 700/unixsocketperm 770/" /etc/redis.conf
+    sed -i "/# requirepass foobared/a requirepass $REDIS_PASSWDHASH" /etc/redis.conf
     sed -i "s/# maxclients 10000/maxclients 512/" /etc/redis.conf
     systemctl -q enable redis
   fi
