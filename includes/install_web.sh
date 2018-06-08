@@ -4,6 +4,12 @@
 # Version 0.6.1
 
 configure_nextcloud() {
+
+if [ $DISTRO = "debian" ]; then
+  REDIS_PASSWDHASH=$(grep -oP '^requirepass\s+\K\S+') /etc/redis/redis.conf
+elif [ $DISTRO = "centos" ]; then
+  REDIS_PASSWDHASH=$(grep -oP '^requirepass\s+\K\S+') /etc/redis.conf
+fi
 echo <<EOFMW "
 #################################################################
 #
@@ -37,12 +43,11 @@ EOFMW
 cat > $HOST_MAINDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
 <?php
 \$CONFIG = array (
-  'trusted_domains' =>
-  array (
-    0 => '$USER_MAINDOMAIN',
+  'trusted_domains' => array (
+    0 => 'localhost',
   ),
   'datadirectory' => '$HOST_MAINDOMAIN_ROOT_LOCATION/data',
-  'overwrite.cli.url' => 'https://$USER_MAINDOMAIN',
+  'overwrite.cli.url' => 'http://localhost',
   'htaccess.RewriteBase' => '/',
   'dbtype' => 'mysql',
   'dbname' => '$HOST_DB_DATABASE',
@@ -84,12 +89,11 @@ EOL
     cat > $HOST_SUBDOMAIN_HTTPD_LOCATION/config/config.php <<EOL
     <?php
     \$CONFIG = array (
-      'trusted_domains' =>
-      array (
+      'trusted_domains' => array (
         0 => 'localhost',
       ),
       'datadirectory' => '$HOST_SUBDOMAIN_ROOT_LOCATION/data',
-      'overwrite.cli.url' => 'https://$USER_SUBDOMAIN',
+      'overwrite.cli.url' => 'http://localhost',
       'htaccess.RewriteBase' => '/',
       'dbtype' => 'mysql',
       'dbname' => '$HOST_DB_DATABASE',
@@ -107,6 +111,7 @@ EOL
       'redis' => array(
         'host' => '/var/run/redis/redis.sock',
         'port' => 0,
+        'password' => '%',
         'timeout' => 0.0,
       ),
 EOL
