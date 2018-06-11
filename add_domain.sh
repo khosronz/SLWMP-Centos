@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.2
+# Version 0.7.0-dev
 
 servicesCheck(){
 ps cax | grep $1 > /dev/null
@@ -15,15 +15,17 @@ fi
 source includes/install_web.sh
 
 if [ -e /etc/redhat-release ]; then
-     DISTRO="centos"
+  DISTRO="centos"
 elif [ -e /etc/debian_version ]; then
-     DISTRO="debian"
+  DISTRO="debian"
 fi
 
 if [ -e /etc/apache2/apache2.conf ]; then
-     WEBSRV="apache"
+  WEBSRV="apache"
 elif [ -e /etc/nginx/nginx.conf ]; then
-     WEBSRV="nginx"
+  WEBSRV="nginx"
+else
+  WEBSERV="none"
 fi
 
 create_skeleton_dirs() {
@@ -302,39 +304,41 @@ configure_nginx_vhost(){
 }
 
 configure_logrotate() {
-  if [ $USER_DOMAIN_TYP = "0" ]; then
-    cat >> /etc/logrotate.d/nginx <<EOL
-    /var/log/www/$USER_MAINDOMAIN/logs/*.log {
-            daily
-            copytruncate
-            missingok
-            notifempty
-            compress
-            delaycompress
-            postrotate
-                    if [ -f /var/run/nginx.pid ]; then
-                            kill -USR1 `cat /var/run/nginx.pid`
-                    fi
-            endscript
-    }
+  if [ $WEBSRV = "nginx" ]; then
+    if [ $USER_DOMAIN_TYP = "0" ]; then
+      cat >> /etc/logrotate.d/nginx <<EOL
+      /var/log/www/$USER_MAINDOMAIN/logs/*.log {
+              daily
+              copytruncate
+              missingok
+              notifempty
+              compress
+              delaycompress
+              postrotate
+                      if [ -f /var/run/nginx.pid ]; then
+                              kill -USR1 `cat /var/run/nginx.pid`
+                      fi
+              endscript
+      }
 EOL
-  fi
-  if [ $USER_DOMAIN_TYP = "1" ]; then
-    cat >> /etc/logrotate.d/nginx <<EOL
-    /var/log/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs/*.log {
-            daily
-            copytruncate
-            missingok
-            notifempty
-            compress
-            delaycompress
-            postrotate
-                    if [ -f /var/run/nginx.pid ]; then
-                            kill -USR1 `cat /var/run/nginx.pid`
-                    fi
-            endscript
-    }
+    fi
+    if [ $USER_DOMAIN_TYP = "1" ]; then
+      cat >> /etc/logrotate.d/nginx <<EOL
+      /var/log/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs/*.log {
+              daily
+              copytruncate
+              missingok
+              notifempty
+              compress
+              delaycompress
+              postrotate
+                      if [ -f /var/run/nginx.pid ]; then
+                              kill -USR1 `cat /var/run/nginx.pid`
+                      fi
+              endscript
+      }
 EOL
+    fi
   fi
   return 0
 }

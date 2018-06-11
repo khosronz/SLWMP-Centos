@@ -14,6 +14,8 @@ It supports latest versions of Debian (Stretch) and CentOS (7.x).
 - MariaDB databases with random generated passwords
 - Install Nextcloud or Wordpress with an optimized configuration for Apache and Nginx
 - Redis support (optional, but recommended if you are using Nextcloud)
+- Fail2ban support (optinal)
+- UFW (uncomplicated firewall) support (Debian only, optional)
 
 ## Requirements
 
@@ -65,7 +67,6 @@ You will find the config and files at the following paths:
 
 - Set a password to your location user
 - Connect over SCP with your server (Windows: WinSCP, macOS: Transmit)
-
 
 ## What's next
 - fail2ban

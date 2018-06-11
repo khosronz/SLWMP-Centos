@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.3
+# Version 0.7.0-dev
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -35,11 +35,11 @@ choice () {
 
 initialize_os() {
   if [ $DISTRO = "debian" ]; then
-	DEBIAN_FRONTEND=noninteractive apt-get -qq update >> /tmp/slemp_install.txt 2>&1
+	  DEBIAN_FRONTEND=noninteractive apt-get -qq update >> /tmp/slemp_install.txt 2>&1
     DEBIAN_FRONTEND=noninteractive apt-get -qq install apt-transport-https lsb-release ca-certificates curl wget software-properties-common dirmngr -y >> /tmp/slemp_install.txt 2>&1
 
     DEBIAN_FRONTEND=noninteractive apt-key adv --recv-keys -qq --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8 >> /tmp/slemp_install.txt 2>&1
-    add-apt-repository -y 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian stretch main' >> /tmp/slemp_install.txt 2>&1
+    add-apt-repository -y 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.3/debian stretch main' >> /tmp/slemp_install.txt 2>&1
 
     echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
     echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
@@ -61,7 +61,7 @@ initialize_os() {
     cat >/etc/yum.repos.d/MariaDB.repo <<EOL
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.2/centos7-amd64
+baseurl = http://yum.mariadb.org/10.3/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOL
@@ -205,6 +205,20 @@ install_letsencrypt() {
   return 0
 }
 
+install_fail2ban() {
+  if servicesCheck "fail2ban"; then
+    if [ $DISTRO = "debian" ]; then
+      DEBIAN_FRONTEND=noninteractive apt-get -qq install fail2ban -y >> /tmp/slemp_install.txt 2>&1
+    fi
+    if [ $DISTRO = "centos" ]; then
+      yum -q install fail2ban -y >> /tmp/slemp_install.txt 2>&1
+    fi
+    return 0
+  else
+    return 1
+  fi
+}
+
 install_redis() {
   if servicesCheck "redis"; then
     if [ $DISTRO = "debian" ]; then
@@ -217,6 +231,15 @@ install_redis() {
       cp /etc/redis.conf /etc/redis.conf.org
       systemctl -q start redis
     fi
+    return 0
+  else
+    return 1
+  fi
+}
+
+install_ufw() {
+  if servicesCheck "ufw-client"; then
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install ufw -y >> /tmp/slemp_install.txt 2>&1
     return 0
   else
     return 1
@@ -344,6 +367,14 @@ initialize_redis() {
   return 0
 }
 
+initialize_fail2ban() {
+return 0
+}
+
+initialize_ufw() {
+return 0
+}
+
 configure_centos() {
   firewall-cmd --permanent --zone=public --add-service=http > /dev/null 2>&1
   firewall-cmd --permanent --zone=public --add-service=https > /dev/null 2>&1
@@ -427,11 +458,30 @@ then
 
   read -p "Do you want to install Redis server? (recommended for Nextcloud) [y/n] " -n 1 -r
   echo
-  if [[ $REPLY =~ ^[Yy]$ ]]
-  then
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
     INSTALLING_REDIS=1
   else
     INSTALLING_REDIS=0
+  fi
+  clear
+  read -p "Do you want to install fail2ban? [y/n] " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    INSTALLING_F2B=1
+  else
+    INSTALLING_F2B=0
+  fi
+  clear
+  if [ $DISTRO = "debian" ]; then
+    read -p "Do you want to install uncomplicated firewall (UFW)? [y/n] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      INSTALLING_UFW=1
+    else
+      INSTALLING_UFW=0
+    fi
+  elif [ $DISTRO = "centos" ]; then
+    INSTALLING_UFW=0
   fi
   clear
   printf "######################################\nInstallation of SLEMP\n######################################\n"
@@ -462,6 +512,18 @@ then
     if install_redis $1; then echo "[X]"; else echo "Failed..."; fi
     printf "\nConfiguring Redis . . . "
     if initialize_redis $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
+  if [ $INSTALLING_F2B = "1" ]; then
+    printf "\nInstalling Fail2ban . . . "
+    if install_fail2ban $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring Fail2ban . . . "
+    if initialize_fail2ban $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
+  if [ $INSTALLING_UFW = "1" ]; then
+    printf "\nInstalling UFW . . . "
+    if install_ufw $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring UFW . . . "
+    if initialize_ufw $1; then echo "[X]"; else echo "Failed..."; fi
   fi
 
   if [ $DISTRO = "centos" ]; then

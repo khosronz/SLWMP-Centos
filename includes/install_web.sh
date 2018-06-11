@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.3
+# Version 0.7.0-dev
 
 configure_nextcloud() {
 
@@ -130,6 +130,8 @@ EOL
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ background:cron
   fi
 
+  # If Fail2ban is installed, rules have to be added
+
   systemctl -q restart redis
   rm -rf /tmp/nextcloud
   echo <<EOFMW "
@@ -140,7 +142,7 @@ EOL
   #
   # Login with your previous provided login credentials!
   # If you receive a Internal Server Error please comment out Redis
-  # in NC config. 
+  # in NC config.
   #
   #################################################################
   "
@@ -214,6 +216,8 @@ EOFMW
     done
     chown -R $HOST_LOCATION_USER: $HOST_SUBDOMAIN_HTTPD_LOCATION
   fi
+  # If Fail2ban is installed, rules have to be added
+
 echo <<EOFMW "
     #################################################################
     #

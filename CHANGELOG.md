@@ -1,3 +1,10 @@
+0.7.0 (work in progress)
+=====
++ Fail2ban
++ UFW (for Debian)
++ Fixing Logrotate for Apache
++ MariaDB 10.3
+
 0.6.3
 =====
 + Redis is available again in NC
