@@ -336,13 +336,13 @@ initialize_php(){
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            alternatives --install /usr/local/bin/php php /usr/bin/php70 1
+            ln -s /usr/bin/php70 /usr/bin/php
           fi
           if (($opt=="2")); then
-            alternatives --install /usr/local/bin/php php /usr/bin/php71 1
+            ln -s /usr/bin/php71 /usr/bin/php
           fi
           if (($opt=="3")); then
-            alternatives --install /usr/local/bin/php php /usr/bin/php72 1
+            ln -s /usr/bin/php72 /usr/bin/php
           fi
         fi
     done
