@@ -20,9 +20,17 @@ elif [ -e /etc/debian_version ]; then
   DISTRO="debian"
 fi
 
-if [ -e /etc/apache2/apache2.conf ]; then
-  WEBSRV="apache"
-elif [ -e /etc/nginx/nginx.conf ]; then
+if [ $DISTRO = "debian" ]; then
+  if [ -e /etc/apache2/apache2.conf ]; then
+    WEBSRV="apache"
+  fi
+fi
+if [ $DISTRO = "centos" ]; then
+  if [ -e /etc/httpd/conf/httpd.conf ]; then
+    WEBSRV="apache"
+  fi
+fi
+if [ -e /etc/nginx/nginx.conf ]; then
   WEBSRV="nginx"
 else
   WEBSERV="none"
@@ -33,9 +41,17 @@ create_skeleton_dirs() {
 
   if [ $WEBSRV = "nginx" ]; then
 	usermod -aG $HOST_LOCATION_USER nginx
-  elif [ $WEBSRV = "apache" ]; then
-	usermod -aG $HOST_LOCATION_USER www-data
-  # apache - CentOS
+  fi
+  if [ $DISTRO = "debian" ]; then
+    if [ $WEBSRV = "apache" ]; then
+  	usermod -aG $HOST_LOCATION_USER www-data
+    # apache - CentOS
+    fi
+  fi
+  if [ $DISTRO = "centos" ]; then
+    if [ $WEBSRV = "apache" ]; then
+    usermod -aG $HOST_LOCATION_USER apache
+    fi
   fi
 
   if [ ! -d /var/www/$USER_MAINDOMAIN ]; then
@@ -436,7 +452,8 @@ echo <<EOF "
 # Be sure that your domain have the following DNS configuration:
 #
 # If you use a domain:
-# @   3600  IN  A  172.27.171.106
+#
+# @                  3600  IN  A  YOUR_SERVER_IP
 # www.example.com.   3600  IN  A  YOUR_SERVER_IP
 #
 # If you use a subdomain:

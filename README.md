@@ -69,6 +69,5 @@ You will find the config and files at the following paths:
 - Connect over SCP with your server (Windows: WinSCP, macOS: Transmit)
 
 ## What's next
-- fail2ban
-- UFW for debian
 - Cleanup the script
+- Option to anonymize IPs

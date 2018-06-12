@@ -91,7 +91,8 @@ install_apache() {
     fi
     if [ $DISTRO = "centos" ]; then
       yum -q install httpd mod_ssl -y
-    return 0
+      return 0
+    fi
   else
     return 1
   fi
@@ -269,6 +270,7 @@ initialize_apache() {
   if [ $DISTRO = "centos" ]; then
     systemctl -q enable httpd
     systemctl -q restart httpd
+  fi
   return 0
 }
 
