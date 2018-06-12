@@ -54,11 +54,10 @@ create_skeleton_dirs() {
     fi
   fi
 
-  if [ ! -d /var/www/$USER_MAINDOMAIN ]; then
+  if [ ! -d /var/www/$USER_MAINDOMAIN/htdocs ]; then
 	   mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
 	   mkdir /var/www/$USER_MAINDOMAIN/logs
 	   mkdir /var/www/$USER_MAINDOMAIN/tmp
-     chmod 755 /var/www/$USER_MAINDOMAIN
   fi
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -66,9 +65,10 @@ create_skeleton_dirs() {
       mkdir -p /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs
   		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs
   		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/tmp
-      chmod 755 /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
   	fi
   fi
+  chmod 755 /var/www/$USER_MAINDOMAIN
+  chmod 755 /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
   chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAINW
   return 0
 }
@@ -221,9 +221,10 @@ configure_apache_vhost() {
       fi
       sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/#Protocols/Protocols/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-      sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       a2ensite -q $USER_MAINDOMAIN.conf
     fi
@@ -239,10 +240,9 @@ configure_apache_vhost() {
       fi
       sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
       sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
-      sed -i s/#Protocols/Protocols/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
       sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
-      sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
       sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
       systemctl -q reload httpd
     fi

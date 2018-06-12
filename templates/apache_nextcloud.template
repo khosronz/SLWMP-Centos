@@ -24,8 +24,8 @@ SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
             Dav off
           </IfModule>
 
-          SetEnv HOME /var/www/nextcloud
-          SetEnv HTTP_HOME /var/www/nextcloud
+          SetEnv HOME HOST_HTTPD_LOCATION
+          SetEnv HTTP_HOME HOST_HTTPD_LOCATION
 
     </Directory>
     ErrorLog HOST_ROOT_LOCATION/logs/error_apache.log
