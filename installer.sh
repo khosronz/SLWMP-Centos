@@ -77,7 +77,7 @@ EOL
     yum -q update -y
     yum -q install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
     yum -q install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
-    yum -q update -y && yum -q install firewalld yum-utils -y >> /tmp/slemp_install.txt 2>&1
+    yum -q update -y && yum -q install bzip2 firewalld yum-utils -y >> /tmp/slemp_install.txt 2>&1
 
 	  systemctl -q enable firewalld
     systemctl -q start firewalld
@@ -332,6 +332,20 @@ initialize_php(){
     sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/opt/remi/php7*/php.ini
     sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/opt/remi/php7*/php.ini
     sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/opt/remi/php7*/php.ini
+    for opt in "${!php_opts[@]}"
+      do
+        if [[ ${php_opts[opt]} ]];then
+          if (($opt=="1")); then
+            alternatives --install /usr/local/bin/php php /usr/bin/php70 1
+          fi
+          if (($opt=="2")); then
+            alternatives --install /usr/local/bin/php php /usr/bin/php71 1
+          fi
+          if (($opt=="3")); then
+            alternatives --install /usr/local/bin/php php /usr/bin/php72 1
+          fi
+        fi
+    done
   fi
   return 0
 }

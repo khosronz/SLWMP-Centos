@@ -69,7 +69,7 @@ create_skeleton_dirs() {
   fi
   chmod 755 /var/www/$USER_MAINDOMAIN
   chmod 755 /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
-  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAINW
+  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN
   return 0
 }
 
