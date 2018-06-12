@@ -222,6 +222,7 @@ configure_apache_vhost() {
       sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i s/#Protocols/Protocols/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/#SSLSessionTickets/SSLSessionTickets/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
       sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
@@ -250,13 +251,13 @@ configure_apache_vhost() {
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
-      NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
-      NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $DISTRO = "debian" ]; then
       if [ $USER_CMS_CHOICE = "none" ]; then
@@ -271,6 +272,7 @@ configure_apache_vhost() {
       sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
       sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
       sed -i s/#Protocols/Protocols/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i s/#SSLSessionTickets/SSLSessionTickets/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
       sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
       sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf

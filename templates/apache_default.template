@@ -39,7 +39,7 @@ SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
     # Requires Apache >= 2.4
     SSLCompression off
     # Requires Apache >= 2.4.11
-    SSLSessionTickets Off
+    #SSLSessionTickets Off
 
     AddOutputFilterByType DEFLATE text/plain
     AddOutputFilterByType DEFLATE text/html
