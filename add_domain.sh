@@ -407,16 +407,31 @@ configure_letsencrypt() {
       return 0
     fi
   fi
-  if [ $WEBSRV = "apache" ]; then
-    if [ $USER_DOMAIN_TYP = "0" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
-      return 0
-    fi
-    if [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_SUBDOMAIN
-      return 0
+  if [ $DISTRO = "debian" ]; then
+    if [ $WEBSRV = "apache" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+        return 0
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+        return 0
+      fi
     fi
   fi
+  if [ $DISTRO = "centos" ]; then
+    if [ $WEBSRV = "apache" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop httpd" --post-hook "systemctl start httpd" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+        return 0
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop httpd" --post-hook "systemctl start httpd" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+        return 0
+      fi
+    fi
+  fi
+
 }
 
 configure_database(){
