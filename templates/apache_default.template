@@ -10,12 +10,12 @@
 SSLUseStapling on
 SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
 <VirtualHost *:443>
-    Protocols h2 http/1.1
+    #Protocols h2 http/1.1
     ServerName DOMAIN_FULLNAME
     ServerAlias www.DOMAIN_FULLNAME
     ServerAdmin hostmaster@hostname
-    DocumentRoot DOMAIN_HTTPD_LOCATION
-    <Directory DOMAIN_HTTPD_LOCATION>
+    DocumentRoot HOST_HTTPD_LOCATION
+    <Directory HOST_HTTPD_LOCATION>
           Options Indexes FollowSymLinks MultiViews
           AllowOverride All
           Order allow,deny
@@ -58,9 +58,6 @@ SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
     DirectoryIndex index.php
 
     <FilesMatch \.php$>
-          # TCP/IP-Port
-          # SetHandler "proxy:fcgi://127.0.0.1:9001"
-          # UNIX-Socket - Since Apache 2.4.9 / CentOS 7 use Apache 2.4.6 !
           SetHandler "proxy:unix:NGXSOCKET|fcgi://localhost/"
     </FilesMatch>
 

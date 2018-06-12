@@ -4,6 +4,7 @@
 + UFW (for Debian)
 + Fixing Logrotate for Apache
 + MariaDB 10.3
++ Adding Apache for CentOS
 
 0.6.3
 =====

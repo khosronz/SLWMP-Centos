@@ -89,6 +89,8 @@ install_apache() {
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install apache2 -y >> /tmp/slemp_install.txt 2>&1
     fi
+    if [ $DISTRO = "centos" ]; then
+      yum -q install httpd mod_ssl -y
     return 0
   else
     return 1
@@ -250,19 +252,23 @@ initialize_apache() {
   if [ ! -d "/var/www" ]; then
     mkdir /var/www
   fi
-  a2enmod http2 > /dev/null 2>&1
-  a2enmod rewrite > /dev/null 2>&1
-  a2enmod headers > /dev/null 2>&1
-  a2enmod env > /dev/null 2>&1
-  a2enmod dir > /dev/null 2>&1
-  a2enmod mime > /dev/null 2>&1
-  a2enmod proxy_fcgi > /dev/null 2>&1
-  a2enmod setenvif > /dev/null 2>&1
-  a2enmod ssl > /dev/null 2>&1
+  if [ $DISTRO = "debian" ]; then
+    a2enmod http2 > /dev/null 2>&1
+    a2enmod rewrite > /dev/null 2>&1
+    a2enmod headers > /dev/null 2>&1
+    a2enmod env > /dev/null 2>&1
+    a2enmod dir > /dev/null 2>&1
+    a2enmod mime > /dev/null 2>&1
+    a2enmod proxy_fcgi > /dev/null 2>&1
+    a2enmod setenvif > /dev/null 2>&1
+    a2enmod ssl > /dev/null 2>&1
 
-  systemctl -q enable apache2
-  systemctl -q restart apache2
-
+    systemctl -q enable apache2
+    systemctl -q restart apache2
+  fi
+  if [ $DISTRO = "centos" ]; then
+    systemctl -q enable httpd
+    systemctl -q restart httpd
   return 0
 }
 
@@ -319,7 +325,11 @@ initialize_php(){
     sed -i "s/opcache.max_accelerated_files=4000/opcache.max_accelerated_files=10000/" /etc/opt/remi/php7*/php.d/10-opcache.ini
     sed -i "s/;opcache.save_comments=1/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
     sed -i "s/;opcache.revalidate_freq=2/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
-  # /etc/opt/remi/php71/php.ini
+
+    sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/opt/remi/php7*/php.ini
+    sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/opt/remi/php7*/php.ini
+    sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/opt/remi/php7*/php.ini
+    sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/opt/remi/php7*/php.ini
   fi
   return 0
 }
@@ -372,6 +382,13 @@ return 0
 }
 
 initialize_ufw() {
+  printf "Enabling UFW rules... \n"
+  ufw enable
+  ufw logging on
+  ufw allow ssh
+  ufw allow 80/tcp
+  ufw allow 443/tcp
+  ufw default deny
 return 0
 }
 
@@ -407,27 +424,23 @@ then
   read -p "Press ENTER to confirm"
   initialize_os
   clear
-  if [ $DISTRO = "debian" ]; then
-    PS3='Which webserver do you want to install? '
-    options=("NGINX" "Apache")
-    select opt in "${options[@]}"
-    do
-        case $opt in
-            "NGINX")
-                INSTALLING_HTTPD_SERVER="0"
-                break
-                ;;
-            "Apache")
-                INSTALLING_HTTPD_SERVER="1"
-                break
-                ;;
-            *) echo invalid option;;
-        esac
-    done
-  else
-    INSTALLING_HTTPD_SERVER="0"
-  fi
-
+  PS3='Which webserver do you want to install? '
+  options=("NGINX" "Apache")
+  select opt in "${options[@]}"
+  do
+      case $opt in
+          "NGINX")
+              INSTALLING_HTTPD_SERVER="0"
+              break
+              ;;
+          "Apache")
+              INSTALLING_HTTPD_SERVER="1"
+              break
+              ;;
+          *) echo invalid option;;
+      esac
+  done
+  clear
   PS3='Please select your PHP versions: '
   while :
   do
@@ -525,7 +538,6 @@ then
     printf "\nConfiguring UFW . . . "
     if initialize_ufw $1; then echo "[X]"; else echo "Failed..."; fi
   fi
-
   if [ $DISTRO = "centos" ]; then
     printf "\nConfigure CentOS . . ."
     configure_centos

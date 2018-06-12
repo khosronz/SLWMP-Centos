@@ -35,12 +35,14 @@ create_skeleton_dirs() {
 	usermod -aG $HOST_LOCATION_USER nginx
   elif [ $WEBSRV = "apache" ]; then
 	usermod -aG $HOST_LOCATION_USER www-data
+  # apache - CentOS
   fi
 
   if [ ! -d /var/www/$USER_MAINDOMAIN ]; then
 	   mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
 	   mkdir /var/www/$USER_MAINDOMAIN/logs
 	   mkdir /var/www/$USER_MAINDOMAIN/tmp
+     chmod 755 /var/www/$USER_MAINDOMAIN
   fi
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -48,14 +50,10 @@ create_skeleton_dirs() {
       mkdir -p /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs
   		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs
   		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/tmp
+      chmod 755 /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
   	fi
   fi
-
-  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN
-  chmod 755 /var/www/$USER_MAINDOMAIN
-  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
-  chmod 755 /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
-
+  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAINW
   return 0
 }
 
@@ -195,24 +193,43 @@ configure_apache_vhost() {
     if [ $USER_PHP_VERSION = "php70" ]; then
       NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
-    if [ $USER_CMS_CHOICE = "none" ]; then
-      cp templates/apache_default.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    if [ $DISTRO = "debian" ]; then
+      if [ $USER_CMS_CHOICE = "none" ]; then
+        cp templates/apache_default.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+        cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "wordpress" ]; then
+        cp templates/apache_wordpress.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      fi
+      sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      a2ensite -q $USER_MAINDOMAIN.conf
     fi
-    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
-      cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    if [ $DISTRO = "centos" ]; then
+      if [ $USER_CMS_CHOICE = "none" ]; then
+        cp templates/apache_default.template /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+        cp templates/apache_nextcloud.template /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "wordpress" ]; then
+        cp templates/apache_wordpress.template /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      fi
+      sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i s/#Protocols/Protocols/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      systemctl -q reload httpd
     fi
-    if [ $USER_CMS_CHOICE = "wordpress" ]; then
-      cp templates/apache_wordpress.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    fi
-
-    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-
-    a2ensite -q $USER_MAINDOMAIN.conf
   fi
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
@@ -225,24 +242,44 @@ configure_apache_vhost() {
     if [ $USER_PHP_VERSION = "php70" ]; then
       NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
     fi
-    if [ $USER_CMS_CHOICE = "none" ]; then
-      cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    if [ $DISTRO = "debian" ]; then
+      if [ $USER_CMS_CHOICE = "none" ]; then
+        cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+        cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "wordpress" ]; then
+        cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      fi
+      sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i s/#Protocols/Protocols/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      a2ensite -q $USER_SUBDOMAIN.conf
     fi
-    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
-      cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    fi
-    if [ $USER_CMS_CHOICE = "wordpress" ]; then
-      cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    if [ $DISTRO = "centos" ]; then
+      if [ $USER_CMS_CHOICE = "none" ]; then
+        cp templates/apache_default.template /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+        cp templates/apache_nextcloud.template /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "wordpress" ]; then
+        cp templates/apache_default.template /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      fi
+      sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      systemctl -q reload httpd
     fi
 
-    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-
-    a2ensite -q $USER_SUBDOMAIN.conf
   fi
   return 0
 }
