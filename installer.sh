@@ -394,6 +394,12 @@ initialize_redis() {
 }
 
 initialize_fail2ban() {
+  cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+  sed -i "s/bantime = 600/bantime = 7200/" /etc/fail2ban/jail.local
+  sed -i "s/findtime = 600/findtime = 300/" /etc/fail2ban/jail.local
+  sed -i "s/maxretry = 5/maxretry = 3/" /etc/fail2ban/jail.local
+  sed -i "/[sshd]/a enabled = true" /etc/fail2ban/jail.local
+  systemctl -q restart fail2ban
 return 0
 }
 

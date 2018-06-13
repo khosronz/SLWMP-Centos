@@ -2,12 +2,13 @@
 
 SL(A)EMP stands for Secure L(A)EMP.
 It supports latest versions of Debian (Stretch) and CentOS (7.x).
+It will install all necessary binaries for a secure LAMP or LEMP server automatically.
 
 ## Features
 
 - Setup a secure webserver config
   - Using the strong cipherlist from https://cipherli.st
-- NGINX OR Apache Support (Only on Debian, on CentOS nginx will be installed)
+- NGINX OR Apache Support (HTTP2 is not supported on Apache on CentOS)
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
 - Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
@@ -38,7 +39,7 @@ The setup script will add the following repositories, dependent on your OS:
   - CentOS: Remi's RPM repository (https://rpms.remirepo.net)
 - MariaDB (original repository by the MariaDB developers)
 
-After the installer is finished, CentOS user have to restart there system!
+After the installer is finished, CentOS user have to restart there system, because SELinux will be disabled during the installation.
 Also save your MySQL root password on a secure place! You will see the password at the end of the installation.
 
 If something goes wrong there is an installer log available at /tmp/slemp_install.txt

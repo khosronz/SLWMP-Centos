@@ -40,12 +40,11 @@ create_skeleton_dirs() {
 	useradd $HOST_LOCATION_USER -d /var/www/$USER_MAINDOMAIN
 
   if [ $WEBSRV = "nginx" ]; then
-	usermod -aG $HOST_LOCATION_USER nginx
+	   usermod -aG $HOST_LOCATION_USER nginx
   fi
   if [ $DISTRO = "debian" ]; then
     if [ $WEBSRV = "apache" ]; then
-  	usermod -aG $HOST_LOCATION_USER www-data
-    # apache - CentOS
+  	   usermod -aG $HOST_LOCATION_USER www-data
     fi
   fi
   if [ $DISTRO = "centos" ]; then
