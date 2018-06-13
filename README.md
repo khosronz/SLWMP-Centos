@@ -8,14 +8,14 @@ It will install all necessary binaries for a secure LAMP or LEMP server automati
 
 - Setup a secure webserver config
   - Using the strong cipherlist from https://cipherli.st
-- NGINX OR Apache Support (HTTP2 is not supported on Apache on CentOS)
+- nginx OR Apache Support (HTTP2 is not supported by Apache on CentOS)
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
 - Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
 - MariaDB databases with random generated passwords
 - Install Nextcloud or Wordpress with an optimized configuration for Apache and Nginx
 - Redis support (optional, but recommended if you are using Nextcloud)
-- Fail2ban support (optinal)
+- Fail2ban support (optional)
 - UFW (uncomplicated firewall) support (Debian only, optional)
 
 ## Requirements
@@ -72,3 +72,4 @@ You will find the config and files at the following paths:
 ## What's next
 - Cleanup the script
 - Option to anonymize IPs
+- Advices to secure the server in general

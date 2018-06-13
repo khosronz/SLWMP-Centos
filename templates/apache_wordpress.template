@@ -36,9 +36,7 @@ SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
     Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
     Header always set X-Frame-Options DENY
     Header always set X-Content-Type-Options nosniff
-    # Requires Apache >= 2.4
     SSLCompression off
-    # Requires Apache >= 2.4.11
     #SSLSessionTickets Off
 
     AddOutputFilterByType DEFLATE text/plain
@@ -51,7 +49,6 @@ SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
     AddOutputFilterByType DEFLATE application/javascript
     AddOutputFilterByType DEFLATE application/x-javascript
 
-    # HSTS (mod_headers is required) (15768000 seconds = 6 months)
     #Header always set Strict-Transport-Security "max-age=15768000"
 
     AddType text/html .php
