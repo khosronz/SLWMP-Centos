@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.7.0-dev
+# Version 0.7.0
 
 servicesCheck(){
 ps cax | grep $1 > /dev/null
@@ -391,6 +391,48 @@ EOL
                       fi
               endscript
       }
+EOL
+    fi
+  fi
+  if [ $DISTRO = "centos" ]; then
+    if [ $WEBSRV = "apache" ]; then
+    cat >> /etc/logrotate.d/httpd <<EOL
+    $HOST_ROOT_LOCATION/logs/*.log {
+    daily
+    missingok
+    notifempty
+    sharedscripts
+    delaycompress
+    postrotate
+        /bin/systemctl reload httpd.service > /dev/null 2>/dev/null || true
+    endscript
+  }
+EOL
+    fi
+  fi
+  if [ $DISTRO = "debian" ]; then
+    if [ $WEBSRV = "apache" ]; then
+    cat >> /etc/logrotate.d/apache2 <<EOL
+    $HOST_ROOT_LOCATION/logs/*.log {
+            daily
+            missingok
+            rotate 14
+            compress
+            delaycompress
+            notifempty
+            create 640 root adm
+            sharedscripts
+            postrotate
+                    if /etc/init.d/apache2 status > /dev/null ; then \
+                        /etc/init.d/apache2 reload > /dev/null; \
+                    fi;
+            endscript
+            prerotate
+                    if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+                            run-parts /etc/logrotate.d/httpd-prerotate; \
+                    fi; \
+            endscript
+    }
 EOL
     fi
   fi

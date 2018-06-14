@@ -1,8 +1,7 @@
 # SL(A)EMP
 
 SL(A)EMP stands for Secure L(A)EMP.
-It supports latest versions of Debian (Stretch) and CentOS (7.x).
-It will install all necessary binaries for a secure LAMP or LEMP server automatically.
+It will install all necessary binaries for a secure LAMP or LEMP server automatically. Supported are the latest versions of Debian (Stretch) and CentOS (7.x).
 
 ## Features
 

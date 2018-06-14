@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.7.0-dev
+# Version 0.7.0
 
 configure_nextcloud() {
 
