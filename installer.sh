@@ -498,7 +498,6 @@ then
   else
     INSTALLING_REDIS=0
   fi
-  clear
   read -p "Do you want to install fail2ban? [y/n] " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -506,7 +505,6 @@ then
   else
     INSTALLING_F2B=0
   fi
-  clear
   if [ $DISTRO = "debian" ]; then
     read -p "Do you want to install uncomplicated firewall (UFW)? [y/n] " -n 1 -r
     echo
