@@ -5,7 +5,7 @@ The next release will include a breaking point.
 - The apache user on Debian will be changed to "apache"
 Also PHP 7.0 will be removed, when PHP 7.3 becomes RC or GA
 
-== Changes
+### Changes
 =====
 + Fail2ban
 + UFW (for Debian)
