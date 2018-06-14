@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.3
+# Version 0.7.0
 
 configure_nextcloud() {
 
@@ -130,6 +130,21 @@ EOL
     sudo -u $HOST_LOCATION_USER php $HOST_SUBDOMAIN_HTTPD_LOCATION/occ background:cron
   fi
 
+  if ! servicesCheck "fail2ban-server"; then
+    echo "fail2ban rules for Nextcloud will be added now . . ."
+    cat >> /etc/fail2ban/jail.conf <<EOL
+[nextcloud-$DOMAIN_HYPHEN]
+enabled = true
+port = 80,443
+protocol = tcp
+filter = nextcloud
+maxretry = 3
+logpath = $HOST_ROOT_LOCATION/data/nextcloud.log
+action = %(action_mwl)s
+EOL
+
+  fi
+  systemctl -q reload fail2ban
   systemctl -q restart redis
   rm -rf /tmp/nextcloud
   echo <<EOFMW "
@@ -140,7 +155,7 @@ EOL
   #
   # Login with your previous provided login credentials!
   # If you receive a Internal Server Error please comment out Redis
-  # in NC config. 
+  # in NC config.
   #
   #################################################################
   "
@@ -214,6 +229,8 @@ EOFMW
     done
     chown -R $HOST_LOCATION_USER: $HOST_SUBDOMAIN_HTTPD_LOCATION
   fi
+  # If Fail2ban is installed, rules have to be added
+
 echo <<EOFMW "
     #################################################################
     #

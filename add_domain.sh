@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.2
+# Version 0.7.0
 
 servicesCheck(){
 ps cax | grep $1 > /dev/null
@@ -15,27 +15,45 @@ fi
 source includes/install_web.sh
 
 if [ -e /etc/redhat-release ]; then
-     DISTRO="centos"
+  DISTRO="centos"
 elif [ -e /etc/debian_version ]; then
-     DISTRO="debian"
+  DISTRO="debian"
 fi
 
-if [ -e /etc/apache2/apache2.conf ]; then
-     WEBSRV="apache"
-elif [ -e /etc/nginx/nginx.conf ]; then
-     WEBSRV="nginx"
+if [ $DISTRO = "debian" ]; then
+  if [ -e /etc/apache2/apache2.conf ]; then
+    WEBSRV="apache"
+  fi
+fi
+if [ $DISTRO = "centos" ]; then
+  if [ -e /etc/httpd/conf/httpd.conf ]; then
+    WEBSRV="apache"
+  fi
+fi
+if [ -e /etc/nginx/nginx.conf ]; then
+  WEBSRV="nginx"
+else
+  WEBSERV="none"
 fi
 
 create_skeleton_dirs() {
 	useradd $HOST_LOCATION_USER -d /var/www/$USER_MAINDOMAIN
 
   if [ $WEBSRV = "nginx" ]; then
-	usermod -aG $HOST_LOCATION_USER nginx
-  elif [ $WEBSRV = "apache" ]; then
-	usermod -aG $HOST_LOCATION_USER www-data
+	   usermod -aG $HOST_LOCATION_USER nginx
+  fi
+  if [ $DISTRO = "debian" ]; then
+    if [ $WEBSRV = "apache" ]; then
+  	   usermod -aG $HOST_LOCATION_USER www-data
+    fi
+  fi
+  if [ $DISTRO = "centos" ]; then
+    if [ $WEBSRV = "apache" ]; then
+    usermod -aG $HOST_LOCATION_USER apache
+    fi
   fi
 
-  if [ ! -d /var/www/$USER_MAINDOMAIN ]; then
+  if [ ! -d /var/www/$USER_MAINDOMAIN/htdocs ]; then
 	   mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
 	   mkdir /var/www/$USER_MAINDOMAIN/logs
 	   mkdir /var/www/$USER_MAINDOMAIN/tmp
@@ -48,12 +66,9 @@ create_skeleton_dirs() {
   		mkdir /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/tmp
   	fi
   fi
-
-  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN
   chmod 755 /var/www/$USER_MAINDOMAIN
-  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
   chmod 755 /var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN
-
+  chown -R $HOST_LOCATION_USER: /var/www/$USER_MAINDOMAIN
   return 0
 }
 
@@ -193,54 +208,95 @@ configure_apache_vhost() {
     if [ $USER_PHP_VERSION = "php70" ]; then
       NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
-    if [ $USER_CMS_CHOICE = "none" ]; then
-      cp templates/apache_default.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    if [ $DISTRO = "debian" ]; then
+      if [ $USER_CMS_CHOICE = "none" ]; then
+        cp templates/apache_default.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+        cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "wordpress" ]; then
+        cp templates/apache_wordpress.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      fi
+      sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/#Protocols/Protocols/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/#SSLSessionTickets/SSLSessionTickets/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+      a2ensite -q $USER_MAINDOMAIN.conf
     fi
-    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
-      cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
+    if [ $DISTRO = "centos" ]; then
+      if [ $USER_CMS_CHOICE = "none" ]; then
+        cp templates/apache_default.template /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+        cp templates/apache_nextcloud.template /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "wordpress" ]; then
+        cp templates/apache_wordpress.template /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      fi
+      sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/httpd/conf.d/$USER_MAINDOMAIN.conf
+      systemctl -q reload httpd
     fi
-    if [ $USER_CMS_CHOICE = "wordpress" ]; then
-      cp templates/apache_wordpress.template /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    fi
-
-    sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i s/DOMAIN_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_MAINDOMAIN.conf
-
-    a2ensite -q $USER_MAINDOMAIN.conf
   fi
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
     if [ $USER_PHP_VERSION = "php72" ]; then
-      NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
-      NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
-    if [ $USER_CMS_CHOICE = "none" ]; then
-      cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    if [ $DISTRO = "debian" ]; then
+      if [ $USER_CMS_CHOICE = "none" ]; then
+        cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+        cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "wordpress" ]; then
+        cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      fi
+      sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i s/#Protocols/Protocols/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i s/#SSLSessionTickets/SSLSessionTickets/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+      a2ensite -q $USER_SUBDOMAIN.conf
     fi
-    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
-      cp templates/apache_nextcloud.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    fi
-    if [ $USER_CMS_CHOICE = "wordpress" ]; then
-      cp templates/apache_default.template /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
+    if [ $DISTRO = "centos" ]; then
+      if [ $USER_CMS_CHOICE = "none" ]; then
+        cp templates/apache_default.template /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+        cp templates/apache_nextcloud.template /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      fi
+      if [ $USER_CMS_CHOICE = "wordpress" ]; then
+        cp templates/apache_default.template /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      fi
+      sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i 's|'HOST_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
+      systemctl -q reload httpd
     fi
 
-    sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i 's|'NGXSOCKET'|'$NGXSOCKET'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i s/DOMAIN_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-    sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/apache2/sites-available/$USER_SUBDOMAIN.conf
-
-    a2ensite -q $USER_SUBDOMAIN.conf
   fi
   return 0
 }
@@ -302,39 +358,83 @@ configure_nginx_vhost(){
 }
 
 configure_logrotate() {
-  if [ $USER_DOMAIN_TYP = "0" ]; then
-    cat >> /etc/logrotate.d/nginx <<EOL
-    /var/log/www/$USER_MAINDOMAIN/logs/*.log {
-            daily
-            copytruncate
-            missingok
-            notifempty
-            compress
-            delaycompress
-            postrotate
-                    if [ -f /var/run/nginx.pid ]; then
-                            kill -USR1 `cat /var/run/nginx.pid`
-                    fi
-            endscript
-    }
+  if [ $WEBSRV = "nginx" ]; then
+    if [ $USER_DOMAIN_TYP = "0" ]; then
+      cat >> /etc/logrotate.d/nginx <<EOL
+      /var/log/www/$USER_MAINDOMAIN/logs/*.log {
+              daily
+              copytruncate
+              missingok
+              notifempty
+              compress
+              delaycompress
+              postrotate
+                      if [ -f /var/run/nginx.pid ]; then
+                              kill -USR1 `cat /var/run/nginx.pid`
+                      fi
+              endscript
+      }
 EOL
+    fi
+    if [ $USER_DOMAIN_TYP = "1" ]; then
+      cat >> /etc/logrotate.d/nginx <<EOL
+      /var/log/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs/*.log {
+              daily
+              copytruncate
+              missingok
+              notifempty
+              compress
+              delaycompress
+              postrotate
+                      if [ -f /var/run/nginx.pid ]; then
+                              kill -USR1 `cat /var/run/nginx.pid`
+                      fi
+              endscript
+      }
+EOL
+    fi
   fi
-  if [ $USER_DOMAIN_TYP = "1" ]; then
-    cat >> /etc/logrotate.d/nginx <<EOL
-    /var/log/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs/*.log {
+  if [ $DISTRO = "centos" ]; then
+    if [ $WEBSRV = "apache" ]; then
+    cat >> /etc/logrotate.d/httpd <<EOL
+    $HOST_ROOT_LOCATION/logs/*.log {
+    daily
+    missingok
+    notifempty
+    sharedscripts
+    delaycompress
+    postrotate
+        /bin/systemctl reload httpd.service > /dev/null 2>/dev/null || true
+    endscript
+  }
+EOL
+    fi
+  fi
+  if [ $DISTRO = "debian" ]; then
+    if [ $WEBSRV = "apache" ]; then
+    cat >> /etc/logrotate.d/apache2 <<EOL
+    $HOST_ROOT_LOCATION/logs/*.log {
             daily
-            copytruncate
             missingok
-            notifempty
+            rotate 14
             compress
             delaycompress
+            notifempty
+            create 640 root adm
+            sharedscripts
             postrotate
-                    if [ -f /var/run/nginx.pid ]; then
-                            kill -USR1 `cat /var/run/nginx.pid`
-                    fi
+                    if /etc/init.d/apache2 status > /dev/null ; then \
+                        /etc/init.d/apache2 reload > /dev/null; \
+                    fi;
+            endscript
+            prerotate
+                    if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+                            run-parts /etc/logrotate.d/httpd-prerotate; \
+                    fi; \
             endscript
     }
 EOL
+    fi
   fi
   return 0
 }
@@ -350,16 +450,31 @@ configure_letsencrypt() {
       return 0
     fi
   fi
-  if [ $WEBSRV = "apache" ]; then
-    if [ $USER_DOMAIN_TYP = "0" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
-      return 0
-    fi
-    if [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_SUBDOMAIN
-      return 0
+  if [ $DISTRO = "debian" ]; then
+    if [ $WEBSRV = "apache" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+        return 0
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+        return 0
+      fi
     fi
   fi
+  if [ $DISTRO = "centos" ]; then
+    if [ $WEBSRV = "apache" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop httpd" --post-hook "systemctl start httpd" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+        return 0
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop httpd" --post-hook "systemctl start httpd" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+        return 0
+      fi
+    fi
+  fi
+
 }
 
 configure_database(){
@@ -395,7 +510,8 @@ echo <<EOF "
 # Be sure that your domain have the following DNS configuration:
 #
 # If you use a domain:
-# @   3600  IN  A  172.27.171.106
+#
+# @                  3600  IN  A  YOUR_SERVER_IP
 # www.example.com.   3600  IN  A  YOUR_SERVER_IP
 #
 # If you use a subdomain:

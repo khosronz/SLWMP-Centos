@@ -1,19 +1,21 @@
 # SL(A)EMP
 
 SL(A)EMP stands for Secure L(A)EMP.
-It supports latest versions of Debian (Stretch) and CentOS (7.x).
+It will install all necessary binaries for a secure LAMP or LEMP server automatically. Supported are the latest versions of Debian (Stretch) and CentOS (7.x).
 
 ## Features
 
 - Setup a secure webserver config
   - Using the strong cipherlist from https://cipherli.st
-- NGINX OR Apache Support (Only on Debian, on CentOS nginx will be installed)
+- nginx OR Apache Support (HTTP2 is not supported by Apache on CentOS)
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
 - Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
 - MariaDB databases with random generated passwords
 - Install Nextcloud or Wordpress with an optimized configuration for Apache and Nginx
 - Redis support (optional, but recommended if you are using Nextcloud)
+- Fail2ban support (optional)
+- UFW (uncomplicated firewall) support (Debian only, optional)
 
 ## Requirements
 
@@ -36,7 +38,7 @@ The setup script will add the following repositories, dependent on your OS:
   - CentOS: Remi's RPM repository (https://rpms.remirepo.net)
 - MariaDB (original repository by the MariaDB developers)
 
-After the installer is finished, CentOS user have to restart there system!
+After the installer is finished, CentOS user have to restart there system, because SELinux will be disabled during the installation.
 Also save your MySQL root password on a secure place! You will see the password at the end of the installation.
 
 If something goes wrong there is an installer log available at /tmp/slemp_install.txt
@@ -66,8 +68,7 @@ You will find the config and files at the following paths:
 - Set a password to your location user
 - Connect over SCP with your server (Windows: WinSCP, macOS: Transmit)
 
-
 ## What's next
-- fail2ban
-- UFW for debian
 - Cleanup the script
+- Option to anonymize IPs
+- Advices to secure the server in general

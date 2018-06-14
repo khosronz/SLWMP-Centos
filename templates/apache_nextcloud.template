@@ -10,12 +10,12 @@
 SSLUseStapling on
 SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
 <VirtualHost *:443>
-    Protocols h2 http/1.1
+    #Protocols h2 http/1.1
     ServerName DOMAIN_FULLNAME
     ServerAlias www.DOMAIN_FULLNAME
     ServerAdmin hostmaster@hostname
-    DocumentRoot DOMAIN_HTTPD_LOCATION
-    <Directory DOMAIN_HTTPD_LOCATION>
+    DocumentRoot HOST_HTTPD_LOCATION
+    <Directory HOST_HTTPD_LOCATION>
           Options +FollowSymLinks
           AllowOverride All
           Order allow,deny
@@ -24,8 +24,8 @@ SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
             Dav off
           </IfModule>
 
-          SetEnv HOME /var/www/nextcloud
-          SetEnv HTTP_HOME /var/www/nextcloud
+          SetEnv HOME HOST_HTTPD_LOCATION
+          SetEnv HTTP_HOME HOST_HTTPD_LOCATION
 
     </Directory>
     ErrorLog HOST_ROOT_LOCATION/logs/error_apache.log
@@ -44,17 +44,9 @@ SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
     Header always set X-Frame-Options SAMEORIGIN
     Header always set X-Content-Type-Options nosniff
     SSLCompression off
-    SSLSessionTickets Off
-
-    # AddType text/html .php
-    # DirectoryIndex index.php
+    #SSLSessionTickets Off
 
     <FilesMatch \.php$>
-          # Tachtler
-          # default:    SetHandler application/x-httpd-php
-          # TCP/IP-Port
-          # SetHandler "proxy:fcgi://127.0.0.1:9001"
-          # UNIX-Socket - Supported since Apache 2.4.9 / CentOS 7 use Apache 2.4.6
           SetHandler "proxy:unix:/var/run/php-fpm-www.sock|fcgi://localhost/"
     </FilesMatch>
 

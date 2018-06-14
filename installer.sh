@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.6.3
+# Version 0.7.0
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -35,11 +35,11 @@ choice () {
 
 initialize_os() {
   if [ $DISTRO = "debian" ]; then
-	DEBIAN_FRONTEND=noninteractive apt-get -qq update >> /tmp/slemp_install.txt 2>&1
+	  DEBIAN_FRONTEND=noninteractive apt-get -qq update >> /tmp/slemp_install.txt 2>&1
     DEBIAN_FRONTEND=noninteractive apt-get -qq install apt-transport-https lsb-release ca-certificates curl wget software-properties-common dirmngr -y >> /tmp/slemp_install.txt 2>&1
 
     DEBIAN_FRONTEND=noninteractive apt-key adv --recv-keys -qq --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8 >> /tmp/slemp_install.txt 2>&1
-    add-apt-repository -y 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.2/debian stretch main' >> /tmp/slemp_install.txt 2>&1
+    add-apt-repository -y 'deb [arch=amd64,i386,ppc64el] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.3/debian stretch main' >> /tmp/slemp_install.txt 2>&1
 
     echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" > /etc/apt/sources.list.d/nginx.list
     echo "deb-src http://nginx.org/packages/mainline/debian/ $(lsb_release -c -s) nginx" >> /etc/apt/sources.list.d/nginx.list
@@ -61,7 +61,7 @@ initialize_os() {
     cat >/etc/yum.repos.d/MariaDB.repo <<EOL
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.2/centos7-amd64
+baseurl = http://yum.mariadb.org/10.3/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOL
@@ -77,7 +77,7 @@ EOL
     yum -q update -y
     yum -q install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
     yum -q install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
-    yum -q update -y && yum -q install firewalld yum-utils -y >> /tmp/slemp_install.txt 2>&1
+    yum -q update -y && yum -q install bzip2 firewalld yum-utils -y >> /tmp/slemp_install.txt 2>&1
 
 	  systemctl -q enable firewalld
     systemctl -q start firewalld
@@ -89,7 +89,10 @@ install_apache() {
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install apache2 -y >> /tmp/slemp_install.txt 2>&1
     fi
-    return 0
+    if [ $DISTRO = "centos" ]; then
+      yum -q install httpd mod_ssl -y
+      return 0
+    fi
   else
     return 1
   fi
@@ -205,6 +208,20 @@ install_letsencrypt() {
   return 0
 }
 
+install_fail2ban() {
+  if servicesCheck "fail2ban"; then
+    if [ $DISTRO = "debian" ]; then
+      DEBIAN_FRONTEND=noninteractive apt-get -qq install fail2ban -y >> /tmp/slemp_install.txt 2>&1
+    fi
+    if [ $DISTRO = "centos" ]; then
+      yum -q install fail2ban -y >> /tmp/slemp_install.txt 2>&1
+    fi
+    return 0
+  else
+    return 1
+  fi
+}
+
 install_redis() {
   if servicesCheck "redis"; then
     if [ $DISTRO = "debian" ]; then
@@ -223,23 +240,37 @@ install_redis() {
   fi
 }
 
+install_ufw() {
+  if servicesCheck "ufw-client"; then
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install ufw -y >> /tmp/slemp_install.txt 2>&1
+    return 0
+  else
+    return 1
+  fi
+}
+
 initialize_apache() {
   if [ ! -d "/var/www" ]; then
     mkdir /var/www
   fi
-  a2enmod http2 > /dev/null 2>&1
-  a2enmod rewrite > /dev/null 2>&1
-  a2enmod headers > /dev/null 2>&1
-  a2enmod env > /dev/null 2>&1
-  a2enmod dir > /dev/null 2>&1
-  a2enmod mime > /dev/null 2>&1
-  a2enmod proxy_fcgi > /dev/null 2>&1
-  a2enmod setenvif > /dev/null 2>&1
-  a2enmod ssl > /dev/null 2>&1
+  if [ $DISTRO = "debian" ]; then
+    a2enmod http2 > /dev/null 2>&1
+    a2enmod rewrite > /dev/null 2>&1
+    a2enmod headers > /dev/null 2>&1
+    a2enmod env > /dev/null 2>&1
+    a2enmod dir > /dev/null 2>&1
+    a2enmod mime > /dev/null 2>&1
+    a2enmod proxy_fcgi > /dev/null 2>&1
+    a2enmod setenvif > /dev/null 2>&1
+    a2enmod ssl > /dev/null 2>&1
 
-  systemctl -q enable apache2
-  systemctl -q restart apache2
-
+    systemctl -q enable apache2
+    systemctl -q restart apache2
+  fi
+  if [ $DISTRO = "centos" ]; then
+    systemctl -q enable httpd
+    systemctl -q restart httpd
+  fi
   return 0
 }
 
@@ -296,7 +327,25 @@ initialize_php(){
     sed -i "s/opcache.max_accelerated_files=4000/opcache.max_accelerated_files=10000/" /etc/opt/remi/php7*/php.d/10-opcache.ini
     sed -i "s/;opcache.save_comments=1/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
     sed -i "s/;opcache.revalidate_freq=2/opcache.save_comments=1/" /etc/opt/remi/php7*/php.d/10-opcache.ini
-  # /etc/opt/remi/php71/php.ini
+
+    sed -i "s/max_execution_time = 30/max_execution_time = 900/" /etc/opt/remi/php7*/php.ini
+    sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/opt/remi/php7*/php.ini
+    sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/opt/remi/php7*/php.ini
+    sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/opt/remi/php7*/php.ini
+    for opt in "${!php_opts[@]}"
+      do
+        if [[ ${php_opts[opt]} ]];then
+          if (($opt=="1")); then
+            ln -s /usr/bin/php70 /usr/bin/php
+          fi
+          if (($opt=="2")); then
+            ln -s /usr/bin/php71 /usr/bin/php
+          fi
+          if (($opt=="3")); then
+            ln -s /usr/bin/php72 /usr/bin/php
+          fi
+        fi
+    done
   fi
   return 0
 }
@@ -344,6 +393,33 @@ initialize_redis() {
   return 0
 }
 
+initialize_fail2ban() {
+  cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+  sed -i "s/bantime = 600/bantime = 7200/" /etc/fail2ban/jail.local
+  sed -i "s/findtime = 600/findtime = 300/" /etc/fail2ban/jail.local
+  sed -i "s/maxretry = 5/maxretry = 3/" /etc/fail2ban/jail.local
+  sed -i "/port    = ssh/a enabled = true" /etc/fail2ban/jail.local
+
+  cat >/etc/fail2ban/filter.d/nextcloud.conf <<EOL
+[Definition]
+failregex = ^{"reqId":".*","remoteAddr":".*","app":"core","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)","level":2,"time":".*"}$
+            ^{"reqId":".*","level":2,"time":".*","remoteAddr":".*","app":"core".*","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)".*}$
+ignoreregex =
+EOL
+  systemctl -q restart fail2ban
+return 0
+}
+
+initialize_ufw() {
+  ufw --force enable
+  ufw logging on
+  ufw allow ssh
+  ufw allow 80/tcp
+  ufw allow 443/tcp
+  ufw default deny
+return 0
+}
+
 configure_centos() {
   firewall-cmd --permanent --zone=public --add-service=http > /dev/null 2>&1
   firewall-cmd --permanent --zone=public --add-service=https > /dev/null 2>&1
@@ -376,27 +452,23 @@ then
   read -p "Press ENTER to confirm"
   initialize_os
   clear
-  if [ $DISTRO = "debian" ]; then
-    PS3='Which webserver do you want to install? '
-    options=("NGINX" "Apache")
-    select opt in "${options[@]}"
-    do
-        case $opt in
-            "NGINX")
-                INSTALLING_HTTPD_SERVER="0"
-                break
-                ;;
-            "Apache")
-                INSTALLING_HTTPD_SERVER="1"
-                break
-                ;;
-            *) echo invalid option;;
-        esac
-    done
-  else
-    INSTALLING_HTTPD_SERVER="0"
-  fi
-
+  PS3='Which webserver do you want to install? '
+  options=("NGINX" "Apache")
+  select opt in "${options[@]}"
+  do
+      case $opt in
+          "NGINX")
+              INSTALLING_HTTPD_SERVER="0"
+              break
+              ;;
+          "Apache")
+              INSTALLING_HTTPD_SERVER="1"
+              break
+              ;;
+          *) echo invalid option;;
+      esac
+  done
+  clear
   PS3='Please select your PHP versions: '
   while :
   do
@@ -427,11 +499,28 @@ then
 
   read -p "Do you want to install Redis server? (recommended for Nextcloud) [y/n] " -n 1 -r
   echo
-  if [[ $REPLY =~ ^[Yy]$ ]]
-  then
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
     INSTALLING_REDIS=1
   else
     INSTALLING_REDIS=0
+  fi
+  read -p "Do you want to install fail2ban? [y/n] " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    INSTALLING_F2B=1
+  else
+    INSTALLING_F2B=0
+  fi
+  if [ $DISTRO = "debian" ]; then
+    read -p "Do you want to install uncomplicated firewall (UFW)? [y/n] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      INSTALLING_UFW=1
+    else
+      INSTALLING_UFW=0
+    fi
+  elif [ $DISTRO = "centos" ]; then
+    INSTALLING_UFW=0
   fi
   clear
   printf "######################################\nInstallation of SLEMP\n######################################\n"
@@ -463,7 +552,18 @@ then
     printf "\nConfiguring Redis . . . "
     if initialize_redis $1; then echo "[X]"; else echo "Failed..."; fi
   fi
-
+  if [ $INSTALLING_F2B = "1" ]; then
+    printf "\nInstalling Fail2ban . . . "
+    if install_fail2ban $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring Fail2ban . . . "
+    if initialize_fail2ban $1; then echo "[X]"; else echo "Failed..."; fi
+  fi
+  if [ $INSTALLING_UFW = "1" ]; then
+    printf "\nInstalling UFW . . . "
+    if install_ufw $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring UFW rules . . .\n"
+    initialize_ufw
+  fi
   if [ $DISTRO = "centos" ]; then
     printf "\nConfigure CentOS . . ."
     configure_centos
