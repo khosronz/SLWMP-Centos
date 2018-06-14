@@ -131,12 +131,6 @@ EOL
   fi
 
   if ! servicesCheck "fail2ban-server"; then
-    cat >/etc/fail2ban/filter.d/nextcloud-$DOMAIN_HYPHEN.conf <<EOL
-    [Definition]
-    failregex = ^{"reqId":".*","remoteAddr":".*","app":"core","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)","level":2,"time":".*"}$
-                ^{"reqId":".*","level":2,"time":".*","remoteAddr":".*","app":"core".*","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)".*}$
-    ignoreregex =
-EOL
     echo "fail2ban rules for Nextcloud will be added now . . ."
     cat >> /etc/fail2ban/jail.conf <<EOL
 [nextcloud-$DOMAIN_HYPHEN]

@@ -399,6 +399,13 @@ initialize_fail2ban() {
   sed -i "s/findtime = 600/findtime = 300/" /etc/fail2ban/jail.local
   sed -i "s/maxretry = 5/maxretry = 3/" /etc/fail2ban/jail.local
   sed -i "/port    = ssh/a enabled = true" /etc/fail2ban/jail.local
+
+  cat >/etc/fail2ban/filter.d/nextcloud.conf <<EOL
+  [Definition]
+  failregex = ^{"reqId":".*","remoteAddr":".*","app":"core","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)","level":2,"time":".*"}$
+              ^{"reqId":".*","level":2,"time":".*","remoteAddr":".*","app":"core".*","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)".*}$
+  ignoreregex =
+EOL
   systemctl -q restart fail2ban
 return 0
 }
