@@ -398,14 +398,13 @@ initialize_fail2ban() {
   sed -i "s/bantime = 600/bantime = 7200/" /etc/fail2ban/jail.local
   sed -i "s/findtime = 600/findtime = 300/" /etc/fail2ban/jail.local
   sed -i "s/maxretry = 5/maxretry = 3/" /etc/fail2ban/jail.local
-  sed -i "/[sshd]/a enabled = true" /etc/fail2ban/jail.local
+  sed -i "/port    = ssh/a enabled = true" /etc/fail2ban/jail.local
   systemctl -q restart fail2ban
 return 0
 }
 
 initialize_ufw() {
-  printf "Enabling UFW rules... \n"
-  ufw enable
+  ufw --force enable
   ufw logging on
   ufw allow ssh
   ufw allow 80/tcp
@@ -555,8 +554,8 @@ then
   if [ $INSTALLING_UFW = "1" ]; then
     printf "\nInstalling UFW . . . "
     if install_ufw $1; then echo "[X]"; else echo "Failed..."; fi
-    printf "\nConfiguring UFW . . . "
-    if initialize_ufw $1; then echo "[X]"; else echo "Failed..."; fi
+    printf "\nConfiguring UFW rules . . .\n"
+    initialize_ufw
   fi
   if [ $DISTRO = "centos" ]; then
     printf "\nConfigure CentOS . . ."
