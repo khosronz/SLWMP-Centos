@@ -1,3 +1,8 @@
+0.7.1
+=====
+Small fix for Issue #6
+- Rework is needed
+
 0.7.0
 =====
 Attention:
