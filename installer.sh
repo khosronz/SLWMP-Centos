@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.7.0
+# Version 0.8.0-dev
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -263,6 +263,9 @@ initialize_apache() {
     a2enmod proxy_fcgi > /dev/null 2>&1
     a2enmod setenvif > /dev/null 2>&1
     a2enmod ssl > /dev/null 2>&1
+
+    sed -i "s/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=apache/" /etc/apache2/envvars
+    sed -i "s/export APACHE_RUN_GROUP=www-data/export APACHE_RUN_GROUP=apache/" /etc/apache2/envvars
 
     systemctl -q enable apache2
     systemctl -q restart apache2
