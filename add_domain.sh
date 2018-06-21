@@ -45,16 +45,8 @@ create_skeleton_dirs() {
 
   if [ $WEBSRV = "nginx" ]; then
 	   usermod -aG $HOST_LOCATION_USER nginx
-  fi
-  if [ $DISTRO = "debian" ]; then
-    if [ $WEBSRV = "apache" ]; then
-  	   usermod -aG $HOST_LOCATION_USER www-data
-    fi
-  fi
-  if [ $DISTRO = "centos" ]; then
-    if [ $WEBSRV = "apache" ]; then
+  elif [ $WEBSRV = "apache" ]; then
     usermod -aG $HOST_LOCATION_USER apache
-    fi
   fi
 
   if [ ! -d /var/www/$USER_MAINDOMAIN/htdocs ]; then
@@ -304,9 +296,11 @@ configure_apache_vhost() {
   if [ $USER_DOMAIN_TYP = "2" ]; then
     if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
       # Do alias things...
-    fi
-    if [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
+    elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
       cp templates/apache_redirect.template $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i s/TARGET_DOMAINNAME/$USER_REDIRECT_TARGET_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
     fi
   fi
   return 0
@@ -694,14 +688,16 @@ then
 
       if [ $WEBSRV = "nginx" ]; then
         if [ -e $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf ]; then
-          #do things...
+          read -p 'Alias domain which should be added: ' USER_REDIRECT_SOURCE_DOMAIN
+          configure_letsencrypt
         else
           echo "Domain not exists on the server. Exit."
           exit 2
         fi
       elif [ $WEBSRV = "apache" ]; then
         if [ -e $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf ]; then
-          #do things...
+          read -p 'Alias domain which should be added: ' USER_REDIRECT_SOURCE_DOMAIN
+          configure_letsencrypt
         else
           echo "Domain not exists on the server. Exit."
           exit 2
