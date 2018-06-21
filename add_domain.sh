@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.7.0
+# Version 0.7.1
 
 servicesCheck(){
 ps cax | grep $1 > /dev/null
@@ -484,7 +484,6 @@ configure_database(){
 # We will now create the mysql database called '$HOST_DB_DATABASE',
 # and also setup a mysql database user '$HOST_DB_USER'.
 #
-#
 # Warning: if the database exists it will be dropped, if the user
 # exists the password will be reset. (Ctrl-c to abort)
 #
@@ -614,12 +613,17 @@ then
   fi
 
   HOST_LOCATION_USER=(${USER_MAINDOMAIN//./ })
+  HOST_DB_ADDITION=$(</dev/urandom tr -dc A-Za-z0-9 | head -c4)
 
-  HOST_DB_USER=$HOST_LOCATION_USER'_usr'
   if [ $USER_DOMAIN_TYP = "0" ]; then
-  HOST_DB_DATABASE=${USER_MAINDOMAIN/./_}
+    HOST_DB_USER=$HOST_LOCATION_USER'_usr_'$HOST_DB_ADDITION
+  elif [ $USER_DOMAIN_TYP = "1" ]; then
+    HOST_DB_USER=$HOST_LOCATION_USER'_usr_'$HOST_DB_ADDITION
   fi
-  if [ $USER_DOMAIN_TYP = "1" ]; then
+
+  if [ $USER_DOMAIN_TYP = "0" ]; then
+  HOST_DB_DATABASE=${USER_MAINDOMAIN//./_}
+  elif [ $USER_DOMAIN_TYP = "1" ]; then
   HOST_DB_DATABASE=${USER_SUBDOMAIN//./_}
   fi
 
