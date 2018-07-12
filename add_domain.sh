@@ -295,7 +295,7 @@ configure_apache_vhost() {
   fi
   if [ $USER_DOMAIN_TYP = "2" ]; then
     if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
-      # Do alias things...
+      sed -i 's/\<ServerAlias\>/& $USER_REDIRECT_SOURCE_DOMAIN/' $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf
     elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
       cp templates/apache_redirect.template $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
@@ -349,7 +349,7 @@ configure_nginx_vhost(){
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
   elif [ $USER_DOMAIN_TYP = "2" ]; then
     if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
-      # Add alias to existing config
+      sed -i '/server_name /s/;/ $USER_REDIRECT_SOURCE_DOMAIN;/' /etc/nginx/conf.d/$USER_REDIRECT_TARGET_DOMAIN.conf
     elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
       cp templates/nginx_redirect.template /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
@@ -463,10 +463,10 @@ configure_letsencrypt() {
       certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_SUBDOMAIN
       return 0
     elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0"]; then
-      #certbot certonly --standalone --expand --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+      #certbot certonly --standalone --expand --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
       return 0
     elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1"]; then
-      #certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
       return 0
     fi
   fi
