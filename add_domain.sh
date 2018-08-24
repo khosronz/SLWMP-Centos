@@ -38,10 +38,6 @@ if [ -e /etc/nginx/nginx.conf ]; then
   WEBSRV_CONF_DIR="/etc/nginx/conf.d"
 fi
 
-if [ ! -f /etc/nginx/nginx.conf ] || [ ! -f /etc/httpd/conf/httpd.conf ]; then
-  WEBSRV="none"
-fi
-
 create_skeleton_dirs() {
 	useradd $HOST_LOCATION_USER -d /var/www/$USER_MAINDOMAIN
 
