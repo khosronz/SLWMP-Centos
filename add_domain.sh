@@ -36,7 +36,9 @@ fi
 if [ -e /etc/nginx/nginx.conf ]; then
   WEBSRV="nginx"
   WEBSRV_CONF_DIR="/etc/nginx/conf.d"
-else
+fi
+
+if [ ! -f /etc/nginx/nginx.conf ] || [ ! -f /etc/httpd/conf/httpd.conf ]; then
   WEBSRV="none"
 fi
 
@@ -663,7 +665,7 @@ then
 
     [ $? -ne "0" ] && exit 1
   fi # if [ $USER_DOMAIN_TYP -ne "2" ]; then
-  if [ $USER_DOMAIN_TYP = "2"]; then
+  if [ $USER_DOMAIN_TYP = "2" ]; then
     PS3='Select the domain forwarding typ: '
     options=("Alias" "Redirect")
     select opt in "${options[@]}"
@@ -682,7 +684,7 @@ then
         *) echo invalid option;;
       esac
     done
-    if [ $USER_DOMAIN_REDIRECT_TYP = "0"]; then
+    if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
       read -p 'Enter the target domain on this server: ' USER_REDIRECT_TARGET_DOMAIN
       USER_REDIRECT_TARGET_DOMAIN=(${USER_REDIRECT_TARGET_DOMAIN//./ })
 
@@ -704,7 +706,7 @@ then
         fi
       fi
 
-    elif [ $USER_DOMAIN_REDIRECT_TYP = "1"]; then
+    elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
       read -p 'Source Domain [example.com]: ' USER_REDIRECT_SOURCE_DOMAIN
       echo
       read -p 'Target Domain [https://example.com]: ' USER_REDIRECT_TARGET_DOMAIN
