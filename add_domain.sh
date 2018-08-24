@@ -71,14 +71,14 @@ create_skeleton_dirs() {
 configure_fpm_pool(){
 
   if [ $DISTRO = "debian" ]; then
-    if [ $USER_PHP_VERSION = "php72" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
 
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php72-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php73-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp templates/phpfpmpool.template /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
@@ -86,18 +86,18 @@ configure_fpm_pool(){
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php73-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.2/fpm/pool.d/$USER_SUBDOMAIN.conf
       fi
       systemctl reload php7.2-fpm
     fi
-    if [ $USER_PHP_VERSION = "php71" ]; then
+    if [ $USER_PHP_VERSION = "php72" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
 
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php72-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
@@ -105,19 +105,19 @@ configure_fpm_pool(){
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php71-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
       fi
       systemctl reload php7.1-fpm
     fi
 
-    if [ $USER_PHP_VERSION = "php70" ]; then
+    if [ $USER_PHP_VERSION = "php71" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
 
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
         cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
@@ -125,12 +125,32 @@ configure_fpm_pool(){
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php70-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php71-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
       fi
       systemctl reload php7.0-fpm
     fi
   fi
   if [ $DISTRO = "centos" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php73-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php73-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php73-php-fpm
+    fi
+
     if [ $USER_PHP_VERSION = "php72" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -146,11 +166,10 @@ configure_fpm_pool(){
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       systemctl reload php72-php-fpm
     fi
-
     if [ $USER_PHP_VERSION = "php71" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -168,26 +187,7 @@ configure_fpm_pool(){
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php71-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
-      systemctl reload php71-php-fpm
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-
-		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-
-		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php70-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-      fi
-      systemctl -q reload php70-php-fpm
+      systemctl -q reload php71-php-fpm
     fi
   fi
 	return 0
@@ -195,14 +195,14 @@ configure_fpm_pool(){
 
 configure_apache_vhost() {
   if [ $USER_DOMAIN_TYP = "0" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      NGXSOCKET="/var/run/php73-fpm-$USER_DOMAIN_HYPHEN.sock"
+    fi
     if [ $USER_PHP_VERSION = "php72" ]; then
       NGXSOCKET="/var/run/php72-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
       NGXSOCKET="/var/run/php71-fpm-$USER_DOMAIN_HYPHEN.sock"
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
     if [ $DISTRO = "debian" ]; then
       if [ $USER_CMS_CHOICE = "none" ]; then
@@ -245,14 +245,14 @@ configure_apache_vhost() {
   fi
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      NGXSOCKET="/var/run/php73-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
+    fi
     if [ $USER_PHP_VERSION = "php72" ]; then
       NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
       NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $DISTRO = "debian" ]; then
       if [ $USER_CMS_CHOICE = "none" ]; then
@@ -308,12 +308,12 @@ configure_apache_vhost() {
 
 configure_nginx_vhost(){
   if [ $USER_DOMAIN_TYP = "0" ]; then
-    if [ $USER_PHP_VERSION = "php72" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      NGXSOCKET="/var/run/php73-fpm-$USER_DOMAIN_HYPHEN.sock;"
+    elif [ $USER_PHP_VERSION = "php72" ]; then
       NGXSOCKET="/var/run/php72-fpm-$USER_DOMAIN_HYPHEN.sock;"
     elif [ $USER_PHP_VERSION = "php71" ]; then
       NGXSOCKET="/var/run/php71-fpm-$USER_DOMAIN_HYPHEN.sock;"
-    elif [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock;"
     elif [ $USER_CMS_CHOICE = "none" ]; then
       cp templates/nginx_default.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     elif [ $USER_CMS_CHOICE = "nextcloud" ]; then
@@ -328,12 +328,12 @@ configure_nginx_vhost(){
 	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
   elif [ $USER_DOMAIN_TYP = "1" ]; then
-    if [ $USER_PHP_VERSION = "php72" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      NGXSOCKET="/var/run/php73-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+    elif [ $USER_PHP_VERSION = "php72" ]; then
       NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
     elif [ $USER_PHP_VERSION = "php71" ]; then
       NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
-    elif [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
     elif [ $USER_CMS_CHOICE = "none" ]; then
       cp templates/nginx_default.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     elif [ $USER_CMS_CHOICE = "nextcloud" ]; then
@@ -562,17 +562,17 @@ then
       case $opt in
         "PHP 7.0")
           echo "PHP 7.0 selected"
-          USER_PHP_VERSION=php70
+          USER_PHP_VERSION=php71
           break
           ;;
         "PHP 7.1")
           echo "PHP 7.1 selected"
-          USER_PHP_VERSION=php71
+          USER_PHP_VERSION=php72
           break
           ;;
         "PHP 7.2")
           echo "PHP 7.2 selected"
-          USER_PHP_VERSION=php72
+          USER_PHP_VERSION=php73
           break
           ;;
         *) echo invalid option;;
