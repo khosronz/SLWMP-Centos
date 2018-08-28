@@ -1,3 +1,13 @@
+0.8.0 (in development)
+=====
+Attention:
+This release include a breaking point.
+- The apache user on Debian changed to "apache"
+- PHP 7.0 was removed
+
++ PHP 7.3 (Beta) added
++ Domain redirects and aliases can be created
+
 0.7.1
 =====
 Small fix for Issue #6

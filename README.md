@@ -10,7 +10,8 @@ It will install all necessary binaries for a secure LAMP or LEMP server automati
 - nginx OR Apache Support (HTTP2 is not supported by Apache on CentOS)
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
-- Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
+- Domain Redirects and Alias support
+- Multiple PHP versions (7.1, 7.2, 7.3) running as FPM service
 - MariaDB databases with random generated passwords
 - Install Nextcloud or Wordpress with an optimized configuration for Apache and Nginx
 - Redis support (optional, but recommended if you are using Nextcloud)
