@@ -14,6 +14,24 @@ elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
 fi
 
+if [ $DISTRO = "debian" ]; then
+  if [ -e /etc/apache2/apache2.conf ]; then
+    WEBSRV="apache"
+    WEBSRV_CONF_DIR="/etc/apache2/sites-available"
+    WEBSRV_SVC_NAME="apache2"
+  fi
+elif [ $DISTRO = "centos" ]; then
+  if [ -e /etc/httpd/conf/httpd.conf ]; then
+    WEBSRV="apache"
+    WEBSRV_CONF_DIR="/etc/httpd/conf.d"
+    WEBSRV_SVC_NAME="httpd"
+  fi
+fi
+if [ -e /etc/nginx/nginx.conf ]; then
+  WEBSRV="nginx"
+  WEBSRV_CONF_DIR="/etc/nginx/conf.d"
+fi
+
 servicesCheck(){
 ps cax | grep $1 > /dev/null
 if [ $? -eq 0 ]; then
@@ -199,9 +217,9 @@ install_letsencrypt() {
     yum -q install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
   if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
-    echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
+    echo "@weekly certbot renew --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --renew-hook "systemctl reload $WEBSRV_SVC_NAME" --quiet" >> /etc/crontab
   elif [ $INSTALLING_HTTPD_SERVER = "1" ]; then
-    echo "@weekly certbot renew --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --renew-hook "systemctl reload apache2" --quiet" >> /etc/crontab
+    echo "@weekly certbot renew --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --renew-hook "systemctl reload $WEBSRV_SVC_NAME" --quiet" >> /etc/crontab
   fi
   return 0
 }
