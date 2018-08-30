@@ -106,6 +106,9 @@ install_apache() {
   if servicesCheck "apache2"; then
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install apache2 -y >> /tmp/slemp_install.txt 2>&1
+      groupadd apache
+      useradd -s /bin/false -d /var/www apache
+      usermod -aG apache apache
     fi
     if [ $DISTRO = "centos" ]; then
       yum -q install httpd mod_ssl -y
@@ -324,7 +327,11 @@ initialize_php(){
     sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.*/fpm/php.ini
     sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.*/fpm/php.ini
     sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/php/7.*/fpm/php.ini
+
     if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+      sed -i "s/user = www-data/user = apache/" /etc/php/7.*/fpm/pool.d/www.conf
+      sed -i "s/group = www-data/group = apache/" /etc/php/7.*/fpm/pool.d/www.conf
+
       for opt in "${!php_opts[@]}"
         do
           if [[ ${php_opts[opt]} ]];then
