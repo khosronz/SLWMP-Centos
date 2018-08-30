@@ -1,12 +1,13 @@
-0.8.0 (in development)
+0.8.0 (in testing)
 =====
 Attention:
 This release include a breaking point.
 - The apache user on Debian changed to "apache"
 - PHP 7.0 was removed
 
-+ PHP 7.3 (Beta) added
++ PHP 7.3 (Beta) added - Don't use it on productive systems!
 + Domain redirects and aliases can be created
+- Let's Encrypt was optimized
 
 0.7.1
 =====
