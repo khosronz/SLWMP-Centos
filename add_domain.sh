@@ -453,17 +453,17 @@ configure_letsencrypt() {
   fi
   if [ $WEBSRV = "apache" ]; then
     if [ $USER_DOMAIN_TYP = "0" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
       return 0
     elif [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d $USER_SUBDOMAIN
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d $USER_SUBDOMAIN
       return 0
     elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
       LE_EXISTING_DOMAINNAMES=grep 'ServerAlias' $WEBSRV_CONF_DIR/$USER_MAINDOMAIN -m 1 | awk '{for (i=1;i<=1;i++){$i=""};print}' | sed 's/ / -d /g'
-      certbot certonly --standalone --expand --agree-tos --no-eff-email --email hostmaster@$USER_EXISTING_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN $LE_EXISTING_DOMAINNAMES
+      certbot certonly --standalone --expand --agree-tos --email hostmaster@$USER_EXISTING_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN $LE_EXISTING_DOMAINNAMES
       return 0
     elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
       return 0
     fi
   fi
@@ -661,6 +661,7 @@ then
     [ $? -ne "0" ] && exit 1
   fi # if [ $USER_DOMAIN_TYP -ne "2" ]; then
   if [ $USER_DOMAIN_TYP = "2" ]; then
+    clear
     PS3='Select the domain forwarding typ: '
     options=("Alias" "Redirect")
     select opt in "${options[@]}"
@@ -722,7 +723,7 @@ if [ $USER_DOMAIN_TYP = "1" ]; then
   echo "Absolute path subdomain: $HOST_SUBDOMAIN_ROOT_LOCATION"
 fi
 echo "Location owner: $HOST_LOCATION_USER"
-if [ $USER_DB_SITE = "1" ]; then
+if [ "$USER_DB_SITE" = "1" ]; then
   echo "MySQL username: $HOST_DB_USER"
   echo "MySQL password: $HOST_DB_PASS"
   echo "MySQL database: $HOST_DB_DATABASE"
