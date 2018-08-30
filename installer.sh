@@ -169,7 +169,7 @@ if servicesCheck "php-fpm"; then
             printf "\n - PHP 7.2 installed [X]"
           fi
           if (($opt=="3")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.3-fpm php7.3-mysql php7.3-gd php7.3-cli php7.3-curl php7.3-mbstring php7.3-posix php7.3-xml php7.3-xmlrpc php7.3-intl php7.3-imagick php7.3-xml php7.3-zip php7.3-apcu php7.3-opcache php7.3-redis -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.3-fpm php7.3-mysql php7.3-gd php7.3-cli php7.3-curl php7.3-mbstring php7.3-posix php7.3-xml php7.3-xmlrpc php7.3-intl php7.3-xml php7.3-zip php7.3-opcache php7.3-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.3-fpm
             systemctl -q enable php7.3-fpm
             printf "\n- PHP 7.3 installed [X]"
