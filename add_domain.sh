@@ -292,7 +292,7 @@ configure_apache_vhost() {
     elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
       cp templates/apache_redirect.template $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
-      sed -i s/TARGET_DOMAINNAME/$USER_REDIRECT_TARGET_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i 's|'TARGET_DOMAINNAME'|'$USER_REDIRECT_TARGET_DOMAIN'|g' $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
     fi
   fi
@@ -346,7 +346,7 @@ configure_nginx_vhost(){
     elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
       cp templates/nginx_redirect.template /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
-      sed -i s/TARGET_DOMAINNAME/$USER_REDIRECT_TARGET_DOMAIN/g /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i 's|'TARGET_DOMAINNAME'|'$USER_REDIRECT_TARGET_DOMAIN'|g' /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
     fi
   fi
@@ -441,12 +441,12 @@ configure_letsencrypt() {
     elif [ $USER_DOMAIN_TYP = "1" ]; then
       certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d $USER_SUBDOMAIN
       return 0
-    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0"] ; then
+    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0" ] ; then
       # First we are looking for the row with the servernames, then we are looking for all entries until the end of the row. SED remove the ; and add -d
       LE_EXISTING_DOMAINNAMES=grep 'server_name ' $WEBSRV_CONF_DIR/$USER_MAINDOMAIN -m 1 | awk '{for (i=1;i<=1;i++){$i=""};print}' | sed 's/;//g' | sed 's/ / -d /g'
       certbot certonly --standalone --expand --agree-tos --email hostmaster@$USER_EXISTING_DOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN $LE_EXISTING_DOMAINNAMES
       return 0
-    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1"] ; then
+    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1" ] ; then
       certbot certonly --standalone --agree-tos --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
       return 0
     fi
@@ -458,11 +458,11 @@ configure_letsencrypt() {
     elif [ $USER_DOMAIN_TYP = "1" ]; then
       certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d $USER_SUBDOMAIN
       return 0
-    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0"]; then
+    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
       LE_EXISTING_DOMAINNAMES=grep 'ServerAlias' $WEBSRV_CONF_DIR/$USER_MAINDOMAIN -m 1 | awk '{for (i=1;i<=1;i++){$i=""};print}' | sed 's/ / -d /g'
       certbot certonly --standalone --expand --agree-tos --no-eff-email --email hostmaster@$USER_EXISTING_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN $LE_EXISTING_DOMAINNAMES
       return 0
-    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1"]; then
+    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
       certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
       return 0
     fi
@@ -521,7 +521,7 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
   clear
-  PS3='Do you want to add a domain or subdomain? '
+  PS3='Do you want to add a domain, subdomain or alias/redirect? '
   options=("Domain" "Subdomain" "Alias/Redirect")
   select opt in "${options[@]}"
   do

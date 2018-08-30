@@ -8,6 +8,7 @@ This release include a breaking point.
 + PHP 7.3 (Beta) added - Don't use it on productive systems!
 + Domain redirects and aliases can be created
 - Let's Encrypt was optimized
+- Modified NC nginx template for Nextcloud 14 support
 
 0.7.1
 =====

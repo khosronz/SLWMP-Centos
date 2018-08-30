@@ -160,13 +160,13 @@ if servicesCheck "php-fpm"; then
             DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip php7.1-apcu php7.1-opcache php7.1-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.1-fpm
             systemctl -q enable php7.1-fpm
-            printf "\n - PHP 7.1 installed [X]"
+            printf "\n- PHP 7.1 installed [X]"
           fi
           if (($opt=="2")); then
             DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip php7.2-apcu php7.2-opcache php7.2-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.2-fpm
             systemctl -q enable php7.2-fpm
-            printf "\n - PHP 7.2 installed [X]"
+            printf "\n- PHP 7.2 installed [X]"
           fi
           if (($opt=="3")); then
             DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.3-fpm php7.3-mysql php7.3-gd php7.3-cli php7.3-curl php7.3-mbstring php7.3-posix php7.3-xml php7.3-xmlrpc php7.3-intl php7.3-xml php7.3-zip php7.3-opcache php7.3-redis -y >> /tmp/slemp_install.txt 2>&1
@@ -562,7 +562,7 @@ then
   printf "\nInstalling PHP . . . "
   if install_phpfpm $1; then echo ""; else echo "Failed..."; fi
   printf "\nConfiguring PHP . . . "
-  if initialize_php $1; then echo ""; else echo "Failed..."; fi
+  if initialize_php $1; then echo "[X]"; else echo "Failed..."; fi
   printf "\nInstalling Certbot . . . "
   if install_letsencrypt $1; then echo "[X]"; else echo "Failed..."; fi
   if [ $INSTALLING_REDIS = "1" ]; then
