@@ -289,11 +289,25 @@ configure_apache_vhost() {
   if [ $USER_DOMAIN_TYP = "2" ]; then
     if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
       sed -i 's/\<ServerAlias\>/& $USER_REDIRECT_SOURCE_DOMAIN/' $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf
+      if [ $DISTRO = "centos" ]; then
+        systemctl -q reload httpd
+      fi
+      if [ $DISTRO = "debian" ]; then
+        a2ensite -q $USER_REDIRECT_TARGET_DOMAIN.conf
+        systemctl -q reload apache2
+      fi
     elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
       cp templates/apache_redirect.template $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i s/DOMAIN_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i 's|'TARGET_DOMAINNAME'|'$USER_REDIRECT_TARGET_DOMAIN'|g' $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
       sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      if [ $DISTRO = "centos" ]; then
+        systemctl -q reload httpd
+      fi
+      if [ $DISTRO = "debian" ]; then
+        a2ensite -q $USER_REDIRECT_SOURCE_DOMAIN.conf
+        systemctl -q reload apache2
+      fi
     fi
   fi
   return 0
