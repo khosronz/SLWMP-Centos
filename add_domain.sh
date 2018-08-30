@@ -692,9 +692,9 @@ then
       fi
 
     elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
-      read -p 'Source Domain [example.com]: ' USER_REDIRECT_SOURCE_DOMAIN
+      read -p 'Source Domain [(subdomain.)example.com]: ' USER_REDIRECT_SOURCE_DOMAIN
       echo
-      read -p 'Target Domain [https://example.com]: ' USER_REDIRECT_TARGET_DOMAIN
+      read -p 'Target Domain [(subdomain.)example.com]: ' USER_REDIRECT_TARGET_DOMAIN
       echo
       configure_letsencrypt
       if [ $WEBSRV = "nginx" ]; then
