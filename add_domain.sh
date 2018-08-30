@@ -683,22 +683,12 @@ then
       read -p 'Enter the target domain on this server: ' USER_EXISTING_DOMAIN
       USER_REDIRECT_TARGET_DOMAIN=(${USER_REDIRECT_TARGET_DOMAIN//./ })
 
-      if [ $WEBSRV = "nginx" ]; then
-        if [ -e $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf ]; then
-          read -p 'Alias domain which should be added: ' USER_ALIAS_DOMAIN
-          configure_letsencrypt
-        else
-          echo "Domain not exists on the server. Exit."
-          exit 2
-        fi
-      elif [ $WEBSRV = "apache" ]; then
-        if [ -e $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf ]; then
-          read -p 'Alias domain which should be added: ' USER_REDIRECT_SOURCE_DOMAIN
-          configure_letsencrypt
-        else
-          echo "Domain not exists on the server. Exit."
-          exit 2
-        fi
+      if [ -e $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf ]; then
+        read -p 'Alias domain which should be added: ' USER_ALIAS_DOMAIN
+        configure_letsencrypt
+      else
+        echo "Domain not exists on the server. Exit."
+        exit 2
       fi
 
     elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then

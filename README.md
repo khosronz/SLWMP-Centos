@@ -54,6 +54,10 @@ Be sure to point your domain to the IP of your server (www and non-www dns recor
 
 You will find the config and files at the following paths:
 
+#### Apache
+CentOS: /etc/httpd/conf.d/
+Debian: /etc/apache2/sites-enabled/
+
 #### nginx
 - /etc/nginx/conf.d/
 
