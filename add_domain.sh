@@ -40,12 +40,7 @@ fi
 
 create_skeleton_dirs() {
 	useradd $HOST_LOCATION_USER -d /var/www/$USER_MAINDOMAIN
-
-  if [ $WEBSRV = "nginx" ]; then
-	   usermod -aG $HOST_LOCATION_USER nginx
-  elif [ $WEBSRV = "apache" ]; then
-    usermod -aG $HOST_LOCATION_USER apache
-  fi
+	usermod -aG $HOST_LOCATION_USER $WEBSRV
 
   if [ ! -d /var/www/$USER_MAINDOMAIN/htdocs ]; then
 	   mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
@@ -438,18 +433,21 @@ EOL
 }
 
 configure_letsencrypt() {
+  # Redirect Typ 0 = Alias / Redirect Typ 1 = Redirect
   if [ $WEBSRV = "nginx" ]; then
     if [ $USER_DOMAIN_TYP = "0" ]; then
       certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
       return 0
     elif [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d $USER_SUBDOMAIN
       return 0
     elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0"] ; then
-      #certbot certonly --standalone --expand --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+      # First we are looking for the row with the servernames, then we are looking for all entries until the end of the row. SED remove the ; and add -d
+      LE_EXISTING_DOMAINNAMES=grep 'server_name ' $WEBSRV_CONF_DIR/$USER_MAINDOMAIN -m 1 | awk '{for (i=1;i<=1;i++){$i=""};print}' | sed 's/;//g' | sed 's/ / -d /g'
+      certbot certonly --standalone --expand --agree-tos --email hostmaster@$USER_EXISTING_DOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN $LE_EXISTING_DOMAINNAMES
       return 0
     elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1"] ; then
-      #certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
       return 0
     fi
   fi
@@ -458,10 +456,11 @@ configure_letsencrypt() {
       certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
       return 0
     elif [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+      certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d $USER_SUBDOMAIN
       return 0
     elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0"]; then
-      #certbot certonly --standalone --expand --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
+      LE_EXISTING_DOMAINNAMES=grep 'ServerAlias' $WEBSRV_CONF_DIR/$USER_MAINDOMAIN -m 1 | awk '{for (i=1;i<=1;i++){$i=""};print}' | sed 's/ / -d /g'
+      certbot certonly --standalone --expand --agree-tos --no-eff-email --email hostmaster@$USER_EXISTING_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN $LE_EXISTING_DOMAINNAMES
       return 0
     elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1"]; then
       certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
@@ -486,7 +485,7 @@ configure_database(){
 "
 EOFMW
 
-	mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $HOST_DB_DATABASE ;
+mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $HOST_DB_DATABASE ;
 CREATE DATABASE $HOST_DB_DATABASE;
 GRANT ALL PRIVILEGES ON $HOST_DB_DATABASE.* TO '$HOST_DB_USER'@'localhost' IDENTIFIED BY '$HOST_DB_PASS';
 FLUSH PRIVILEGES;"
@@ -681,12 +680,12 @@ then
       esac
     done
     if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
-      read -p 'Enter the target domain on this server: ' USER_REDIRECT_TARGET_DOMAIN
+      read -p 'Enter the target domain on this server: ' USER_EXISTING_DOMAIN
       USER_REDIRECT_TARGET_DOMAIN=(${USER_REDIRECT_TARGET_DOMAIN//./ })
 
       if [ $WEBSRV = "nginx" ]; then
         if [ -e $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf ]; then
-          read -p 'Alias domain which should be added: ' USER_REDIRECT_SOURCE_DOMAIN
+          read -p 'Alias domain which should be added: ' USER_ALIAS_DOMAIN
           configure_letsencrypt
         else
           echo "Domain not exists on the server. Exit."
@@ -732,10 +731,12 @@ echo "Absolute path domain: $HOST_MAINDOMAIN_ROOT_LOCATION"
 if [ $USER_DOMAIN_TYP = "1" ]; then
   echo "Absolute path subdomain: $HOST_SUBDOMAIN_ROOT_LOCATION"
 fi
-echo "MySQL username: $HOST_DB_USER"
-echo "MySQL password: $HOST_DB_PASS"
-echo "MySQL database: $HOST_DB_DATABASE"
 echo "Location owner: $HOST_LOCATION_USER"
+if [ $USER_DB_SITE = "1" ]; then
+  echo "MySQL username: $HOST_DB_USER"
+  echo "MySQL password: $HOST_DB_PASS"
+  echo "MySQL database: $HOST_DB_DATABASE"
+fi
 echo <<EOF "
 #
 #
