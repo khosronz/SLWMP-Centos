@@ -106,7 +106,6 @@ install_apache() {
   if servicesCheck "apache2"; then
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install apache2 -y >> /tmp/slemp_install.txt 2>&1
-      groupadd apache
       useradd -s /bin/false -d /var/www apache
       usermod -aG apache apache
     fi
