@@ -1,4 +1,4 @@
-0.8.0 (in testing)
+0.8.0
 =====
 Attention:
 This release include a breaking point.
