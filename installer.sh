@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.7.0
+# Version 0.8.0
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -12,6 +12,24 @@ if [ -e /etc/redhat-release ]; then
      DISTRO="centos"
 elif [ -e /etc/debian_version ]; then
      DISTRO="debian"
+fi
+
+if [ $DISTRO = "debian" ]; then
+  if [ -e /etc/apache2/apache2.conf ]; then
+    WEBSRV="apache"
+    WEBSRV_CONF_DIR="/etc/apache2/sites-available"
+    WEBSRV_SVC_NAME="apache2"
+  fi
+elif [ $DISTRO = "centos" ]; then
+  if [ -e /etc/httpd/conf/httpd.conf ]; then
+    WEBSRV="apache"
+    WEBSRV_CONF_DIR="/etc/httpd/conf.d"
+    WEBSRV_SVC_NAME="httpd"
+  fi
+fi
+if [ -e /etc/nginx/nginx.conf ]; then
+  WEBSRV="nginx"
+  WEBSRV_CONF_DIR="/etc/nginx/conf.d"
 fi
 
 servicesCheck(){
@@ -88,11 +106,13 @@ install_apache() {
   if servicesCheck "apache2"; then
     if [ $DISTRO = "debian" ]; then
       DEBIAN_FRONTEND=noninteractive apt-get -qq install apache2 -y >> /tmp/slemp_install.txt 2>&1
+      useradd -s /bin/false -d /var/www apache
+      usermod -aG apache apache
     fi
     if [ $DISTRO = "centos" ]; then
       yum -q install httpd mod_ssl -y
-      return 0
     fi
+    return 0
   else
     return 1
   fi
@@ -120,15 +140,13 @@ install_mariadb(){
       DEBIAN_FRONTEND=noninteractive apt-get -qq install mariadb-server mariadb-client -y >> /tmp/slemp_install.txt 2>&1
       systemctl -q enable mariadb
       systemctl -q start mariadb
-
     fi
     if [ $DISTRO = "centos" ]; then
       yum -q install MariaDB-server MariaDB-client -y >> /tmp/slemp_install.txt 2>&1
       systemctl -q enable mariadb
       systemctl -q start mariadb
-
-      return 0
     fi
+    return 0
   else
     return 1
   fi
@@ -141,22 +159,22 @@ if servicesCheck "php-fpm"; then
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.0-fpm php7.0-mysql php7.0-gd php7.0-cli php7.0-curl php7.0-mbstring php7.0-posix php7.0-mcrypt php7.0-xml php7.0-xmlrpc php7.0-intl php7.0-mcrypt php7.0-imagick php7.0-xml php7.0-zip php7.0-apcu php7.0-opcache php7.0-redis -y >> /tmp/slemp_install.txt 2>&1
-            systemctl -q start php7.0-fpm
-            systemctl -q enable php7.0-fpm
-            printf "\n - PHP 7.0 installed [X]"
-          fi
-          if (($opt=="2")); then
             DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.1-fpm php7.1-mysql php7.1-gd php7.1-cli php7.1-curl php7.1-mbstring php7.1-posix php7.1-mcrypt php7.1-xml php7.1-xmlrpc php7.1-intl php7.1-mcrypt php7.1-imagick php7.1-xml php7.1-zip php7.1-apcu php7.1-opcache php7.1-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.1-fpm
             systemctl -q enable php7.1-fpm
-            printf "\n - PHP 7.1 installed [X]"
+            printf "\n- PHP 7.1 installed [X]"
           fi
-          if (($opt=="3")); then
+          if (($opt=="2")); then
             DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-curl php7.2-mbstring php7.2-posix php7.2-xml php7.2-xmlrpc php7.2-intl php7.2-imagick php7.2-xml php7.2-zip php7.2-apcu php7.2-opcache php7.2-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.2-fpm
             systemctl -q enable php7.2-fpm
             printf "\n- PHP 7.2 installed [X]"
+          fi
+          if (($opt=="3")); then
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.3-fpm php7.3-mysql php7.3-gd php7.3-cli php7.3-curl php7.3-mbstring php7.3-posix php7.3-xml php7.3-xmlrpc php7.3-intl php7.3-xml php7.3-zip php7.3-opcache php7.3-redis -y >> /tmp/slemp_install.txt 2>&1
+            systemctl -q start php7.3-fpm
+            systemctl -q enable php7.3-fpm
+            printf "\n- PHP 7.3 installed [X]"
           fi
         fi
       done
@@ -167,22 +185,22 @@ if servicesCheck "php-fpm"; then
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            yum -q install php70-php-fpm php70-php-mysql php70-php-gd php70-php-cli php70-php-curl php70-php-mbstring php70-php-posix php70-php-mcrypt php70-php-xml php70-php-xmlrpc php70-php-intl php70-php-mcrypt php70-php-imagick php70-php-xml php70-php-zip php70-php-apcu php70-php-opcache -y >> /tmp/slemp_install.txt 2>&1
-            systemctl -q start php70-php-fpm
-            systemctl -q enable php70-php-fpm
-            printf "\n- PHP 7.0 installed [X]"
-          fi
-          if (($opt=="2")); then
             yum -q install php71-php-fpm php71-php-mysql php71-php-gd php71-php-cli php71-php-curl php71-php-mbstring php71-php-posix php71-php-mcrypt php71-php-xml php71-php-xmlrpc php71-php-intl php71-php-mcrypt php71-php-imagick php71-php-xml php71-php-zip php71-php-apcu php71-php-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php71-php-fpm
             systemctl -q enable php71-php-fpm
             printf "\n- PHP 7.1 installed [X]"
           fi
-          if (($opt=="3")); then
+          if (($opt=="2")); then
             yum -q install php72-php-fpm php72-php-mysql php72-php-gd php72-php-cli php72-php-curl php72-php-mbstring php72-php-posix php72-php-xml php72-php-xmlrpc php72-php-intl php72-php-imagick php72-php-xml php72-php-zip php72-php-apcu php72-php-opcache -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php72-php-fpm
             systemctl -q enable php72-php-fpm
             printf "\n- PHP 7.2 installed [X]"
+          fi
+          if (($opt=="3")); then
+            yum -q install php73-php-fpm php73-php-mysql php73-php-gd php73-php-cli php73-php-curl php73-php-mbstring php73-php-posix php73-php-xml php73-php-xmlrpc php73-php-intl php73-php-imagick php73-php-xml php73-php-zip php73-php-apcu php73-php-opcache -y >> /tmp/slemp_install.txt 2>&1
+            systemctl -q start php73-php-fpm
+            systemctl -q enable php73-php-fpm
+            printf "\n- PHP 7.3 installed [X]"
           fi
         fi
       done
@@ -201,9 +219,9 @@ install_letsencrypt() {
     yum -q install certbot -y >> /tmp/slemp_install.txt 2>&1
   fi
   if [ $INSTALLING_HTTPD_SERVER = "0" ]; then
-    echo "@weekly certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --renew-hook "systemctl reload nginx" --quiet" >> /etc/crontab
+    echo "@weekly certbot renew --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --renew-hook "systemctl reload $WEBSRV_SVC_NAME" --quiet" >> /etc/crontab
   elif [ $INSTALLING_HTTPD_SERVER = "1" ]; then
-    echo "@weekly certbot renew --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --renew-hook "systemctl reload apache2" --quiet" >> /etc/crontab
+    echo "@weekly certbot renew --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --renew-hook "systemctl reload $WEBSRV_SVC_NAME" --quiet" >> /etc/crontab
   fi
   return 0
 }
@@ -264,6 +282,9 @@ initialize_apache() {
     a2enmod setenvif > /dev/null 2>&1
     a2enmod ssl > /dev/null 2>&1
 
+    sed -i "s/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=apache/" /etc/apache2/envvars
+    sed -i "s/export APACHE_RUN_GROUP=www-data/export APACHE_RUN_GROUP=apache/" /etc/apache2/envvars
+
     systemctl -q enable apache2
     systemctl -q restart apache2
   fi
@@ -305,18 +326,22 @@ initialize_php(){
     sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.*/fpm/php.ini
     sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 500M/" /etc/php/7.*/fpm/php.ini
     sed -i "s/post_max_size = 8M/post_max_size = 550M/" /etc/php/7.*/fpm/php.ini
+
     if [ $INSTALLING_HTTPD_SERVER = "1" ]; then
+      sed -i "s/user = www-data/user = apache/" /etc/php/7.*/fpm/pool.d/www.conf
+      sed -i "s/group = www-data/group = apache/" /etc/php/7.*/fpm/pool.d/www.conf
+
       for opt in "${!php_opts[@]}"
         do
           if [[ ${php_opts[opt]} ]];then
             if (($opt=="1")); then
-              a2enconf -q php7.0-fpm > /dev/null 2>&1
-            fi
-            if (($opt=="2")); then
               a2enconf -q php7.1-fpm > /dev/null 2>&1
             fi
-            if (($opt=="3")); then
+            if (($opt=="2")); then
               a2enconf -q php7.2-fpm > /dev/null 2>&1
+            fi
+            if (($opt=="3")); then
+              a2enconf -q php7.3-fpm > /dev/null 2>&1
             fi
           fi
       done
@@ -336,13 +361,13 @@ initialize_php(){
       do
         if [[ ${php_opts[opt]} ]];then
           if (($opt=="1")); then
-            ln -s /usr/bin/php70 /usr/bin/php
-          fi
-          if (($opt=="2")); then
             ln -s /usr/bin/php71 /usr/bin/php
           fi
-          if (($opt=="3")); then
+          if (($opt=="2")); then
             ln -s /usr/bin/php72 /usr/bin/php
+          fi
+          if (($opt=="3")); then
+            ln -s /usr/bin/php73 /usr/bin/php
           fi
         fi
     done
@@ -473,19 +498,19 @@ then
   while :
   do
     clear
-    options=("PHP 7.0 ${php_opts[1]}" "PHP 7.1 ${php_opts[2]}" "PHP 7.2 ${php_opts[3]}" "Done")
+    options=("PHP 7.1 ${php_opts[1]}" "PHP 7.2 ${php_opts[2]}" "PHP 7.3 (BETA) ${php_opts[3]}" "Done")
     select opt in "${options[@]}"
     do
       case $opt in
-        "PHP 7.0 ${php_opts[1]}")
+        "PHP 7.1 ${php_opts[1]}")
           choice 1
           break
           ;;
-        "PHP 7.1 ${php_opts[2]}")
+        "PHP 7.2 ${php_opts[2]}")
           choice 2
           break
           ;;
-        "PHP 7.2 ${php_opts[3]}")
+        "PHP 7.3 (BETA) ${php_opts[3]}")
           choice 3
           break
           ;;
@@ -543,7 +568,7 @@ then
   printf "\nInstalling PHP . . . "
   if install_phpfpm $1; then echo ""; else echo "Failed..."; fi
   printf "\nConfiguring PHP . . . "
-  if initialize_php $1; then echo ""; else echo "Failed..."; fi
+  if initialize_php $1; then echo "[X]"; else echo "Failed..."; fi
   printf "\nInstalling Certbot . . . "
   if install_letsencrypt $1; then echo "[X]"; else echo "Failed..."; fi
   if [ $INSTALLING_REDIS = "1" ]; then

@@ -1,0 +1,23 @@
+server {
+    listen 80;
+    listen [::]:80;
+    server_name DOMAIN_FULLNAME www.DOMAIN_FULLNAME;
+    rewrite ^/(.*)$ https://TARGET_DOMAINNAME/$1 permanent;
+}
+
+server {
+     listen 443 ssl http2;
+     listen [::]:443 ssl http2;
+     server_name DOMAIN_FULLNAME www.DOMAIN_FULLNAME;
+
+     ssl_certificate /etc/letsencrypt/live/SSL_DOMAINNAME_FULLNAME/fullchain.pem;
+     ssl_certificate_key /etc/letsencrypt/live/SSL_DOMAINNAME_FULLNAME/privkey.pem;
+     ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+     ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
+     ssl_prefer_server_ciphers on;
+     ssl_session_cache shared:SSL:10m;
+     ssl_dhparam /etc/ssl/certs/dhparam.pem;
+     add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; ";
+
+     rewrite ^/(.*)$ https://TARGET_DOMAINNAME/$1 permanent;
+}

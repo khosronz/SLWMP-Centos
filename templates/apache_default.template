@@ -1,7 +1,7 @@
 <VirtualHost *:80>
     ServerName DOMAIN_FULLNAME
     ServerAlias www.DOMAIN_FULLNAME
-    ServerAdmin hostmaster@hostname
+    ServerAdmin hostmaster@DOMAIN_FULLNAME
 
     RewriteEngine On
     RewriteCond %{HTTPS} off

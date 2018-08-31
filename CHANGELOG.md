@@ -1,3 +1,15 @@
+0.8.0
+=====
+Attention:
+This release include a breaking point.
+- The apache user on Debian changed to "apache"
+- PHP 7.0 was removed
+
++ PHP 7.3 (Beta) added - Don't use it on productive systems!
++ Domain redirects and aliases can be created
+- Let's Encrypt was optimized
+- Modified NC nginx template for Nextcloud 14 support
+
 0.7.1
 =====
 Small fix for Issue #6

@@ -10,7 +10,8 @@ It will install all necessary binaries for a secure LAMP or LEMP server automati
 - nginx OR Apache Support (HTTP2 is not supported by Apache on CentOS)
 - Secure your host with a Let's Encrypt certificate
 - Subdomain support
-- Multiple PHP versions (7.0, 7.1, 7.2) running as FPM service
+- Domain Redirects and Alias support
+- Multiple PHP versions (7.1, 7.2, 7.3) running as FPM service
 - MariaDB databases with random generated passwords
 - Install Nextcloud or Wordpress with an optimized configuration for Apache and Nginx
 - Redis support (optional, but recommended if you are using Nextcloud)
@@ -52,6 +53,10 @@ The script will guide you through the setup.
 Be sure to point your domain to the IP of your server (www and non-www dns record)
 
 You will find the config and files at the following paths:
+
+#### Apache
+CentOS: /etc/httpd/conf.d/
+Debian: /etc/apache2/sites-enabled/
 
 #### nginx
 - /etc/nginx/conf.d/

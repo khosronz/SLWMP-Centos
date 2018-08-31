@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.7.1
+# Version 0.8.0
 
 servicesCheck(){
 ps cax | grep $1 > /dev/null
@@ -23,35 +23,24 @@ fi
 if [ $DISTRO = "debian" ]; then
   if [ -e /etc/apache2/apache2.conf ]; then
     WEBSRV="apache"
+    WEBSRV_CONF_DIR="/etc/apache2/sites-available"
+    WEBSRV_SVC_NAME="apache2"
   fi
-fi
-if [ $DISTRO = "centos" ]; then
+elif [ $DISTRO = "centos" ]; then
   if [ -e /etc/httpd/conf/httpd.conf ]; then
     WEBSRV="apache"
+    WEBSRV_CONF_DIR="/etc/httpd/conf.d"
+    WEBSRV_SVC_NAME="httpd"
   fi
 fi
 if [ -e /etc/nginx/nginx.conf ]; then
   WEBSRV="nginx"
-else
-  WEBSERV="none"
+  WEBSRV_CONF_DIR="/etc/nginx/conf.d"
 fi
 
 create_skeleton_dirs() {
 	useradd $HOST_LOCATION_USER -d /var/www/$USER_MAINDOMAIN
-
-  if [ $WEBSRV = "nginx" ]; then
-	   usermod -aG $HOST_LOCATION_USER nginx
-  fi
-  if [ $DISTRO = "debian" ]; then
-    if [ $WEBSRV = "apache" ]; then
-  	   usermod -aG $HOST_LOCATION_USER www-data
-    fi
-  fi
-  if [ $DISTRO = "centos" ]; then
-    if [ $WEBSRV = "apache" ]; then
-    usermod -aG $HOST_LOCATION_USER apache
-    fi
-  fi
+	usermod -aG $HOST_LOCATION_USER $WEBSRV
 
   if [ ! -d /var/www/$USER_MAINDOMAIN/htdocs ]; then
 	   mkdir -p /var/www/$USER_MAINDOMAIN/htdocs
@@ -75,6 +64,25 @@ create_skeleton_dirs() {
 configure_fpm_pool(){
 
   if [ $DISTRO = "debian" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.3/fpm/pool.d/$USER_MAINDOMAIN.conf
+
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.3/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.3/fpm/pool.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.3/fpm/pool.d/$USER_MAINDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php73-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.3/fpm/pool.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/php/7.3/fpm/pool.d/$USER_SUBDOMAIN.conf
+
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.3/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.3/fpm/pool.d/$USER_SUBDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.3/fpm/pool.d/$USER_SUBDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php73-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.3/fpm/pool.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php7.3-fpm
+    fi
     if [ $USER_PHP_VERSION = "php72" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/php/7.2/fpm/pool.d/$USER_MAINDOMAIN.conf
@@ -94,9 +102,10 @@ configure_fpm_pool(){
       fi
       systemctl reload php7.2-fpm
     fi
+
     if [ $USER_PHP_VERSION = "php71" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
+        cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
 
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
@@ -104,7 +113,7 @@ configure_fpm_pool(){
 		    sed -i s/PHP-SOCKET/php71-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_MAINDOMAIN.conf
       fi
       if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp templates/phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
+        cp phpfpmpool.template /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
 
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.1/fpm/pool.d/$USER_SUBDOMAIN.conf
@@ -113,28 +122,28 @@ configure_fpm_pool(){
       fi
       systemctl reload php7.1-fpm
     fi
-
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-
-		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp phpfpmpool.template /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-
-		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php70-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/php/7.0/fpm/pool.d/$USER_SUBDOMAIN.conf
-      fi
-      systemctl reload php7.0-fpm
-    fi
   fi
   if [ $DISTRO = "centos" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      if [ $USER_DOMAIN_TYP = "0" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php73-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php73/php-fpm.d/$USER_MAINDOMAIN.conf
+      fi
+      if [ $USER_DOMAIN_TYP = "1" ]; then
+        cp templates/phpfpmpool.template /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+
+		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php73-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php73/php-fpm.d/$USER_SUBDOMAIN.conf
+      fi
+      systemctl reload php73-php-fpm
+    fi
+
     if [ $USER_PHP_VERSION = "php72" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -150,11 +159,10 @@ configure_fpm_pool(){
 		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_SUBDOMAIN.conf
+		    sed -i s/PHP-SOCKET/php72-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php72/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
       systemctl reload php72-php-fpm
     fi
-
     if [ $USER_PHP_VERSION = "php71" ]; then
       if [ $USER_DOMAIN_TYP = "0" ]; then
         cp templates/phpfpmpool.template /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
@@ -172,26 +180,7 @@ configure_fpm_pool(){
         sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php71/php-fpm.d/$USER_SUBDOMAIN.conf
 		    sed -i s/PHP-SOCKET/php71-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php71/php-fpm.d/$USER_MAINDOMAIN.conf
       fi
-      systemctl reload php71-php-fpm
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-
-		    sed -i s/DOMAINNAME_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php70-fpm-$USER_DOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        cp templates/phpfpmpool.template /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-
-		    sed -i s/DOMAINNAME_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i s/HOST_LOCATION_USER/$HOST_LOCATION_USER/g /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-        sed -i 's|'HOST_DOMAIN_FULL'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/opt/remi/php70/php-fpm.d/$USER_SUBDOMAIN.conf
-		    sed -i s/PHP-SOCKET/php70-fpm-$USER_SUBDOMAIN_HYPHEN/g /etc/opt/remi/php70/php-fpm.d/$USER_MAINDOMAIN.conf
-      fi
-      systemctl -q reload php70-php-fpm
+      systemctl -q reload php71-php-fpm
     fi
   fi
 	return 0
@@ -199,14 +188,14 @@ configure_fpm_pool(){
 
 configure_apache_vhost() {
   if [ $USER_DOMAIN_TYP = "0" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      NGXSOCKET="/var/run/php73-fpm-$USER_DOMAIN_HYPHEN.sock"
+    fi
     if [ $USER_PHP_VERSION = "php72" ]; then
       NGXSOCKET="/var/run/php72-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
       NGXSOCKET="/var/run/php71-fpm-$USER_DOMAIN_HYPHEN.sock"
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock"
     fi
     if [ $DISTRO = "debian" ]; then
       if [ $USER_CMS_CHOICE = "none" ]; then
@@ -249,14 +238,14 @@ configure_apache_vhost() {
   fi
 
   if [ $USER_DOMAIN_TYP = "1" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      NGXSOCKET="/var/run/php73-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
+    fi
     if [ $USER_PHP_VERSION = "php72" ]; then
       NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $USER_PHP_VERSION = "php71" ]; then
       NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock"
     fi
     if [ $DISTRO = "debian" ]; then
       if [ $USER_CMS_CHOICE = "none" ]; then
@@ -296,29 +285,47 @@ configure_apache_vhost() {
       sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/httpd/conf.d/$USER_SUBDOMAIN.conf
       systemctl -q reload httpd
     fi
-
+  fi
+  if [ $USER_DOMAIN_TYP = "2" ]; then
+    if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
+      sed -i 's/\<ServerAlias\>/& $USER_REDIRECT_SOURCE_DOMAIN/' $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf
+      if [ $DISTRO = "centos" ]; then
+        systemctl -q reload httpd
+      fi
+      if [ $DISTRO = "debian" ]; then
+        a2ensite -q $USER_REDIRECT_TARGET_DOMAIN.conf
+        systemctl -q reload apache2
+      fi
+    elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
+      cp templates/apache_redirect.template $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i 's|'TARGET_DOMAINNAME'|'$USER_REDIRECT_TARGET_DOMAIN'|g' $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g $WEBSRV_CONF_DIR/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      if [ $DISTRO = "centos" ]; then
+        systemctl -q reload httpd
+      fi
+      if [ $DISTRO = "debian" ]; then
+        a2ensite -q $USER_REDIRECT_SOURCE_DOMAIN.conf
+        systemctl -q reload apache2
+      fi
+    fi
   fi
   return 0
 }
 
 configure_nginx_vhost(){
   if [ $USER_DOMAIN_TYP = "0" ]; then
-    if [ $USER_PHP_VERSION = "php72" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      NGXSOCKET="/var/run/php73-fpm-$USER_DOMAIN_HYPHEN.sock;"
+    elif [ $USER_PHP_VERSION = "php72" ]; then
       NGXSOCKET="/var/run/php72-fpm-$USER_DOMAIN_HYPHEN.sock;"
-    fi
-    if [ $USER_PHP_VERSION = "php71" ]; then
+    elif [ $USER_PHP_VERSION = "php71" ]; then
       NGXSOCKET="/var/run/php71-fpm-$USER_DOMAIN_HYPHEN.sock;"
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_DOMAIN_HYPHEN.sock;"
-    fi
-    if [ $USER_CMS_CHOICE = "none" ]; then
+    elif [ $USER_CMS_CHOICE = "none" ]; then
       cp templates/nginx_default.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-    fi
-    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+    elif [ $USER_CMS_CHOICE = "nextcloud" ]; then
       cp templates/nginx_nextcloud.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-    fi
-    if [ $USER_CMS_CHOICE = "wordpress" ]; then
+    elif [ $USER_CMS_CHOICE = "wordpress" ]; then
       cp templates/nginx_wordpress.template /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     fi
     sed -i s/DOMAIN_HYPHEN/$USER_DOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
@@ -327,24 +334,18 @@ configure_nginx_vhost(){
 	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_MAINDOMAIN/g /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
 	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_MAINDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_MAINDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_MAINDOMAIN.conf
-  fi
-  if [ $USER_DOMAIN_TYP = "1" ]; then
-    if [ $USER_PHP_VERSION = "php72" ]; then
+  elif [ $USER_DOMAIN_TYP = "1" ]; then
+    if [ $USER_PHP_VERSION = "php73" ]; then
+      NGXSOCKET="/var/run/php73-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
+    elif [ $USER_PHP_VERSION = "php72" ]; then
       NGXSOCKET="/var/run/php72-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
-    fi
-    if [ $USER_PHP_VERSION = "php71" ]; then
+    elif [ $USER_PHP_VERSION = "php71" ]; then
       NGXSOCKET="/var/run/php71-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
-    fi
-    if [ $USER_PHP_VERSION = "php70" ]; then
-      NGXSOCKET="/var/run/php70-fpm-$USER_SUBDOMAIN_HYPHEN.sock;"
-    fi
-    if [ $USER_CMS_CHOICE = "none" ]; then
+    elif [ $USER_CMS_CHOICE = "none" ]; then
       cp templates/nginx_default.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-    fi
-    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+    elif [ $USER_CMS_CHOICE = "nextcloud" ]; then
       cp templates/nginx_nextcloud.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
-    fi
-    if [ $USER_CMS_CHOICE = "wordpress" ]; then
+    elif [ $USER_CMS_CHOICE = "wordpress" ]; then
       cp templates/nginx_wordpress.template /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     fi
     sed -i s/DOMAIN_HYPHEN/$USER_SUBDOMAIN_HYPHEN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
@@ -353,6 +354,15 @@ configure_nginx_vhost(){
 	  sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_SUBDOMAIN/g /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
 	  sed -i 's|'DOMAIN_HTTPD_LOCATION'|'$HOST_SUBDOMAIN_HTTPD_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
     sed -i 's|'HOST_ROOT_LOCATION'|'$HOST_SUBDOMAIN_ROOT_LOCATION'|g' /etc/nginx/conf.d/$USER_SUBDOMAIN.conf
+  elif [ $USER_DOMAIN_TYP = "2" ]; then
+    if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
+      sed -i '/server_name /s/;/ $USER_REDIRECT_SOURCE_DOMAIN;/' /etc/nginx/conf.d/$USER_REDIRECT_TARGET_DOMAIN.conf
+    elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
+      cp templates/nginx_redirect.template /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i s/DOMAIN_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i 's|'TARGET_DOMAINNAME'|'$USER_REDIRECT_TARGET_DOMAIN'|g' /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
+      sed -i s/SSL_DOMAINNAME_FULLNAME/$USER_REDIRECT_SOURCE_DOMAIN/g /etc/nginx/conf.d/$USER_REDIRECT_SOURCE_DOMAIN.conf
+    fi
   fi
 	return 0
 }
@@ -375,8 +385,7 @@ configure_logrotate() {
               endscript
       }
 EOL
-    fi
-    if [ $USER_DOMAIN_TYP = "1" ]; then
+    elif [ $USER_DOMAIN_TYP = "1" ]; then
       cat >> /etc/logrotate.d/nginx <<EOL
       /var/log/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/logs/*.log {
               daily
@@ -393,8 +402,7 @@ EOL
       }
 EOL
     fi
-  fi
-  if [ $DISTRO = "centos" ]; then
+  elif [ $DISTRO = "centos" ]; then
     if [ $WEBSRV = "apache" ]; then
     cat >> /etc/logrotate.d/httpd <<EOL
     $HOST_ROOT_LOCATION/logs/*.log {
@@ -409,8 +417,7 @@ EOL
   }
 EOL
     fi
-  fi
-  if [ $DISTRO = "debian" ]; then
+  elif [ $DISTRO = "debian" ]; then
     if [ $WEBSRV = "apache" ]; then
     cat >> /etc/logrotate.d/apache2 <<EOL
     $HOST_ROOT_LOCATION/logs/*.log {
@@ -440,41 +447,41 @@ EOL
 }
 
 configure_letsencrypt() {
+  # Redirect Typ 0 = Alias / Redirect Typ 1 = Redirect
   if [ $WEBSRV = "nginx" ]; then
     if [ $USER_DOMAIN_TYP = "0" ]; then
-      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --non-interactive --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+      return 0
+    elif [ $USER_DOMAIN_TYP = "1" ]; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --non-interactive --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+      return 0
+    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0" ] ; then
+      # First we are looking for the row with the servernames, then we are looking for all entries until the end of the row. SED remove the ; and add -d
+      LE_EXISTING_DOMAINNAMES=grep 'server_name ' $WEBSRV_CONF_DIR/$USER_MAINDOMAIN -m 1 | awk '{for (i=1;i<=1;i++){$i=""};print}' | sed 's/;//g' | sed 's/ / -d /g'
+      certbot certonly --standalone --expand --agree-tos --email hostmaster@$USER_EXISTING_DOMAIN --non-interactive --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN $LE_EXISTING_DOMAINNAMES
+      return 0
+    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1" ] ; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --non-interactive --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
       return 0
     fi
-    if [ $USER_DOMAIN_TYP = "1" ]; then
-      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx" --rsa-key-size 4096 -d $USER_SUBDOMAIN
+  fi
+  if [ $WEBSRV = "apache" ]; then
+    if [ $USER_DOMAIN_TYP = "0" ]; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --non-interactive --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
+      return 0
+    elif [ $USER_DOMAIN_TYP = "1" ]; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_MAINDOMAIN --non-interactive --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN -d $USER_SUBDOMAIN
+      return 0
+    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
+      LE_EXISTING_DOMAINNAMES=grep 'ServerAlias' $WEBSRV_CONF_DIR/$USER_MAINDOMAIN -m 1 | awk '{for (i=1;i<=1;i++){$i=""};print}' | sed 's/ / -d /g'
+      certbot certonly --standalone --expand --agree-tos --email hostmaster@$USER_EXISTING_DOMAIN --non-interactive --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN $LE_EXISTING_DOMAINNAMES
+      return 0
+    elif [ $USER_DOMAIN_TYP = "2" ] && [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
+      certbot certonly --standalone --agree-tos --email hostmaster@$USER_REDIRECT_SOURCE_DOMAIN --non-interactive --pre-hook "systemctl stop $WEBSRV_SVC_NAME" --post-hook "systemctl start $WEBSRV_SVC_NAME" --rsa-key-size 4096 -d $USER_REDIRECT_SOURCE_DOMAIN
       return 0
     fi
   fi
-  if [ $DISTRO = "debian" ]; then
-    if [ $WEBSRV = "apache" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
-        return 0
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2" --rsa-key-size 4096 -d $USER_SUBDOMAIN
-        return 0
-      fi
-    fi
-  fi
-  if [ $DISTRO = "centos" ]; then
-    if [ $WEBSRV = "apache" ]; then
-      if [ $USER_DOMAIN_TYP = "0" ]; then
-        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop httpd" --post-hook "systemctl start httpd" --rsa-key-size 4096 -d $USER_MAINDOMAIN -d www.$USER_MAINDOMAIN
-        return 0
-      fi
-      if [ $USER_DOMAIN_TYP = "1" ]; then
-        certbot certonly --standalone --agree-tos --no-eff-email --email hostmaster@$USER_MAINDOMAIN --pre-hook "systemctl stop httpd" --post-hook "systemctl start httpd" --rsa-key-size 4096 -d $USER_SUBDOMAIN
-        return 0
-      fi
-    fi
-  fi
-
+  return 0
 }
 
 configure_database(){
@@ -492,7 +499,7 @@ configure_database(){
 "
 EOFMW
 
-	mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $HOST_DB_DATABASE ;
+mysql -f -u root -p$MYSQL_ROOT_PASS -e <<EOSQL "DROP DATABASE IF EXISTS $HOST_DB_DATABASE ;
 CREATE DATABASE $HOST_DB_DATABASE;
 GRANT ALL PRIVILEGES ON $HOST_DB_DATABASE.* TO '$HOST_DB_USER'@'localhost' IDENTIFIED BY '$HOST_DB_PASS';
 FLUSH PRIVILEGES;"
@@ -528,8 +535,8 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
   clear
-  PS3='Do you want to add a domain or subdomain? '
-  options=("Domain" "Subdomain")
+  PS3='Do you want to add a domain, subdomain or alias/redirect? '
+  options=("Domain" "Subdomain" "Alias/Redirect")
   select opt in "${options[@]}"
   do
     case $opt in
@@ -543,122 +550,176 @@ then
         USER_DOMAIN_TYP=1
   	    break
         ;;
-      *) echo invalid option;;
-    esac
-  done
-  read -p 'Domain [example.com]: ' USER_MAINDOMAIN
-  if [ $USER_DOMAIN_TYP = "1" ]; then
-    read -p 'Subdomain [subdomain.example.com]: ' USER_SUBDOMAIN
-  fi
-
-  PS3='Select the PHP for your domain: '
-  options=("PHP 7.0" "PHP 7.1" "PHP 7.2")
-  select opt in "${options[@]}"
-  do
-    case $opt in
-      "PHP 7.0")
-        echo "PHP 7.0 selected"
-        USER_PHP_VERSION=php70
-        break
-        ;;
-      "PHP 7.1")
-        echo "PHP 7.1 selected"
-        USER_PHP_VERSION=php71
-        break
-        ;;
-      "PHP 7.2")
-        echo "PHP 7.2 selected"
-        USER_PHP_VERSION=php72
+      "Alias/Redirect")
+        echo "Alias/Redirect selected"
+        USER_DOMAIN_TYP=2
         break
         ;;
       *) echo invalid option;;
     esac
   done
 
-  PS3='Select an Installer for your domain: '
-  options=("Nextcloud" "Wordpress" "None")
-  select opt in "${options[@]}"
-  do
-    case $opt in
-      "Nextcloud")
-        echo "Nextcloud selected"
-        USER_CMS_CHOICE=nextcloud
-        break
-        ;;
-      "Wordpress")
-        echo "Wordpress selected"
-        USER_CMS_CHOICE=wordpress
-        break
-        ;;
-      "None")
-        USER_CMS_CHOICE=none
-        break
-        ;;
-      *) echo invalid option;;
-    esac
-  done
+  if [ $USER_DOMAIN_TYP -ne "2" ]; then
 
-  if [ $USER_CMS_CHOICE = "nextcloud" ] || [ $USER_CMS_CHOICE = "wordpress" ]; then
-    USER_DB_SITE=1
-  else
-    read -p "Do you want to add a database? [y/n] " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]
-    then
-      printf "\nPlease provide your MySQL-Root-Password when asked.\n"
+    read -p 'Domain [example.com]: ' USER_MAINDOMAIN
+    if [ $USER_DOMAIN_TYP = "1" ]; then
+      read -p 'Subdomain [subdomain.example.com]: ' USER_SUBDOMAIN
+    fi
+
+    PS3='Select the PHP for your domain: '
+    options=("PHP 7.1" "PHP 7.2" "PHP 7.3")
+    select opt in "${options[@]}"
+    do
+      case $opt in
+        "PHP 7.1")
+          echo "PHP 7.1 selected"
+          USER_PHP_VERSION=php71
+          break
+          ;;
+        "PHP 7.2")
+          echo "PHP 7.2 selected"
+          USER_PHP_VERSION=php72
+          break
+          ;;
+        "PHP 7.3")
+          echo "PHP 7.3 selected"
+          USER_PHP_VERSION=php73
+          break
+          ;;
+        *) echo invalid option;;
+      esac
+    done
+
+    PS3='Select an Installer for your domain: '
+    options=("Nextcloud" "Wordpress" "None")
+    select opt in "${options[@]}"
+    do
+      case $opt in
+        "Nextcloud")
+          echo "Nextcloud selected"
+          USER_CMS_CHOICE=nextcloud
+          break
+          ;;
+        "Wordpress")
+          echo "Wordpress selected"
+          USER_CMS_CHOICE=wordpress
+          break
+          ;;
+        "None")
+          USER_CMS_CHOICE=none
+          break
+          ;;
+        *) echo invalid option;;
+      esac
+    done
+
+    if [ $USER_CMS_CHOICE = "nextcloud" ] || [ $USER_CMS_CHOICE = "wordpress" ]; then
       USER_DB_SITE=1
     else
-      USER_DB_SITE=0
+      read -p "Do you want to add a database? [y/n] " -n 1 -r
+      echo
+      if [[ $REPLY =~ ^[Yy]$ ]]
+      then
+        printf "\nPlease provide your MySQL-Root-Password when asked.\n"
+        USER_DB_SITE=1
+      else
+        USER_DB_SITE=0
+      fi
     fi
-  fi
 
-  HOST_LOCATION_USER=(${USER_MAINDOMAIN//./ })
-  HOST_DB_ADDITION=$(</dev/urandom tr -dc A-Za-z0-9 | head -c4)
+    HOST_LOCATION_USER=(${USER_MAINDOMAIN//./ })
+    HOST_DB_ADDITION=$(</dev/urandom tr -dc A-Za-z0-9 | head -c4)
 
-  if [ $USER_DOMAIN_TYP = "0" ]; then
-    HOST_DB_USER=$HOST_LOCATION_USER'_usr_'$HOST_DB_ADDITION
-  elif [ $USER_DOMAIN_TYP = "1" ]; then
-    HOST_DB_USER=$HOST_LOCATION_USER'_usr_'$HOST_DB_ADDITION
-  fi
+    if [ $USER_DOMAIN_TYP = "0" ]; then
+      HOST_DB_USER=$HOST_LOCATION_USER'_usr_'$HOST_DB_ADDITION
+    elif [ $USER_DOMAIN_TYP = "1" ]; then
+      HOST_DB_USER=$HOST_LOCATION_USER'_usr_'$HOST_DB_ADDITION
+    fi
 
-  if [ $USER_DOMAIN_TYP = "0" ]; then
-  HOST_DB_DATABASE=${USER_MAINDOMAIN//./_}
-  elif [ $USER_DOMAIN_TYP = "1" ]; then
-  HOST_DB_DATABASE=${USER_SUBDOMAIN//./_}
-  fi
+    if [ $USER_DOMAIN_TYP = "0" ]; then
+    HOST_DB_DATABASE=${USER_MAINDOMAIN//./_}
+    elif [ $USER_DOMAIN_TYP = "1" ]; then
+    HOST_DB_DATABASE=${USER_SUBDOMAIN//./_}
+    fi
 
-  HOST_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
+    HOST_DB_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c10)
 
-  USER_DOMAIN_HYPHEN=${USER_MAINDOMAIN/./-}
-  USER_SUBDOMAIN_HYPHEN=${USER_SUBDOMAIN//./-}
+    USER_DOMAIN_HYPHEN=${USER_MAINDOMAIN/./-}
+    USER_SUBDOMAIN_HYPHEN=${USER_SUBDOMAIN//./-}
 
-  HOST_MAINDOMAIN_ROOT_LOCATION="/var/www/$USER_MAINDOMAIN"
-  HOST_SUBDOMAIN_ROOT_LOCATION="/var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN"
+    HOST_MAINDOMAIN_ROOT_LOCATION="/var/www/$USER_MAINDOMAIN"
+    HOST_SUBDOMAIN_ROOT_LOCATION="/var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN"
 
-  HOST_MAINDOMAIN_HTTPD_LOCATION="/var/www/$USER_MAINDOMAIN/htdocs"
-  HOST_SUBDOMAIN_HTTPD_LOCATION="/var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs"
+    HOST_MAINDOMAIN_HTTPD_LOCATION="/var/www/$USER_MAINDOMAIN/htdocs"
+    HOST_SUBDOMAIN_HTTPD_LOCATION="/var/www/$USER_MAINDOMAIN/$USER_SUBDOMAIN/htdocs"
 
-  create_skeleton_dirs
-  configure_fpm_pool
-  if [ $WEBSRV = "nginx" ]; then
-    configure_nginx_vhost
-  elif [ $WEBSRV = "apache" ]; then
-    configure_apache_vhost
-  fi
-  configure_logrotate
-  configure_letsencrypt
-  if [ $USER_DB_SITE = "1" ]; then
-  configure_database
-  fi
+    create_skeleton_dirs
+    configure_fpm_pool
+    if [ $WEBSRV = "nginx" ]; then
+      configure_nginx_vhost
+    elif [ $WEBSRV = "apache" ]; then
+      configure_apache_vhost
+    fi
+    configure_logrotate
+    configure_letsencrypt
+    if [ $USER_DB_SITE = "1" ]; then
+    configure_database
+    fi
 
-  if [ $USER_CMS_CHOICE = "nextcloud" ]; then
-    configure_nextcloud
-  elif [ $USER_CMS_CHOICE = "wordpress" ]; then
-    configure_wordpress
-  fi
+    if [ $USER_CMS_CHOICE = "nextcloud" ]; then
+      configure_nextcloud
+    elif [ $USER_CMS_CHOICE = "wordpress" ]; then
+      configure_wordpress
+    fi
 
-  [ $? -ne "0" ] && exit 1
-fi
+    [ $? -ne "0" ] && exit 1
+  fi # if [ $USER_DOMAIN_TYP -ne "2" ]; then
+  if [ $USER_DOMAIN_TYP = "2" ]; then
+    clear
+    PS3='Select the domain forwarding typ: '
+    options=("Alias" "Redirect")
+    select opt in "${options[@]}"
+    do
+      case $opt in
+        "Alias")
+          echo "Alias selected"
+          USER_DOMAIN_REDIRECT_TYP=0
+          break
+          ;;
+        "Redirect")
+          echo "Redirect selected"
+          USER_DOMAIN_REDIRECT_TYP=1
+          break
+          ;;
+        *) echo invalid option;;
+      esac
+    done
+    if [ $USER_DOMAIN_REDIRECT_TYP = "0" ]; then
+      read -p 'Enter the target domain on this server: ' USER_EXISTING_DOMAIN
+      USER_REDIRECT_TARGET_DOMAIN=(${USER_REDIRECT_TARGET_DOMAIN//./ })
+
+      if [ -e $WEBSRV_CONF_DIR/$USER_REDIRECT_TARGET_DOMAIN.conf ]; then
+        read -p 'Alias domain which should be added: ' USER_ALIAS_DOMAIN
+        configure_letsencrypt
+      else
+        echo "Domain not exists on the server. Exit."
+        exit 2
+      fi
+
+    elif [ $USER_DOMAIN_REDIRECT_TYP = "1" ]; then
+      read -p 'Source Domain [(subdomain.)example.com]: ' USER_REDIRECT_SOURCE_DOMAIN
+      echo
+      read -p 'Target Domain [(subdomain.)example.com]: ' USER_REDIRECT_TARGET_DOMAIN
+      echo
+      configure_letsencrypt
+      if [ $WEBSRV = "nginx" ]; then
+        configure_nginx_vhost
+      elif [ $WEBSRV = "apache" ]; then
+        configure_apache_vhost
+      fi # if [ $WEBSRV = "nginx" ]; then
+    fi # elif [ $USER_DOMAIN_REDIRECT_TYP = "1"]; then
+  fi # if [ $USER_DOMAIN_TYP = "2"]; then
+fi # if [[ $REPLY =~ ^[Yy]$ ]]
 
 echo <<EOF "
 #################################################################
@@ -675,10 +736,12 @@ echo "Absolute path domain: $HOST_MAINDOMAIN_ROOT_LOCATION"
 if [ $USER_DOMAIN_TYP = "1" ]; then
   echo "Absolute path subdomain: $HOST_SUBDOMAIN_ROOT_LOCATION"
 fi
-echo "MySQL username: $HOST_DB_USER"
-echo "MySQL password: $HOST_DB_PASS"
-echo "MySQL database: $HOST_DB_DATABASE"
 echo "Location owner: $HOST_LOCATION_USER"
+if [ "$USER_DB_SITE" = "1" ]; then
+  echo "MySQL username: $HOST_DB_USER"
+  echo "MySQL password: $HOST_DB_PASS"
+  echo "MySQL database: $HOST_DB_DATABASE"
+fi
 echo <<EOF "
 #
 #

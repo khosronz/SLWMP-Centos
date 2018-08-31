@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.7.0
+# Version 0.8.0
 
 configure_nextcloud() {
 
@@ -154,8 +154,7 @@ EOL
   # Open a browser and go to your domain to login.
   #
   # Login with your previous provided login credentials!
-  # If you receive a Internal Server Error please comment out Redis
-  # in NC config.
+  #
   #
   #################################################################
   "
