@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.8.0-dev
+# Version 0.8.0
 
 servicesCheck(){
 ps cax | grep $1 > /dev/null
