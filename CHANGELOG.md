@@ -1,3 +1,8 @@
+0.8.1
+=====
+- Removed some PHP 7.3 packages
+- Modified Nextcloud Nginx template for Nextcloud 14 support
+
 0.8.0
 =====
 Attention:

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2017-2018 Tim Scharner (https://timscha.io)
-# Version 0.8.0
+# Version 0.8.1
 
 if [[ $EUID -ne 0 ]]; then
    echo "$(tput setaf 1)This script must be run as root$(tput sgr0)" 1>&2
@@ -171,7 +171,7 @@ if servicesCheck "php-fpm"; then
             printf "\n- PHP 7.2 installed [X]"
           fi
           if (($opt=="3")); then
-            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.3-fpm php7.3-mysql php7.3-gd php7.3-cli php7.3-curl php7.3-mbstring php7.3-posix php7.3-xml php7.3-xmlrpc php7.3-intl php7.3-xml php7.3-zip php7.3-opcache php7.3-redis -y >> /tmp/slemp_install.txt 2>&1
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install php7.3-fpm php7.3-mysql php7.3-gd php7.3-cli php7.3-curl php7.3-mbstring php7.3-common php7.3-xml php7.3-xmlrpc php7.3-intl php-imagick php7.3-xml php7.3-zip php7.3-apcu php7.3-opcache php-redis -y >> /tmp/slemp_install.txt 2>&1
             systemctl -q start php7.3-fpm
             systemctl -q enable php7.3-fpm
             printf "\n- PHP 7.3 installed [X]"
@@ -498,7 +498,7 @@ then
   while :
   do
     clear
-    options=("PHP 7.1 ${php_opts[1]}" "PHP 7.2 ${php_opts[2]}" "PHP 7.3 (BETA) ${php_opts[3]}" "Done")
+    options=("PHP 7.1 ${php_opts[1]}" "PHP 7.2 ${php_opts[2]}" "PHP 7.3 ${php_opts[3]}" "Done")
     select opt in "${options[@]}"
     do
       case $opt in
@@ -510,7 +510,7 @@ then
           choice 2
           break
           ;;
-        "PHP 7.3 (BETA) ${php_opts[3]}")
+        "PHP 7.3 ${php_opts[3]}")
           choice 3
           break
           ;;
