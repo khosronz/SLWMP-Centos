@@ -1,4 +1,4 @@
-# SL(A)EMP
+# SLWMP
 
 
 ## Attention! 2019-05-29
@@ -15,7 +15,7 @@ More details soon.
 
 
 
-SL(A)EMP stands for Secure L(A)EMP.
+SLWMP stands for Secure Linux Webserver.
 It will install all necessary binaries for a secure LAMP or LEMP server automatically. Supported are the latest versions of Debian (Stretch) and CentOS (7.x).
 
 ## Features
@@ -38,7 +38,7 @@ It will install all necessary binaries for a secure LAMP or LEMP server automati
 - OS: Debian 9 (Stretch) or CentOS 7.x, clean install!
 
 ## Installation
-Important: SL(A)EMP makes use of various open-source software.
+Important: SLWMP makes use of various open-source software.
 Please assure you agree with their license before using it. Any part of SL(A)EMP itself is released under GNU General Public License, Version 3.
 
 ```
