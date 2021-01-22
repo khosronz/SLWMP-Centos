@@ -42,7 +42,7 @@ Important: SLWMP makes use of various open-source software.
 Please assure you agree with their license before using it. Any part of SL(A)EMP itself is released under GNU General Public License, Version 3.
 
 ```
-git clone https://github.com/timscha/SLEMP SLEMP
+git clone https://github.com/khosronz/SLWMP-Centos SLEMP
 chmod +x installer.sh add_domain.sh
 ./installer.sh
 ```
